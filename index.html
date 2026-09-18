@@ -1000,64 +1000,39 @@
   const PREFIX_COLS = ["Prefix_1", "Prefix_2", "Prefix_3"];
   const SUFFIX_COLS = ["Suffix_1", "Suffix_2", "Suffix_3", "Suffix_4", "Suffix_5", "Suffix_6"];
 
-  const MORPH_CHECK_PROMPT = `You are an expert in English morphology, etymology, structured word inquiry, and vocabulary instruction.
+const MORPH_CHECK_PROMPT = `You are a friendly expert in English morphology and structured word inquiry.
 
-You are auditing ONE exact row from the BAWF morphological database.
+You are helping a teacher understand a database parse.
 
-Judge only the row provided by the user. Do not copy words from examples, prior rows, or instructions.
+Do NOT overcomplicate the answer. Do NOT act like a strict automated validator. Your goal is to help a teacher decide whether the parse is probably okay, questionable, or has useful alternatives.
 
 BAWF notation:
 - Roots are inside parentheses: (root)
 - Bases/basewords are inside square brackets: [base] or [(root)]
-- Prefixes appear before the base/root: <prefix<
-- Suffixes appear after the base/root: >suffix>
+- Prefixes appear before the base/root with angle brackets: <prefix<
+- Suffixes appear after the base/root with angle brackets: >suffix>
 - Do not treat material inside [] or () as a suffix.
-- Do not wrap a whole word in angle brackets. Angle brackets are for affixes.
+- Do not wrap a whole baseword in angle brackets. Angle brackets are for affixes.
 
-Critical audit rules:
-1. The current database parse is database_parse_exact.
-2. Copy database_parse_exact into database_parse_exact_seen exactly.
-3. Do not silently repair database_parse_exact before judging it.
-4. Use the Word, Baseword, Root, Prefix, and Suffix columns.
-5. Check whether prefix + base/root + suffixes reconstructs the surface word.
-6. Do not say the base/root is wrong merely because the surface word is longer than the base. Affixes may explain extra letters.
-7. If local_omitted_inflection_after_reconstruction is present, treat the row as a plausible base/derivational parse with an omitted surface inflection. Use parse_mismatch "omitted_surface_inflection", not "wrong_base_or_root", unless the base/root itself is independently implausible.
-8. For ordinary missing -ed, -ing, -s, or -es after an otherwise plausible parse, use parse_mismatch "omitted_surface_inflection".
-9. Do not use "suffix_spelling_variant_or_final_s" for ordinary -ed or -ing. That category is mainly for cases such as -ward versus -wards.
-10. In BAWF notation, a suffix must be written as >suffix>. For example, use >ed>, not ed>.
-11. If a word is simplex or lexicalized, suggested_parse should normally be [(word)].
-12. For un- + base + -able/-ible words, consider affix-scope ambiguity.
-13. The critical_check field must be an actual evaluation of the row, not a copied checklist.
-14. If unsure, use "uncertain" and explain why.
+Important guidance:
+1. Explain the exact database parse given.
+2. Say whether the parse is probably OK, probably incomplete, or questionable.
+3. If the parse omits a normal inflection such as -s, -ed, or -ing, say that simply. Do not call the whole parse wrong if the base/root is reasonable.
+4. If there are alternative parses, give one or two.
+5. If the parse is good enough for teaching, say so.
+6. If the parse should be checked by a human, say so.
+7. Keep the response short and teacher-friendly.
+8. Avoid technical overkill.
+9. Do not return JSON.
+10. Do not use markdown tables.
 
-Output formatting rules:
-- Return ONLY one valid raw JSON object.
-- The first character must be { and the last character must be }.
-- Do not use markdown.
-- Do not use code fences.
-- All JSON keys and string values must use double quotes.
-- Do not use trailing commas.
-- "issues" must be an array of strings.
-- "alternative_analyses" must be an array of strings.
-- Keep each field concise.
+Use this format:
 
-The JSON object must have exactly these keys:
-{
-  "status": "accurate | mostly_accurate | questionable | likely_incorrect | uncertain",
-  "confidence": "high | medium | low",
-  "database_parse_exact_seen": "",
-  "notation_interpretation": "",
-  "surface_spelling_check": "",
-  "critical_check": "",
-  "suggested_parse": "",
-  "alternative_analyses": [],
-  "parse_mismatch": "none | omitted_surface_inflection | suffix_spelling_variant_or_final_s | omitted_derivational_affix | wrong_base_or_root | wrong_affix | affix_scope_ambiguous | unclear_notation | invalid_suggested_notation | notation_misread | hallucinated_unrelated_word | other | uncertain",
-  "issues": [],
-  "explanation": "",
-  "teaching_note": "",
-  "recommended_action": "keep | keep_but_note_ambiguity | revise | flag_for_human_review | uncertain"
-}`;
-
+Quick judgment:
+Current parse means:
+Possible issue:
+Possible alternative(s):
+Teacher note:`;
   const DISPLAY_LABELS = {
     "Word_frq_Zipf_Recomputed": "Word Zipf",
     "Word_frq_Zipf": "Word Zipf",
@@ -2267,7 +2242,7 @@ Please:
     }
 
     copyText(lastMorphCheckText).then(() => {
-      showCopyToast("AI morphology review copied");
+      showCopyToast("Morphology review copied");
     });
   }
 
@@ -2305,12 +2280,6 @@ Please:
     ]));
   }
 
-  function getAffixValues(row, cols) {
-    return cols
-      .map(col => cleanMorphValue(row[col]))
-      .filter(v => v && v.toLowerCase() !== "nan");
-  }
-
   function getSurfaceWordForReview(row) {
     return cleanMorphValue(getFirstNonEmpty(row, [
       "Word",
@@ -2320,17 +2289,10 @@ Please:
     ]));
   }
 
-  function normalizeMorphToken(value) {
-    return cleanMorphValue(value)
-      .toLowerCase()
-      .replace(/^[^a-z0-9]+|[^a-z0-9]+$/g, "")
-      .trim();
-  }
-
-  function normalizeSurfaceForCompare(value) {
-    return cleanMorphValue(value)
-      .toLowerCase()
-      .replace(/[^a-z0-9]/g, "");
+  function getAffixValues(row, cols) {
+    return cols
+      .map(col => cleanMorphValue(row[col]))
+      .filter(v => v && v.toLowerCase() !== "nan");
   }
 
   function cleanBareMorphPart(value) {
@@ -2340,11 +2302,7 @@ Please:
       .trim();
   }
 
-  function escapeRegExp(str) {
-    return String(str).replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
-  }
-
-  function uniqueCleanList(items) {
+  function uniqueSimpleList(items) {
     return Array.from(
       new Set(
         (items || [])
@@ -2354,7 +2312,7 @@ Please:
     );
   }
 
-  function extractBAWFNotationParts(parse) {
+  function extractSimpleBAWFNotationParts(parse) {
     const text = cleanMorphValue(parse);
 
     const roots = [];
@@ -2362,98 +2320,70 @@ Please:
     const prefixes = [];
     const suffixes = [];
 
-    const rootRegex = /\(([^()]+)\)/g;
-    let rootMatch;
+    let match;
 
-    while ((rootMatch = rootRegex.exec(text)) !== null) {
-      const value = cleanMorphValue(rootMatch[1]);
+    const rootRegex = /\(([^()]+)\)/g;
+    while ((match = rootRegex.exec(text)) !== null) {
+      const value = cleanMorphValue(match[1]);
       if (value) roots.push(value);
     }
 
     const baseRegex = /\[([^\]]+)\]/g;
-    let baseMatch;
-
-    while ((baseMatch = baseRegex.exec(text)) !== null) {
-      const value = cleanMorphValue(baseMatch[1]).replace(/[()]/g, "").trim();
+    while ((match = baseRegex.exec(text)) !== null) {
+      const value = cleanMorphValue(match[1]).replace(/[()]/g, "").trim();
       if (value) bases.push(value);
     }
 
     const prefixRegex = /<([^<>]+)</g;
-    let prefixMatch;
-
-    while ((prefixMatch = prefixRegex.exec(text)) !== null) {
-      const value = cleanMorphValue(prefixMatch[1]);
+    while ((match = prefixRegex.exec(text)) !== null) {
+      const value = cleanMorphValue(match[1]);
       if (value) prefixes.push(value);
     }
 
     const suffixRegex = />([^<>]+)>/g;
-    let suffixMatch;
-
-    while ((suffixMatch = suffixRegex.exec(text)) !== null) {
-      const value = cleanMorphValue(suffixMatch[1]);
+    while ((match = suffixRegex.exec(text)) !== null) {
+      const value = cleanMorphValue(match[1]);
       if (value) suffixes.push(value);
     }
 
     return {
-      roots: uniqueCleanList(roots),
-      bases: uniqueCleanList(bases),
-      prefixes: uniqueCleanList(prefixes),
-      suffixes: uniqueCleanList(suffixes)
+      roots: uniqueSimpleList(roots),
+      bases: uniqueSimpleList(bases),
+      prefixes: uniqueSimpleList(prefixes),
+      suffixes: uniqueSimpleList(suffixes)
     };
   }
 
-  function buildLocalNotationInterpretation(row) {
-    const parse = getExactDatabaseParse(row);
-    const notationParts = extractBAWFNotationParts(parse);
-    const columnPrefixes = getAffixValues(row, PREFIX_COLS);
-    const columnSuffixes = getAffixValues(row, SUFFIX_COLS);
+  function makeSimpleBAWFParseSuggestion(packet, extraSuffix = "") {
+    const prefixes = packet.prefixes.length
+      ? packet.prefixes
+      : packet.notation_parts.prefixes;
 
-    const root = cleanMorphValue(getFirstNonEmpty(row, [
-      "GPT_Root",
-      "Root_1",
-      "Greek_Latin_Root_1",
-      "Greek_Latin_Root"
-    ]));
+    const suffixes = packet.suffixes.length
+      ? packet.suffixes
+      : packet.notation_parts.suffixes;
 
-    const baseword = cleanMorphValue(getFirstNonEmpty(row, [
-      "Baseword",
-      "Baseword_1"
-    ]));
+    const base =
+      packet.baseword ||
+      packet.notation_parts.bases[0] ||
+      packet.notation_parts.roots[0] ||
+      packet.word;
 
-    const pieces = [];
+    const cleanPrefixes = uniqueSimpleList(prefixes)
+      .map(cleanBareMorphPart)
+      .filter(Boolean);
 
-    pieces.push(`Exact parse: ${parse || "[blank]"}`);
-
-    if (notationParts.prefixes.length) pieces.push(`Prefixes from notation: ${notationParts.prefixes.join(", ")}`);
-    if (notationParts.bases.length) pieces.push(`Bases from notation: ${notationParts.bases.join(", ")}`);
-    if (notationParts.roots.length) pieces.push(`Roots from notation: ${notationParts.roots.join(", ")}`);
-
-    if (notationParts.suffixes.length) pieces.push(`Suffixes from notation: ${notationParts.suffixes.join(", ")}`);
-    else pieces.push("Suffixes from notation: none");
-
-    if (columnPrefixes.length) pieces.push(`Prefixes from columns: ${columnPrefixes.join(", ")}`);
-
-    if (columnSuffixes.length) pieces.push(`Suffixes from columns: ${columnSuffixes.join(", ")}`);
-    else pieces.push("Suffixes from columns: none");
-
-    if (baseword) pieces.push(`Database baseword column: ${baseword}`);
-    if (root) pieces.push(`Database root column: ${root}`);
-
-    return pieces.join("\n");
-  }
-
-  function buildBAWFParseFromParts(prefixes, base, suffixes) {
-    const cleanPrefixes = uniqueCleanList(prefixes || [])
+    const cleanSuffixes = uniqueSimpleList(suffixes)
       .map(cleanBareMorphPart)
       .filter(Boolean);
 
     const cleanBase = cleanBareMorphPart(base);
 
-    const cleanSuffixes = uniqueCleanList(suffixes || [])
-      .map(cleanBareMorphPart)
-      .filter(Boolean);
-
     if (!cleanBase) return "";
+
+    if (extraSuffix) {
+      cleanSuffixes.push(cleanBareMorphPart(extraSuffix));
+    }
 
     const prefixText = cleanPrefixes.map(p => `<${p}<`).join("");
     const baseText = `[(${cleanBase})]`;
@@ -2462,1749 +2392,190 @@ Please:
     return `${prefixText}${baseText}${suffixText}`;
   }
 
-  function makeSimpleBaseRootParse(word) {
-    const cleaned = cleanMorphValue(word).trim();
-    return cleaned ? `[(${cleaned})]` : "";
-  }
-
-  function parseContainsEnding(endingLabel, parse, suffixes) {
-    const endings = String(endingLabel)
-      .split("/")
-      .map(v => v.trim().replace(/^-/, "").toLowerCase())
-      .filter(Boolean);
-
-    const text = cleanMorphValue(parse).toLowerCase();
-    const compact = text.replace(/\s+/g, "");
-
-    const suffixNorms = (suffixes || []).map(s =>
-      cleanMorphValue(s).toLowerCase().replace(/^-/, "")
-    );
-
-    return endings.some(bare => {
-      if (!bare) return false;
-      if (suffixNorms.includes(bare)) return true;
-
-      const compactPatterns = [
-        `+-${bare}`,
-        `+${bare}`,
-        `>-${bare}>`,
-        `>${bare}>`,
-        `(-${bare})`
-      ];
-
-      if (compactPatterns.some(pattern => compact.includes(pattern))) return true;
-
-      const re = new RegExp(`(^|[^a-z])[-]?${escapeRegExp(bare)}($|[^a-z])`, "i");
-      return re.test(text);
-    });
-  }
-
-  function detectLikelySurfaceInflectionOmission(row) {
-    const word = getSurfaceWordForReview(row);
-    const base = cleanMorphValue(getFirstNonEmpty(row, ["Baseword", "Baseword_1"]));
-
-    if (!word || !base) return "";
-
-    const wordLower = word.toLowerCase();
-    const baseLower = base.toLowerCase();
-
-    if (wordLower === baseLower) return "";
-
-    const parse = getExactDatabaseParse(row);
-    const suffixes = getAffixValues(row, SUFFIX_COLS);
-    const candidates = [];
-
-    function addCandidate(ending, reason) {
-      candidates.push({ ending, reason });
-    }
-
-    if (wordLower === baseLower + "ing") addCandidate("-ing", `${word} appears to be ${base} + -ing`);
-    if (baseLower.endsWith("e") && wordLower === baseLower.slice(0, -1) + "ing") addCandidate("-ing", `${word} appears to be ${base} + -ing with final-e deletion`);
-    if (wordLower === baseLower + baseLower.slice(-1) + "ing") addCandidate("-ing", `${word} appears to be ${base} + -ing with consonant doubling`);
-
-    if (wordLower === baseLower + "ed") addCandidate("-ed", `${word} appears to be ${base} + -ed`);
-    if (baseLower.endsWith("e") && wordLower === baseLower + "d") addCandidate("-ed", `${word} appears to be ${base} + -ed, written as -d after final e`);
-    if (wordLower === baseLower + baseLower.slice(-1) + "ed") addCandidate("-ed", `${word} appears to be ${base} + -ed with consonant doubling`);
-    if (baseLower.endsWith("y") && wordLower === baseLower.slice(0, -1) + "ied") addCandidate("-ed", `${word} appears to be ${base} + -ed with y-to-i change`);
-
-    if (wordLower === baseLower + "s") addCandidate("-s", `${word} appears to be ${base} + -s`);
-    if (wordLower === baseLower + "es") addCandidate("-s/-es", `${word} appears to be ${base} + -es`);
-    if (baseLower.endsWith("y") && wordLower === baseLower.slice(0, -1) + "ies") addCandidate("-s/-es", `${word} appears to be ${base} + -s/-es with y-to-i change`);
-
-    if (wordLower === baseLower + "er") addCandidate("-er", `${word} appears to be ${base} + -er`);
-    if (wordLower === baseLower + "est") addCandidate("-est", `${word} appears to be ${base} + -est`);
-
-    const missing = candidates.find(c => !parseContainsEnding(c.ending, parse, suffixes));
-    if (!missing) return "";
-
-    return `Possible omitted surface inflection: ${missing.reason}. Exact database-coded parse is "${parse || "[blank]"}"; suffix columns show "${suffixes.join(", ") || "none"}".`;
-  }
-
-  function getSurfaceReconstructionInfo(row) {
-    const word = getSurfaceWordForReview(row);
-    const parse = getExactDatabaseParse(row);
-    const notationParts = extractBAWFNotationParts(parse);
-    const columnPrefixes = getAffixValues(row, PREFIX_COLS);
-    const columnSuffixes = getAffixValues(row, SUFFIX_COLS);
-
-    const hasNotationCore =
-      notationParts.prefixes.length ||
-      notationParts.bases.length ||
-      notationParts.roots.length ||
-      notationParts.suffixes.length;
-
-    const prefixes = uniqueCleanList(hasNotationCore ? notationParts.prefixes : columnPrefixes)
-      .map(cleanBareMorphPart)
-      .filter(Boolean);
-
-    const suffixes = uniqueCleanList(hasNotationCore ? notationParts.suffixes : columnSuffixes)
-      .map(cleanBareMorphPart)
-      .filter(Boolean);
-
-    const base =
-      cleanBareMorphPart((notationParts.bases || [])[0]) ||
-      cleanBareMorphPart((notationParts.roots || [])[0]) ||
-      cleanBareMorphPart(getFirstNonEmpty(row, ["Baseword", "Baseword_1"]));
-
-    const parseYields = `${prefixes.join("")}${base}${suffixes.join("")}`;
-
-    const surfaceNorm = normalizeSurfaceForCompare(word);
-    const parseYieldsNorm = normalizeSurfaceForCompare(parseYields);
-    const lastSuffix = suffixes.length ? suffixes[suffixes.length - 1].toLowerCase() : "";
-
-    let status = "no_reconstruction";
-    let note = "";
-    let possibleCorrectedSurfaceParse = "";
-
-    if (!word || !base || !parseYields) {
-      return {
-        surface_word: word,
-        parse_yields: parseYields,
-        prefixes_used: prefixes,
-        base_used: base,
-        suffixes_used: suffixes,
-        surface_match_status: status,
-        note: "Could not reconstruct surface form from notation.",
-        possible_corrected_surface_parse: ""
-      };
-    }
-
-    if (surfaceNorm === parseYieldsNorm) {
-      status = "exact_match";
-      note = `The local reconstruction from the database parse yields "${parseYields}", which matches the surface word "${word}".`;
-    } else if (surfaceNorm === `${parseYieldsNorm}s` && lastSuffix === "ward") {
-      status = "known_suffix_s_variant";
-      const correctedSuffixes = [...suffixes];
-      correctedSuffixes[correctedSuffixes.length - 1] = "wards";
-      possibleCorrectedSurfaceParse = buildBAWFParseFromParts(prefixes, base, correctedSuffixes);
-
-      note =
-        `The local reconstruction from the database parse yields "${parseYields}", but the surface word is "${word}". ` +
-        `This is probably the -ward/-wards suffix variant or a final adverbial -s issue, not a wrong base/root. ` +
-        `If exact surface-form parsing is required, consider "${possibleCorrectedSurfaceParse}".`;
-    } else if (surfaceNorm === `${parseYieldsNorm}s` && suffixes.length) {
-      status = "possible_missing_final_s_after_suffix";
-      note =
-        `The local reconstruction from the database parse yields "${parseYields}", but the surface word is "${word}". ` +
-        `The parse may be missing a final -s after an already parsed suffix. This is a surface-spelling or inflection issue, not automatically a wrong base/root.`;
-    } else {
-      status = "mismatch";
-      note =
-        `The local reconstruction from the database parse yields "${parseYields}", but the surface word is "${word}". ` +
-        `This may indicate a parse problem, spelling-change issue, or lexicalized form requiring human review.`;
-    }
-
-    return {
-      surface_word: word,
-      parse_yields: parseYields,
-      prefixes_used: prefixes,
-      base_used: base,
-      suffixes_used: suffixes,
-      surface_match_status: status,
-      note,
-      possible_corrected_surface_parse: possibleCorrectedSurfaceParse
-    };
-  }
-
-  function detectOmittedInflectionAfterReconstruction(surfaceInfo) {
-    if (!surfaceInfo) return null;
-
-    const surface = normalizeSurfaceForCompare(surfaceInfo.surface_word);
-    const stem = normalizeSurfaceForCompare(surfaceInfo.parse_yields);
-
-    if (!surface || !stem) return null;
-    if (surface === stem) return null;
-
-    const prefixes = surfaceInfo.prefixes_used || [];
-    const base = surfaceInfo.base_used || "";
-    const suffixes = surfaceInfo.suffixes_used || [];
-
-    function makeResult(ending, reason, spellingNote = "") {
-      const suggestedParse = buildBAWFParseFromParts(prefixes, base, [...suffixes, ending]);
-
-      return {
-        ending,
-        reason,
-        spelling_note: spellingNote,
-        suggested_parse: suggestedParse
-      };
-    }
-
-    if (surface === `${stem}s`) {
-      return makeResult("s", `The database parse reconstructs "${surfaceInfo.parse_yields}", but the surface word is "${surfaceInfo.surface_word}", which appears to add final -s.`);
-    }
-
-    if (surface === `${stem}es`) {
-      return makeResult("es", `The database parse reconstructs "${surfaceInfo.parse_yields}", but the surface word is "${surfaceInfo.surface_word}", which appears to add -es.`);
-    }
-
-    if (surface === `${stem}ed`) {
-      return makeResult("ed", `The database parse reconstructs "${surfaceInfo.parse_yields}", but the surface word is "${surfaceInfo.surface_word}", which appears to add regular -ed.`);
-    }
-
-    if (stem.endsWith("e") && surface === `${stem}d`) {
-      return makeResult(
-        "ed",
-        `The database parse reconstructs "${surfaceInfo.parse_yields}", but the surface word is "${surfaceInfo.surface_word}", which appears to add regular past-tense -ed, spelled as final -d after silent e.`,
-        "The morphological suffix is -ed, but the spelling after a final e is usually just -d."
-      );
-    }
-
-    if (surface === `${stem}ing`) {
-      return makeResult("ing", `The database parse reconstructs "${surfaceInfo.parse_yields}", but the surface word is "${surfaceInfo.surface_word}", which appears to add -ing.`);
-    }
-
-    if (stem.endsWith("e") && surface === `${stem.slice(0, -1)}ing`) {
-      return makeResult(
-        "ing",
-        `The database parse reconstructs "${surfaceInfo.parse_yields}", but the surface word is "${surfaceInfo.surface_word}", which appears to add -ing with final-e deletion.`,
-        "Final silent e is usually dropped before -ing."
-      );
-    }
-
-    if (stem.endsWith("y") && surface === `${stem.slice(0, -1)}ied`) {
-      return makeResult(
-        "ed",
-        `The database parse reconstructs "${surfaceInfo.parse_yields}", but the surface word is "${surfaceInfo.surface_word}", which appears to add -ed with y-to-i spelling change.`,
-        "Final y often changes to i before -ed."
-      );
-    }
-
-    const last = stem.slice(-1);
-
-    if (last && surface === `${stem}${last}ed`) {
-      return makeResult(
-        "ed",
-        `The database parse reconstructs "${surfaceInfo.parse_yields}", but the surface word is "${surfaceInfo.surface_word}", which appears to add -ed with consonant doubling.`,
-        "Some words double the final consonant before -ed."
-      );
-    }
-
-    if (last && surface === `${stem}${last}ing`) {
-      return makeResult(
-        "ing",
-        `The database parse reconstructs "${surfaceInfo.parse_yields}", but the surface word is "${surfaceInfo.surface_word}", which appears to add -ing with consonant doubling.`,
-        "Some words double the final consonant before -ing."
-      );
-    }
-
-    return null;
-  }
-
-  function getShortFunctionBasesForSegmentation() {
-    return new Set(["a","i","am","an","as","at","be","by","do","go","he","if","in","is","it","me","my","no","of","on","or","so","to","up","us","we"]);
-  }
-
-  function getCommonSuffixesForSegmentationWarning() {
-    return new Set([
-      "s","es","ed","ing","er","est","ly","ness","ment","tion","sion","ation","ition",
-      "able","ible","al","ial","ous","ious","eous","ful","less","ize","ise","ity","ty",
-      "ic","ical","ive","ative","itive","en","ish","hood","ship","dom","ward","wards","wise","y"
-    ]);
-  }
-
-  function detectSuspiciousDatabaseSegmentation(row) {
-    const word = getSurfaceWordForReview(row);
-    const base = cleanMorphValue(getFirstNonEmpty(row, ["Baseword", "Baseword_1"]));
-
-    if (!word || !base) return "";
-
-    const wordNorm = normalizeMorphToken(word);
-    const baseNorm = normalizeMorphToken(base);
-
-    if (!wordNorm || !baseNorm) return "";
-
-    const parse = getExactDatabaseParse(row);
-    const notationParts = extractBAWFNotationParts(parse);
-
-    const notationPrefixes = notationParts.prefixes || [];
-    const notationSuffixes = notationParts.suffixes || [];
-    const columnPrefixes = getAffixValues(row, PREFIX_COLS);
-    const columnSuffixes = getAffixValues(row, SUFFIX_COLS);
-
-    const prefixes = uniqueCleanList([...notationPrefixes, ...columnPrefixes])
-      .map(normalizeMorphToken)
-      .filter(Boolean);
-
-    const notationSuffixNorms = uniqueCleanList(notationSuffixes).map(normalizeMorphToken).filter(Boolean);
-    const columnSuffixNorms = uniqueCleanList(columnSuffixes).map(normalizeMorphToken).filter(Boolean);
-
-    const reasons = [];
-    const shortFunctionBases = getShortFunctionBasesForSegmentation();
-
-    const hasLongPrefixPlusShortBase =
-      prefixes.some(prefix => prefix && prefix.length >= 4 && wordNorm === prefix + baseNorm) &&
-      (baseNorm.length <= 2 || shortFunctionBases.has(baseNorm));
-
-    if (hasLongPrefixPlusShortBase) {
-      reasons.push(
-        `Possible false prefix/base split: surface word "${word}" is analyzed with prefix "${prefixes.join(", ")}" plus very short base "${base}". The base may be leftover letters rather than a meaningful base in this word.`
-      );
-    }
-
-    if (columnSuffixNorms.length && !notationSuffixNorms.length) {
-      reasons.push(`Suffix columns list "${columnSuffixes.join(", ")}", but the exact coded parse does not show a suffix.`);
-    }
-
-    const commonSuffixes = getCommonSuffixesForSegmentationWarning();
-
-    const unusualColumnSuffixes = columnSuffixNorms.filter(suffix => {
-      if (!suffix) return false;
-      if (commonSuffixes.has(suffix)) return false;
-      if (notationSuffixNorms.includes(suffix)) return false;
-      return true;
-    });
-
-    if (unusualColumnSuffixes.length) {
-      reasons.push(`Suspicious suffix-column value: "${unusualColumnSuffixes.join(", ")}" is not a typical English suffix and may be a parsing artifact.`);
-    }
-
-    if (!reasons.length) return "";
-
-    const localSuggested = makeSimpleBaseRootParse(word);
-    return `${reasons.join(" ")} If this word is lexicalized or simplex in current English, a possible corrected BAWF parse is ${localSuggested}.`;
-  }
-
-  function detectPotentialAffixScopeAmbiguity(row) {
-    const parse = getExactDatabaseParse(row);
-    const notationParts = extractBAWFNotationParts(parse);
-
-    const prefixes = uniqueCleanList([
-      ...(notationParts.prefixes || []),
-      ...getAffixValues(row, PREFIX_COLS)
-    ]).map(x => x.toLowerCase().replace(/^-/, ""));
-
-    const suffixes = uniqueCleanList([
-      ...(notationParts.suffixes || []),
-      ...getAffixValues(row, SUFFIX_COLS)
-    ]).map(x => x.toLowerCase().replace(/^-/, ""));
-
-    const word = getSurfaceWordForReview(row);
-    const baseword = cleanMorphValue(getFirstNonEmpty(row, ["Baseword", "Baseword_1"]));
-
-    const hasUn = prefixes.includes("un");
-    const hasAble = suffixes.includes("able") || suffixes.includes("ible");
-
-    if (hasUn && hasAble) {
-      return `Potential affix-scope ambiguity: "${word || "this word"}" contains un- and -able/-ible. Depending on meaning, the analysis may be negative un- attaching to a derived adjective, roughly un-[${baseword || "base"}-able], or a prefixed verb/base followed by -able, roughly [un-${baseword || "base"}]-able. If the database records only flat morpheme sequence, the parse may be acceptable; if it records semantic scope, this should be checked.`;
-    }
-
-    return "";
-  }
-
-      function buildMorphReviewPacket(row, key) {
-    const compactRow = {};
-
-    Object.keys(row || {}).forEach(col => {
-      const val = row[col];
-
-      if (val !== null && val !== undefined && String(val).trim()) {
-        compactRow[col] = String(val).trim();
-      }
-    });
-
-    const databaseParseExact = getExactDatabaseParse(row);
-    const notationParts = extractBAWFNotationParts(databaseParseExact);
-    const surfaceWord = getSurfaceWordForReview(row);
-    const localSurfaceReconstruction = getSurfaceReconstructionInfo(row);
-    const localOmittedInflection = detectOmittedInflectionAfterReconstruction(localSurfaceReconstruction);
-    const localSuspiciousSegmentationNote = detectSuspiciousDatabaseSegmentation(row);
-
-    const localPreferredParseSuggestion =
-      localSuspiciousSegmentationNote
-        ? makeSimpleBaseRootParse(surfaceWord)
-        : (
-            (localOmittedInflection && localOmittedInflection.suggested_parse) ||
-            localSurfaceReconstruction.possible_corrected_surface_parse ||
-            ""
-          );
-
-    return {
-      dataset_key: key,
-      dataset_name: getDatasetLabel(key),
-
-      bawf_notation_guide: {
-        roots: "Roots are inside parentheses, e.g. (root).",
-        bases: "Bases/basewords are inside square brackets, e.g. [base] or [(root)].",
-        prefixes: "Prefixes appear with angle brackets before the base/root.",
-        suffixes: "Suffixes appear with angle brackets after the base/root.",
-        warning_1: "Do not treat material inside [] or () as a suffix.",
-        warning_2: "Do not wrap a whole baseword in angle brackets. Angle brackets mark affixes.",
-        warning_3: "If a word is simplex/lexicalized, a parse like [(word)] is usually preferable to <word>."
-      },
-
-      surface_word: surfaceWord,
-
-      database_baseword: cleanMorphValue(getFirstNonEmpty(row, [
-        "Baseword",
-        "Baseword_1"
-      ])),
-
-      database_parse_exact: databaseParseExact,
-      database_notation_parts_detected_locally: notationParts,
-      local_notation_interpretation: buildLocalNotationInterpretation(row),
-
-      database_root_exact: cleanMorphValue(getFirstNonEmpty(row, [
-        "GPT_Root",
-        "Root_1"
-      ])),
-
-      database_greek_latin_root_exact: cleanMorphValue(getFirstNonEmpty(row, [
-        "Greek_Latin_Root_1",
-        "Greek_Latin_Root"
-      ])),
-
-      database_prefixes_exact: getAffixValues(row, PREFIX_COLS),
-      database_suffixes_exact: getAffixValues(row, SUFFIX_COLS),
-
-      morpheme_count_excluding_inflections: cleanMorphValue(row[MORPHEME_COL_WITHOUT_INFLECTIONS]),
-      morpheme_count_including_inflections: cleanMorphValue(row[MORPHEME_COL_PLUS_INFLECTIONS]),
-
-      word_zipf: cleanMorphValue(getFirstNonEmpty(row, [
-        "Word_frq_Zipf_Recomputed",
-        "Word_frq_Zipf"
-      ])),
-
-      family_zipf: cleanMorphValue(row["Baseword_frq_Zipf"]),
-      familiarity: cleanMorphValue(row["GPT_Familiarity Brysbaert et al._ 2024"]),
-      grade_estimate: cleanMorphValue(row["Vocabulary eXpected Grade Level Flor et al._ 2024"]),
-      reading_aoa: cleanMorphValue(row["Reading AoA Green et al._ 2025"]),
-
-      local_precheck_warning: detectLikelySurfaceInflectionOmission(row),
-      local_scope_ambiguity_note: detectPotentialAffixScopeAmbiguity(row),
-      local_suspicious_segmentation_note: localSuspiciousSegmentationNote,
-      local_surface_reconstruction: localSurfaceReconstruction,
-      local_omitted_inflection_after_reconstruction: localOmittedInflection,
-      local_preferred_parse_suggestion: localPreferredParseSuggestion,
-
-      full_non_empty_row_json: compactRow
-    };
-  }
-
-  function buildMorphCheckUserPromptFromPacket(packet) {
-    return `Audit the exact BAWF database parse below.
-
-Important:
-- The current database parse is database_parse_exact.
-- Do not rewrite database_parse_exact before judging it.
-- First interpret the BAWF notation.
-- Roots are inside parentheses.
-- Basewords/bases are inside square brackets.
-- Affixes are marked with angle brackets.
-- Prefixes appear before the base/root.
-- Suffixes appear after the base/root.
-- Do not treat a root/base inside [] or () as a suffix.
-- Do not put a whole word or whole base in angle brackets. Angle brackets mark affixes.
-- Do not say the base/root is wrong merely because the surface word is longer than the base. Affixes may account for the extra letters.
-- Use local_surface_reconstruction to decide whether the parse accounts for the surface spelling.
-- If local_surface_reconstruction says exact_match, do not call the base/root wrong unless there is a separate morphological reason.
-- If local_surface_reconstruction says known_suffix_s_variant, discuss it as a suffix spelling variant or final -s issue, not as wrong_base_or_root.
-- If local_omitted_inflection_after_reconstruction is not empty, explicitly address it.
-- Missing regular inflections after an otherwise plausible parse should be called omitted_surface_inflection, not wrong_base_or_root.
-- If local_precheck_warning is not empty, explicitly address it.
-- If local_scope_ambiguity_note is not empty, explicitly address it.
-- If local_suspicious_segmentation_note is not empty, explicitly address it.
-- If local_preferred_parse_suggestion is not empty, consider whether that suggestion is better than the database parse.
-- The critical_check field must be a concrete evaluation, not a copied checklist.
-- Be helpful: state what is right, what is wrong or uncertain, and what exact revised parse would be best.
-
-BAWF parse review packet:
-${JSON.stringify(packet, null, 2)}
-
-Return only the required JSON object.`;
-  }
-
-  function normalizeParseForCompare(value) {
+  function normalizeSimpleWord(value) {
     return cleanMorphValue(value)
       .toLowerCase()
-      .replace(/\s+/g, " ")
-      .trim();
+      .replace(/[^a-z0-9]/g, "");
   }
 
-  function getMorphBadgeClass(status) {
-    if (status === "accurate" || status === "mostly_accurate") return "good";
-    if (status === "questionable" || status === "uncertain") return "warn";
-    if (status === "likely_incorrect") return "bad";
-    return "unknown";
+  function buildSimpleLocalHint(packet) {
+    const word = normalizeSimpleWord(packet.word);
+    const base = normalizeSimpleWord(packet.baseword);
+
+    if (!word || !base) return "";
+
+    const prefixes = packet.prefixes.length
+      ? packet.prefixes.map(normalizeSimpleWord)
+      : packet.notation_parts.prefixes.map(normalizeSimpleWord);
+
+    const suffixes = packet.suffixes.length
+      ? packet.suffixes.map(normalizeSimpleWord)
+      : packet.notation_parts.suffixes.map(normalizeSimpleWord);
+
+    const stem = `${prefixes.join("")}${base}${suffixes.join("")}`;
+
+    if (!stem) return "";
+
+    if (word === stem) {
+      return `Simple local check: prefix + base + suffixes reconstructs the surface word as "${stem}". The parse may be basically OK.`;
+    }
+
+    if (word === `${stem}s`) {
+      return `Simple local check: the parse reconstructs "${stem}", while the surface word is "${packet.word}". This may simply omit final -s. Possible full-surface parse: ${makeSimpleBAWFParseSuggestion(packet, "s")}`;
+    }
+
+    if (word === `${stem}es`) {
+      return `Simple local check: the parse reconstructs "${stem}", while the surface word is "${packet.word}". This may simply omit -es. Possible full-surface parse: ${makeSimpleBAWFParseSuggestion(packet, "es")}`;
+    }
+
+    if (word === `${stem}ed`) {
+      return `Simple local check: the parse reconstructs "${stem}", while the surface word is "${packet.word}". This may simply omit -ed. Possible full-surface parse: ${makeSimpleBAWFParseSuggestion(packet, "ed")}`;
+    }
+
+    if (stem.endsWith("e") && word === `${stem}d`) {
+      return `Simple local check: the parse reconstructs "${stem}", while the surface word is "${packet.word}". This looks like omitted -ed, spelled as final -d after silent e. Possible full-surface parse: ${makeSimpleBAWFParseSuggestion(packet, "ed")}`;
+    }
+
+    if (word === `${stem}ing`) {
+      return `Simple local check: the parse reconstructs "${stem}", while the surface word is "${packet.word}". This may simply omit -ing. Possible full-surface parse: ${makeSimpleBAWFParseSuggestion(packet, "ing")}`;
+    }
+
+    if (stem.endsWith("e") && word === `${stem.slice(0, -1)}ing`) {
+      return `Simple local check: the parse reconstructs "${stem}", while the surface word is "${packet.word}". This looks like omitted -ing with final-e deletion. Possible full-surface parse: ${makeSimpleBAWFParseSuggestion(packet, "ing")}`;
+    }
+
+    if (word === `${stem}s` && suffixes[suffixes.length - 1] === "ward") {
+      return `Simple local check: the parse reconstructs "${stem}", while the surface word is "${packet.word}". This may be the -ward/-wards variant, not a wrong base/root.`;
+    }
+
+    return `Simple local check: prefix + base + suffixes reconstructs "${stem}", while the surface word is "${packet.word}". Ask the AI whether this difference matters.`;
   }
 
-  function getDeterministicMorphReview(packet) {
-    return (
-      getDeterministicSimpleMorphReview(packet) ||
-      getDeterministicKnownSuffixVariantReview(packet) ||
-      getDeterministicOmittedInflectionReview(packet) ||
-      getDeterministicSuspiciousSegmentationReview(packet) ||
-      getDeterministicExactReconstructionReview(packet)
-    );
-  }
+  function buildTeacherMorphReviewPacket(row, key) {
+    const word = getSurfaceWordForReview(row);
+    const baseword = cleanMorphValue(getFirstNonEmpty(row, ["Baseword", "Baseword_1"]));
+    const exactParse = getExactDatabaseParse(row);
+    const notationParts = extractSimpleBAWFNotationParts(exactParse);
 
-  function getDeterministicSimpleMorphReview(packet) {
-    if (!packet) return null;
+    const prefixes = getAffixValues(row, PREFIX_COLS);
+    const suffixes = getAffixValues(row, SUFFIX_COLS);
 
-    const word = normalizeMorphToken(packet.surface_word);
-    const baseword = normalizeMorphToken(packet.database_baseword);
-
-    if (!word || !baseword) return null;
-    if (word !== baseword) return null;
-    if (packet.local_precheck_warning) return null;
-
-    const notationParts =
-      packet.database_notation_parts_detected_locally ||
-      extractBAWFNotationParts(packet.database_parse_exact);
-
-    const hasAffixes =
-      (notationParts.prefixes || []).length > 0 ||
-      (notationParts.suffixes || []).length > 0 ||
-      (packet.database_prefixes_exact || []).length > 0 ||
-      (packet.database_suffixes_exact || []).length > 0;
-
-    if (hasAffixes) return null;
-
-    const basesAndRoots = uniqueCleanList([
-      ...(notationParts.bases || []),
-      ...(notationParts.roots || [])
-    ]).map(normalizeMorphToken);
-
-    if (!basesAndRoots.length) return null;
-
-    const allPartsMatchWord = basesAndRoots.every(part => part === word || part === baseword);
-    if (!allPartsMatchWord) return null;
-
-    return {
-      status: "accurate",
-      confidence: "high",
-      database_parse_exact_seen: packet.database_parse_exact,
-      notation_interpretation:
-        `The database parse marks "${packet.surface_word}" as the base/root itself. No prefixes or suffixes are shown in the notation or suffix columns.`,
-      surface_spelling_check:
-        `The surface word, baseword, and coded base/root all match: "${packet.surface_word}".`,
-      critical_check:
-        `This appears to be a simplex entry. There is no evidence in this row of a missing prefix, suffix, or inflection.`,
-      suggested_parse: packet.database_parse_exact,
-      alternative_analyses: [],
-      parse_mismatch: "none",
-      issues: [],
-      explanation: "The parse is appropriate for a simple unsegmented word.",
-      teaching_note: "Do not force an affix analysis for a simple high-frequency word.",
-      recommended_action: "keep"
+    const packet = {
+      dataset: getDatasetLabel(key),
+      word,
+      baseword,
+      exact_database_parse: exactParse,
+      root: cleanMorphValue(getFirstNonEmpty(row, ["GPT_Root", "Root_1", "Greek_Latin_Root_1", "Greek_Latin_Root"])),
+      prefixes,
+      suffixes,
+      notation_parts: notationParts,
+      morpheme_count_without_inflections: cleanMorphValue(row[MORPHEME_COL_WITHOUT_INFLECTIONS]),
+      morpheme_count_with_inflections: cleanMorphValue(row[MORPHEME_COL_PLUS_INFLECTIONS])
     };
+
+    packet.simple_local_hint = buildSimpleLocalHint(packet);
+
+    return packet;
   }
 
-  function getDeterministicExactReconstructionReview(packet) {
-    if (!packet || !packet.local_surface_reconstruction) return null;
-    if (packet.local_scope_ambiguity_note) return null;
-    if (packet.local_suspicious_segmentation_note) return null;
+  function buildTeacherMorphReviewPrompt(packet) {
+    return `Please review this BAWF morphological parse for a teacher.
 
-    const info = packet.local_surface_reconstruction;
-    if (info.surface_match_status !== "exact_match") return null;
+Do not overcomplicate the answer. Be helpful, practical, and brief.
 
-    return {
-      status: "accurate",
-      confidence: "high",
-      database_parse_exact_seen: packet.database_parse_exact,
-      notation_interpretation: packet.local_notation_interpretation || "",
-      surface_spelling_check: info.note,
-      critical_check:
-        `The local reconstruction matches the surface word. The listed base/root and affixes appear internally consistent with the database notation.`,
-      suggested_parse: packet.database_parse_exact,
-      alternative_analyses: [],
-      parse_mismatch: "none",
-      issues: [],
-      explanation:
-        `The coded parse reconstructs "${info.parse_yields}", matching the surface word "${info.surface_word}".`,
-      teaching_note:
-        "This appears to be a reasonable morphological parse based on the database notation.",
-      recommended_action: "keep"
-    };
+BAWF notation reminder:
+- (root) means root.
+- [base] or [(root)] means base/baseword.
+- <prefix< means prefix before the base.
+- >suffix> means suffix after the base.
+- Material inside [] or () is not a suffix.
+
+Database row:
+Word: ${packet.word}
+Baseword: ${packet.baseword}
+Exact database parse: ${packet.exact_database_parse}
+Root column: ${packet.root || "none listed"}
+Prefix columns: ${packet.prefixes.length ? packet.prefixes.join(", ") : "none listed"}
+Suffix columns: ${packet.suffixes.length ? packet.suffixes.join(", ") : "none listed"}
+Parts detected from notation:
+- Prefixes: ${packet.notation_parts.prefixes.length ? packet.notation_parts.prefixes.join(", ") : "none"}
+- Bases: ${packet.notation_parts.bases.length ? packet.notation_parts.bases.join(", ") : "none"}
+- Roots: ${packet.notation_parts.roots.length ? packet.notation_parts.roots.join(", ") : "none"}
+- Suffixes: ${packet.notation_parts.suffixes.length ? packet.notation_parts.suffixes.join(", ") : "none"}
+
+Morpheme count excluding inflections: ${packet.morpheme_count_without_inflections || "not listed"}
+Morpheme count including inflections: ${packet.morpheme_count_with_inflections || "not listed"}
+
+Local hint:
+${packet.simple_local_hint || "No obvious local issue detected."}
+
+Please answer in this exact teacher-friendly format:
+
+Quick judgment:
+Current parse means:
+Possible issue:
+Possible alternative(s):
+Teacher note:`;
   }
 
-  function getDeterministicKnownSuffixVariantReview(packet) {
-    if (!packet || !packet.local_surface_reconstruction) return null;
-
-    const info = packet.local_surface_reconstruction;
-
-    if (info.surface_match_status !== "known_suffix_s_variant") return null;
-
-    const suggested = info.possible_corrected_surface_parse || packet.database_parse_exact;
-
-    return {
-      status: "mostly_accurate",
-      confidence: "medium",
-      database_parse_exact_seen: packet.database_parse_exact,
-      notation_interpretation:
-        packet.local_notation_interpretation ||
-        `The parse marks "${info.base_used}" as the base/root and "${info.suffixes_used.join(", ")}" as suffix material.`,
-      surface_spelling_check: info.note,
-      critical_check:
-        `The base/root "${info.base_used}" is not necessarily wrong. The parse reconstructs "${info.parse_yields}", and the surface word is "${info.surface_word}". The main issue is the -ward/-wards surface variant or final adverbial -s, not the identity of the base/root.`,
-      suggested_parse: suggested,
-      alternative_analyses: [
-        `Keep ${packet.database_parse_exact} if the database intentionally normalizes the suffix family under -ward.`,
-        `Revise to ${suggested} if the database is intended to encode the exact surface suffix -wards.`
-      ],
-      parse_mismatch: "suffix_spelling_variant_or_final_s",
-      issues: [
-        `The parse accounts for "${info.parse_yields}" but the surface word is "${info.surface_word}".`,
-        `This should not be classified as wrong_base_or_root unless there is independent evidence that "${info.base_used}" is not the intended base/root.`
-      ],
-      explanation:
-        `The database parse is structurally plausible, but it may not fully encode the final -s in the surface form. In English, -ward and -wards are closely related adverbial suffix forms.`,
-      teaching_note:
-        `This is a useful case for teaching that a word can have a valid base plus suffix analysis even when the surface spelling has a variant ending.`,
-      recommended_action: "keep_but_note_ambiguity"
-    };
-  }
-
-  function getDeterministicOmittedInflectionReview(packet) {
-    if (!packet || !packet.local_omitted_inflection_after_reconstruction) return null;
-
-    const info = packet.local_surface_reconstruction;
-    const omitted = packet.local_omitted_inflection_after_reconstruction;
-
-    if (!info || !omitted) return null;
-
-    return {
-      status: "mostly_accurate",
-      confidence: "medium",
-      database_parse_exact_seen: packet.database_parse_exact,
-      notation_interpretation:
-        packet.local_notation_interpretation ||
-        `The parse marks "${info.base_used}" as the base/root with prefixes ${info.prefixes_used.join(", ") || "none"} and suffixes ${info.suffixes_used.join(", ") || "none"}.`,
-      surface_spelling_check: omitted.reason,
-      critical_check:
-        `The base/root and derivational parse are plausible. The main issue is that the exact coded parse reconstructs "${info.parse_yields}", while the surface word is "${info.surface_word}". This is best classified as an omitted surface inflection, not as a wrong base/root.`,
-      suggested_parse:
-        omitted.suggested_parse || packet.local_preferred_parse_suggestion || packet.database_parse_exact,
-      alternative_analyses: [
-        `Keep ${packet.database_parse_exact} if this database field intentionally excludes inflectional endings.`,
-        `Use ${omitted.suggested_parse} if this field is intended to encode the full surface-word parse.`
-      ],
-      parse_mismatch: "omitted_surface_inflection",
-      issues: [
-        omitted.reason,
-        omitted.spelling_note || "The database parse appears to omit an inflectional ending."
-      ].filter(Boolean),
-      explanation:
-        "The stored parse is not necessarily morphologically wrong. It captures the base/derivational structure, but it does not fully represent the surface form. The appropriate correction depends on whether BAWF stores inflections in this parse field.",
-      teaching_note:
-        `This is a useful distinction for instruction: "${info.surface_word}" can be analyzed as the parsed stem/base plus an inflectional suffix ${omitted.ending}.`,
-      recommended_action: "keep_but_note_ambiguity"
-    };
-  }
-
-  function getDeterministicSuspiciousSegmentationReview(packet) {
-    if (!packet || !packet.local_suspicious_segmentation_note) return null;
-
-    const suggested =
-      packet.local_preferred_parse_suggestion ||
-      makeSimpleBaseRootParse(packet.surface_word);
-
-    return {
-      status: "likely_incorrect",
-      confidence: "medium",
-      database_parse_exact_seen: packet.database_parse_exact,
-      notation_interpretation: packet.local_notation_interpretation || "",
-      surface_spelling_check:
-        packet.local_surface_reconstruction
-          ? packet.local_surface_reconstruction.note
-          : "Surface reconstruction unavailable.",
-      critical_check:
-        `The row has a suspicious segmentation. ${packet.local_suspicious_segmentation_note}`,
-      suggested_parse: suggested,
-      alternative_analyses: [
-        `Revise to ${suggested} if the word is best treated as a lexicalized/simplex base in current English.`,
-        "Flag for human review if a specialist wants to preserve an etymological or historical segmentation."
-      ],
-      parse_mismatch: "wrong_base_or_root",
-      issues: [
-        packet.local_suspicious_segmentation_note
-      ],
-      explanation:
-        "The database appears to split the surface word into a prefix plus a very short base or contains an unusual suffix-column artifact. This should be checked rather than accepted automatically.",
-      teaching_note:
-        "Do not split a word merely because a letter sequence resembles a prefix. The remaining base must be meaningful in the word.",
-      recommended_action: "flag_for_human_review"
-    };
-  }
-
-  /*
-    This deliberately returns null.
-    We do NOT want to auto-approve every parse that reconstructs the surface form,
-    because the AI should still be able to critique affix choice, root choice,
-    etymology, and semantic scope. Simple words, missing inflections, and known
-    -ward/-wards cases are handled locally above.
-  */
-  function getDeterministicExactReconstructionReview(packet) {
-    return null;
-  }
-
-  function tokenizeMorphWords(text) {
-    return String(text || "")
-      .toLowerCase()
-      .match(/[a-z][a-z'-]*/g) || [];
-  }
-
-  function getCommonMorphWordsToIgnore() {
-    return new Set([
-      "prefix",
-      "prefixes",
-      "suffix",
-      "suffixes",
-      "root",
-      "roots",
-      "base",
-      "bases",
-      "baseword",
-      "word",
-      "words",
-      "morpheme",
-      "morphemes",
-      "bound",
-      "free",
-      "compound",
-      "inflection",
-      "inflections",
-      "inflectional",
-      "derivation",
-      "derivational",
-      "parse",
-      "parsed",
-      "notation",
-      "current",
-      "database",
-      "surface",
-      "suggested",
-      "accurate",
-      "questionable",
-      "incorrect",
-      "uncertain",
-      "none",
-      "listed",
-      "shown",
-      "shows",
-      "does",
-      "not",
-      "and",
-      "or",
-      "but",
-      "with",
-      "without",
-      "from",
-      "into",
-      "itself",
-      "it",
-      "this",
-      "that",
-      "the",
-      "a",
-      "an",
-      "as",
-      "is",
-      "are",
-      "be",
-      "because",
-      "evidence",
-      "entry",
-      "row",
-      "review",
-      "likely",
-      "plausible",
-      "possible",
-      "meaning",
-      "means",
-      "marked",
-      "marks",
-      "material",
-      "form",
-      "forms",
-      "morphology",
-      "morphological",
-      "analysis",
-      "analyses"
-    ]);
-  }
-
-  function getCommonRealAffixes() {
-    return new Set([
-      "s",
-      "es",
-      "ed",
-      "ing",
-      "er",
-      "est",
-      "ly",
-      "ness",
-      "ment",
-      "tion",
-      "sion",
-      "ation",
-      "ition",
-      "able",
-      "ible",
-      "al",
-      "ial",
-      "ous",
-      "ious",
-      "eous",
-      "ful",
-      "less",
-      "ize",
-      "ise",
-      "ity",
-      "ty",
-      "ic",
-      "ical",
-      "ive",
-      "ative",
-      "itive",
-      "en",
-      "ish",
-      "hood",
-      "ship",
-      "dom",
-      "ward",
-      "wards",
-      "wise",
-      "y",
-      "un",
-      "re",
-      "pre",
-      "dis",
-      "mis",
-      "over",
-      "under",
-      "sub",
-      "super",
-      "anti",
-      "inter",
-      "intra",
-      "non",
-      "micro",
-      "macro",
-      "trans",
-      "de",
-      "in",
-      "im",
-      "il",
-      "ir"
-    ]);
-  }
-
-  function toReviewText(value) {
-    if (value === null || value === undefined) return "";
-
-    if (Array.isArray(value)) {
-      return value.map(item => toReviewText(item)).join(" ");
-    }
-
-    if (typeof value === "object") {
-      try {
-        return JSON.stringify(value);
-      } catch {
-        return String(value);
-      }
-    }
-
-    return String(value);
-  }
-
-  function detectLexicalIntrusionByAI(parsed, context) {
-    if (!parsed || !context || !context.parse_packet) return "";
-
-    const packet = context.parse_packet;
-
-    const notationParts =
-      packet.database_notation_parts_detected_locally ||
-      extractBAWFNotationParts(packet.database_parse_exact);
-
-    const allowedSourceValues = [
-      packet.surface_word,
-      packet.database_baseword,
-      packet.database_parse_exact,
-      packet.database_root_exact,
-      packet.database_greek_latin_root_exact,
-      ...(packet.database_prefixes_exact || []),
-      ...(packet.database_suffixes_exact || []),
-      ...(notationParts.prefixes || []),
-      ...(notationParts.suffixes || []),
-      ...(notationParts.bases || []),
-      ...(notationParts.roots || [])
-    ];
-
-    const allowedTokens = new Set(
-      tokenizeMorphWords(allowedSourceValues.join(" "))
-        .map(normalizeMorphToken)
-        .filter(Boolean)
-    );
-
-    const surface = normalizeMorphToken(packet.surface_word);
-    const baseword = normalizeMorphToken(packet.database_baseword);
-    const commonMorphWords = getCommonMorphWordsToIgnore();
-    const commonRealAffixes = getCommonRealAffixes();
-
-    const suggested = String(parsed.suggested_parse || "");
-    if (!suggested.trim()) return "";
-
-    const tokens = tokenizeMorphWords(suggested)
-      .map(normalizeMorphToken)
-      .filter(Boolean);
-
-    const intruders = [];
-
-    for (const token of tokens) {
-      if (token.length < 3) continue;
-      if (commonMorphWords.has(token)) continue;
-      if (commonRealAffixes.has(token)) continue;
-      if (allowedTokens.has(token)) continue;
-
-      if (surface && surface.includes(token)) continue;
-      if (baseword && baseword.includes(token)) continue;
-
-      let allowedByOverlap = false;
-
-      for (const allowed of allowedTokens) {
-        if (!allowed) continue;
-
-        if (allowed.includes(token) || token.includes(allowed)) {
-          allowedByOverlap = true;
-          break;
-        }
-      }
-
-      if (!allowedByOverlap) {
-        intruders.push(token);
-      }
-    }
-
-    const uniqueIntruders = Array.from(new Set(intruders));
-
-    if (!uniqueIntruders.length) return "";
-
-    return `AI suggested parse contains word parts not found in the current row or surface word: ${uniqueIntruders.join(", ")}. This may be example leakage or hallucination.`;
-  }
-
-  function detectAIWrongSurfaceWordMention(parsed, context) {
-    if (!parsed || !context || !context.parse_packet) return "";
-
-    const packet = context.parse_packet;
-    const currentWord = normalizeMorphToken(packet.surface_word);
-    const currentBase = normalizeMorphToken(packet.database_baseword);
-
-    if (!currentWord) return "";
-
-    const aiText = [
-      parsed.notation_interpretation,
-      parsed.surface_spelling_check,
-      parsed.critical_check,
-      parsed.explanation,
-      parsed.teaching_note,
-      Array.isArray(parsed.issues) ? parsed.issues.join(" ") : ""
-    ].join(" ");
-
-    const matches = Array.from(
-      aiText.matchAll(/\bword\s+['"“”‘’`]([a-z][a-z'-]*)['"“”‘’`]/gi)
-    );
-
-    for (const match of matches) {
-      const mentioned = normalizeMorphToken(match[1]);
-
-      if (
-        mentioned &&
-        mentioned !== currentWord &&
-        mentioned !== currentBase
-      ) {
-        return `AI appears to be discussing a different word "${match[1]}" instead of the current word "${packet.surface_word}".`;
-      }
-    }
-
-    return "";
-  }
-
-  function detectLikelyNotationMisreadByAI(parsed, context) {
-    if (!parsed || !context || !context.parse_packet) return "";
-
-    const packet = context.parse_packet;
-    const parse = packet.database_parse_exact || "";
-    const notationParts = extractBAWFNotationParts(parse);
-
-    const aiText = [
-      parsed.notation_interpretation,
-      parsed.surface_spelling_check,
-      parsed.critical_check,
-      parsed.suggested_parse,
-      parsed.parse_mismatch,
-      parsed.explanation,
-      parsed.teaching_note,
-      Array.isArray(parsed.issues) ? parsed.issues.join(" ") : ""
-    ].join(" ").toLowerCase();
-
-    const protectedBaseRootParts = uniqueCleanList([
-      ...(notationParts.roots || []),
-      ...(notationParts.bases || []),
-      packet.database_baseword,
-      packet.database_root_exact
-    ]).map(x => x.toLowerCase());
-
-    for (const part of protectedBaseRootParts) {
-      if (!part) continue;
-
-      const saysPartIsSuffix =
-        aiText.includes(`-${part} suffix`) ||
-        aiText.includes(`suffix -${part}`) ||
-        aiText.includes(`suffix (${part})`) ||
-        aiText.includes(`visible suffix -${part}`);
-
-      if (saysPartIsSuffix) {
-        return `AI appears to have misread "${part}" as a suffix, but in the database notation it is a base/root, not a suffix.`;
-      }
-    }
-
-    return "";
-  }
-
-  function detectInvalidSuggestedBAWFNotation(parsed, context) {
-    if (!parsed || !context || !context.parse_packet) return "";
-
-    const suggested = cleanMorphValue(parsed.suggested_parse || "");
-    if (!suggested) return "";
-
-    const packet = context.parse_packet;
-    const surface = cleanMorphValue(packet.surface_word || "");
-    const compactSuggested = suggested.replace(/\s+/g, "");
-    const hasBaseOrRootMarkers = /[\[\]\(\)]/.test(compactSuggested);
-    const singleAngleWrapped = compactSuggested.match(/^<([^<>]+)>$/);
-
-    if (singleAngleWrapped && !hasBaseOrRootMarkers) {
-      return `AI suggested "${suggested}", but in BAWF notation angle brackets mark affixes. A whole-word/base parse should include [] and/or (), for example ${surface ? makeSimpleBaseRootParse(surface) : "[(word)]"}.`;
-    }
-
-    return "";
-  }
-
-  function detectAIConfusedBaseWithSurface(parsed, context) {
-    if (!parsed || !context || !context.parse_packet) return "";
-
-    const packet = context.parse_packet;
-    const info = packet.local_surface_reconstruction;
-
-    if (!info) return "";
-
-    const status = String(parsed.status || "").toLowerCase();
-    const mismatch = String(parsed.parse_mismatch || "").toLowerCase();
-
-    const aiText = [
-      parsed.critical_check,
-      parsed.explanation,
-      parsed.teaching_note,
-      Array.isArray(parsed.issues) ? parsed.issues.join(" ") : ""
-    ].join(" ").toLowerCase();
-
-    const localSaysMostlyCovered =
-      info.surface_match_status === "exact_match" ||
-      info.surface_match_status === "known_suffix_s_variant" ||
-      info.surface_match_status === "possible_missing_final_s_after_suffix";
-
-    if (!localSaysMostlyCovered) return "";
-
-    if (
-      mismatch === "wrong_base_or_root" ||
-      (
-        status === "likely_incorrect" &&
-        aiText.includes("base") &&
-        aiText.includes("surface word")
-      )
-    ) {
-      return `AI may be confusing base/root mismatch with surface-word length. Local reconstruction yields "${info.parse_yields}" for surface "${info.surface_word}", so the issue is not automatically wrong_base_or_root.`;
-    }
-
-    return "";
-  }
-
-  function detectAIOverstatesOmittedInflection(parsed, context) {
-    if (!parsed || !context || !context.parse_packet) return "";
-
-    const omitted =
-      context.parse_packet.local_omitted_inflection_after_reconstruction;
-
-    if (!omitted) return "";
-
-    const status = String(parsed.status || "").toLowerCase();
-    const mismatch = String(parsed.parse_mismatch || "").toLowerCase();
-
-    if (status === "likely_incorrect" || mismatch === "wrong_base_or_root") {
-      return `AI may be overstating the problem. Local reconstruction suggests the base/derivational parse is plausible and mainly omits the surface inflection ${omitted.ending}.`;
-    }
-
-    return "";
-  }
-
-  function cleanAIJSONContent(content) {
-    let text = String(content || "").trim();
-
-    text = text
-      .replace(/^\s*```json\s*/i, "")
-      .replace(/^\s*```\s*/i, "")
+  function cleanTeacherReviewText(text) {
+    let cleaned = String(text || "").trim();
+
+    cleaned = cleaned
+      .replace(/^\s*```(?:json|text|markdown)?\s*/i, "")
       .replace(/\s*```\s*$/i, "")
       .trim();
 
-    text = text
-      .replace(/[“”]/g, '"')
-      .replace(/[‘’]/g, "'")
-      .trim();
-
-    return text;
+    return cleaned;
   }
 
-  function parseJSONCandidate(candidate) {
-    const text = String(candidate || "").trim();
+  function extractLLMText(data) {
+    if (!data) return "";
 
-    if (!text) return null;
+    if (data.choices && data.choices[0] && data.choices[0].message) {
+      return String(data.choices[0].message.content || "").trim();
+    }
 
-    try {
-      return JSON.parse(text);
-    } catch {}
+    if (typeof data.content === "string") {
+      return data.content.trim();
+    }
 
-    const withoutTrailingCommas = text.replace(/,\s*([}\]])/g, "$1");
+    if (typeof data.response === "string") {
+      return data.response.trim();
+    }
 
-    try {
-      return JSON.parse(withoutTrailingCommas);
-    } catch {}
+    if (typeof data.text === "string") {
+      return data.text.trim();
+    }
 
-    return null;
+    return JSON.stringify(data, null, 2);
   }
 
-  function extractBalancedJSONObject(text) {
-    const s = String(text || "");
-    let start = s.indexOf("{");
-
-    while (start !== -1) {
-      let depth = 0;
-      let inString = false;
-      let escaped = false;
-
-      for (let i = start; i < s.length; i++) {
-        const ch = s[i];
-
-        if (escaped) {
-          escaped = false;
-          continue;
-        }
-
-        if (ch === "\\" && inString) {
-          escaped = true;
-          continue;
-        }
-
-        if (ch === '"') {
-          inString = !inString;
-          continue;
-        }
-
-        if (inString) continue;
-
-        if (ch === "{") depth++;
-
-        if (ch === "}") {
-          depth--;
-
-          if (depth === 0) {
-            return s.slice(start, i + 1);
-          }
-        }
-      }
-
-      start = s.indexOf("{", start + 1);
-    }
-
-    return "";
-  }
-
-  function tryParseAIJSON(content) {
-    const cleaned = cleanAIJSONContent(content);
-
-    let parsed = parseJSONCandidate(cleaned);
-    if (parsed) return parsed;
-
-    const balanced = extractBalancedJSONObject(cleaned);
-    if (balanced) {
-      parsed = parseJSONCandidate(balanced);
-      if (parsed) return parsed;
-    }
-
-    return null;
-  }
-
-  const ALLOWED_MORPH_STATUSES = new Set([
-    "accurate",
-    "mostly_accurate",
-    "questionable",
-    "likely_incorrect",
-    "uncertain"
-  ]);
-
-  const ALLOWED_MORPH_CONFIDENCE = new Set([
-    "high",
-    "medium",
-    "low"
-  ]);
-
-  const ALLOWED_MORPH_MISMATCHES = new Set([
-    "none",
-    "omitted_surface_inflection",
-    "suffix_spelling_variant_or_final_s",
-    "omitted_derivational_affix",
-    "wrong_base_or_root",
-    "wrong_affix",
-    "affix_scope_ambiguous",
-    "unclear_notation",
-    "invalid_suggested_notation",
-    "notation_misread",
-    "hallucinated_unrelated_word",
-    "other",
-    "uncertain"
-  ]);
-
-  const ALLOWED_MORPH_ACTIONS = new Set([
-    "keep",
-    "keep_but_note_ambiguity",
-    "revise",
-    "flag_for_human_review",
-    "uncertain"
-  ]);
-
-  function normalizeEnumValue(value, allowedSet, fallback) {
-    const cleaned = String(value || "")
-      .trim()
-      .toLowerCase()
-      .replace(/\s+/g, "_")
-      .replace(/-/g, "_");
-
-    return allowedSet.has(cleaned) ? cleaned : fallback;
-  }
-
-  function inferReviewStatusFromText(text) {
-    const t = String(text || "").toLowerCase();
-
-    if (/likely[_\s-]*incorrect|incorrect|wrong|error|revise|bad parse|not plausible/.test(t)) {
-      return "likely_incorrect";
-    }
-
-    if (/questionable|unclear|problem|issue|flag|human review/.test(t)) {
-      return "questionable";
-    }
-
-    if (/mostly[_\s-]*accurate|mostly correct|partly correct|partially correct/.test(t)) {
-      return "mostly_accurate";
-    }
-
-    if (/accurate|correct|reasonable|plausible/.test(t)) {
-      return "accurate";
-    }
-
-    return "uncertain";
-  }
-
-  function inferReviewConfidenceFromText(text) {
-    const t = String(text || "").toLowerCase();
-
-    if (/\bhigh confidence\b|confidence:\s*high/.test(t)) return "high";
-    if (/\bmedium confidence\b|confidence:\s*medium/.test(t)) return "medium";
-    if (/\blow confidence\b|confidence:\s*low/.test(t)) return "low";
-
-    return "low";
-  }
-
-  function inferMismatchFromText(text) {
-    const t = String(text || "").toLowerCase();
-
-    if (/scope|attachment/.test(t)) return "affix_scope_ambiguous";
-    if (/ward|wards|final -s|final s/.test(t)) return "suffix_spelling_variant_or_final_s";
-    if (/missing.*inflection|omitted.*inflection|missing.*-ing|missing.*-ed|missing.*-s/.test(t)) return "omitted_surface_inflection";
-    if (/wrong.*base|wrong.*root|base.*wrong|root.*wrong/.test(t)) return "wrong_base_or_root";
-    if (/wrong.*affix|affix.*wrong/.test(t)) return "wrong_affix";
-    if (/unclear.*notation|notation.*unclear/.test(t)) return "unclear_notation";
-    if (/hallucinat|unrelated word|different word/.test(t)) return "hallucinated_unrelated_word";
-    if (/accurate|correct|plausible|reasonable/.test(t)) return "none";
-
-    return "uncertain";
-  }
-
-  function forceArrayOfStrings(value) {
-    if (Array.isArray(value)) {
-      return value
-        .map(item => toReviewText(item).trim())
-        .filter(Boolean);
-    }
-
-    if (value === null || value === undefined) return [];
-
-    const text = String(value).trim();
-
-    if (!text) return [];
-    if (/^(none|none provided|n\/a)$/i.test(text)) return [];
-
-    return text
-      .split(/\n+/)
-      .map(x => x.replace(/^[-*•\d.)\s]+/, "").trim())
-      .filter(Boolean);
-  }
-
-  function getContextDBParse(context) {
-    return context &&
-      context.parse_packet &&
-      context.parse_packet.database_parse_exact
-        ? context.parse_packet.database_parse_exact
-        : "";
-  }
-
-  function getContextNotation(context) {
-    return context &&
-      context.parse_packet &&
-      context.parse_packet.local_notation_interpretation
-        ? context.parse_packet.local_notation_interpretation
-        : "";
-  }
-
-  function getContextSurfaceCheck(context) {
-    return context &&
-      context.parse_packet &&
-      context.parse_packet.local_surface_reconstruction &&
-      context.parse_packet.local_surface_reconstruction.note
-        ? context.parse_packet.local_surface_reconstruction.note
-        : "";
-  }
-
-  function createFallbackReviewFromText(rawText, context) {
-    const dbParse = getContextDBParse(context);
-    const notation = getContextNotation(context);
-    const surfaceCheck = getContextSurfaceCheck(context);
-
-    const status = inferReviewStatusFromText(rawText);
-    const confidence = inferReviewConfidenceFromText(rawText);
-    const mismatch = inferMismatchFromText(rawText);
-
-    const suggested =
-      context &&
-      context.parse_packet &&
-      context.parse_packet.local_preferred_parse_suggestion
-        ? context.parse_packet.local_preferred_parse_suggestion
-        : dbParse;
-
-    return {
-      status,
-      confidence,
-      database_parse_exact_seen: dbParse,
-      notation_interpretation: notation,
-      surface_spelling_check: surfaceCheck,
-      critical_check:
-        "The AI did not return valid JSON. This is an automatic fallback display using the raw AI output below.",
-      suggested_parse: suggested || "",
-      alternative_analyses: [],
-      parse_mismatch: mismatch,
-      issues: [
-        "AI returned non-JSON or malformed JSON.",
-        "Read the raw AI output in the explanation field before accepting this review."
-      ],
-      explanation: `Raw AI output:\n${String(rawText || "").trim()}`,
-      teaching_note:
-        "Because the AI response was not valid JSON, treat this review as advisory only and consider opening the prompt manually.",
-      recommended_action: "flag_for_human_review",
-      __fallback_from_unstructured: true
-    };
-  }
-
-  function normalizeMorphReview(parsed, rawText, context) {
-    if (!parsed || typeof parsed !== "object" || Array.isArray(parsed)) {
-      return createFallbackReviewFromText(rawText, context);
-    }
-
-    const rawAllText = toReviewText(parsed) + "\n" + String(rawText || "");
-
-    const dbParse = getContextDBParse(context);
-    const notation = getContextNotation(context);
-    const surfaceCheck = getContextSurfaceCheck(context);
-
-    const review = {
-      status: normalizeEnumValue(
-        parsed.status,
-        ALLOWED_MORPH_STATUSES,
-        inferReviewStatusFromText(rawAllText)
-      ),
-
-      confidence: normalizeEnumValue(
-        parsed.confidence,
-        ALLOWED_MORPH_CONFIDENCE,
-        inferReviewConfidenceFromText(rawAllText)
-      ),
-
-      database_parse_exact_seen:
-        cleanMorphValue(
-          parsed.database_parse_exact_seen ||
-          parsed.current_parse ||
-          dbParse
-        ),
-
-      notation_interpretation:
-        String(parsed.notation_interpretation || notation || "").trim(),
-
-      surface_spelling_check:
-        String(parsed.surface_spelling_check || surfaceCheck || "").trim(),
-
-      critical_check:
-        String(parsed.critical_check || "").trim(),
-
-      suggested_parse:
-        cleanMorphValue(parsed.suggested_parse || ""),
-
-      alternative_analyses:
-        forceArrayOfStrings(parsed.alternative_analyses),
-
-      parse_mismatch: normalizeEnumValue(
-        parsed.parse_mismatch,
-        ALLOWED_MORPH_MISMATCHES,
-        inferMismatchFromText(rawAllText)
-      ),
-
-      issues:
-        forceArrayOfStrings(parsed.issues),
-
-      explanation:
-        String(parsed.explanation || "").trim(),
-
-      teaching_note:
-        String(parsed.teaching_note || "").trim(),
-
-      recommended_action: normalizeEnumValue(
-        parsed.recommended_action,
-        ALLOWED_MORPH_ACTIONS,
-        "uncertain"
-      )
-    };
-
-    if (!review.critical_check) {
-      review.critical_check = "The AI returned valid JSON but did not provide a critical_check field.";
-    }
-
-    if (!review.explanation) {
-      review.explanation = "No explanation provided by the AI.";
-    }
-
-    return review;
-  }
-
-  function getMorphReviewReliability(parsed, context) {
-    const reasons = [];
-
-    if (parsed && parsed.__fallback_from_unstructured) {
-      reasons.push("AI returned non-JSON or malformed JSON; fallback display was generated.");
-    }
-
-    const dbParse =
-      context &&
-      context.parse_packet &&
-      context.parse_packet.database_parse_exact
-        ? context.parse_packet.database_parse_exact
-        : "";
-
-    const aiEcho =
-      parsed.database_parse_exact_seen ||
-      parsed.current_parse ||
-      "";
-
-    if (dbParse && !aiEcho) {
-      reasons.push("AI did not echo the exact database parse.");
-    } else if (
-      dbParse &&
-      aiEcho &&
-      normalizeParseForCompare(dbParse) !== normalizeParseForCompare(aiEcho)
-    ) {
-      reasons.push("AI echoed a different parse from the exact database parse.");
-    }
-
-    const localWarning =
-      context &&
-      context.parse_packet &&
-      context.parse_packet.local_precheck_warning
-        ? context.parse_packet.local_precheck_warning
-        : "";
-
-    const localScopeNote =
-      context &&
-      context.parse_packet &&
-      context.parse_packet.local_scope_ambiguity_note
-        ? context.parse_packet.local_scope_ambiguity_note
-        : "";
-
-    const localSuspiciousSegmentationNote =
-      context &&
-      context.parse_packet &&
-      context.parse_packet.local_suspicious_segmentation_note
-        ? context.parse_packet.local_suspicious_segmentation_note
-        : "";
-
-    const status = String(parsed.status || "").toLowerCase();
-    const mismatch = String(parsed.parse_mismatch || "").toLowerCase();
-
-    const issuesText = Array.isArray(parsed.issues)
-      ? parsed.issues.join(" ").toLowerCase()
-      : "";
-
-    const aiAllText = [
-      parsed.notation_interpretation,
-      parsed.surface_spelling_check,
-      parsed.critical_check,
-      parsed.suggested_parse,
-      toReviewText(parsed.alternative_analyses),
-      parsed.parse_mismatch,
-      parsed.explanation,
-      parsed.teaching_note,
-      parsed.recommended_action,
-      toReviewText(parsed.issues)
-    ].join(" ").toLowerCase();
-
-    if (
-      localWarning &&
-      status === "accurate" &&
-      (!mismatch || mismatch === "none") &&
-      !issuesText.includes("inflection") &&
-      !issuesText.includes("suffix")
-    ) {
-      reasons.push("AI appears to have ignored the local pre-check warning about a possible omitted surface inflection.");
-    }
-
-    if (
-      localScopeNote &&
-      !aiAllText.includes("scope") &&
-      !aiAllText.includes("ambig") &&
-      !aiAllText.includes("alternative")
-    ) {
-      reasons.push("AI appears to have ignored the local affix-scope ambiguity note.");
-    }
-
-    if (
-      localSuspiciousSegmentationNote &&
-      !aiAllText.includes("false") &&
-      !aiAllText.includes("suspicious") &&
-      !aiAllText.includes("short") &&
-      !aiAllText.includes("leftover") &&
-      !aiAllText.includes("artifact") &&
-      !aiAllText.includes("lexicalized") &&
-      !aiAllText.includes("simplex") &&
-      !aiAllText.includes("revise") &&
-      !aiAllText.includes("incorrect")
-    ) {
-      reasons.push("AI appears to have ignored the local suspicious segmentation note.");
-    }
-
-    const notationMisread = detectLikelyNotationMisreadByAI(parsed, context);
-    if (notationMisread) reasons.push(notationMisread);
-
-    const lexicalIntrusion = detectLexicalIntrusionByAI(parsed, context);
-    if (lexicalIntrusion) reasons.push(lexicalIntrusion);
-
-    const wrongWordMention = detectAIWrongSurfaceWordMention(parsed, context);
-    if (wrongWordMention) reasons.push(wrongWordMention);
-
-    const invalidSuggestedNotation = detectInvalidSuggestedBAWFNotation(parsed, context);
-    if (invalidSuggestedNotation) reasons.push(invalidSuggestedNotation);
-
-    const confusedBaseSurface = detectAIConfusedBaseWithSurface(parsed, context);
-    if (confusedBaseSurface) reasons.push(confusedBaseSurface);
-
-    const overstatedInflection = detectAIOverstatesOmittedInflection(parsed, context);
-    if (overstatedInflection) reasons.push(overstatedInflection);
-
-    return {
-      ok: reasons.length === 0,
-      reasons
-    };
-  }
-
-  function formatMorphCheckParsed(parsed, context = morphCheckContext) {
-    const status = parsed.status || "unknown";
-    const confidence = parsed.confidence || "unknown";
-
-    const dbParse =
-      context &&
-      context.parse_packet &&
-      context.parse_packet.database_parse_exact
-        ? context.parse_packet.database_parse_exact
-        : context && context.current_parse
-          ? context.current_parse
-          : "";
-
-    const aiEcho =
-      parsed.database_parse_exact_seen ||
-      parsed.current_parse ||
-      "";
-
-    const notationInterpretation = parsed.notation_interpretation || "";
-    const surfaceSpellingCheck = parsed.surface_spelling_check || "";
-    const criticalCheck = parsed.critical_check || "";
-    const suggestedParse = parsed.suggested_parse || "";
-    const parseMismatch = parsed.parse_mismatch || "not provided";
-    const issues = Array.isArray(parsed.issues) ? parsed.issues : [];
-    const explanation = parsed.explanation || "";
-    const teachingNote = parsed.teaching_note || "";
-    const recommendedAction = parsed.recommended_action || "not provided";
-
-    const alternativeAnalyses = Array.isArray(parsed.alternative_analyses)
-      ? parsed.alternative_analyses
-      : [];
-
-    const alternativeText = alternativeAnalyses.length
-      ? alternativeAnalyses.map((item, index) => {
-          if (typeof item === "string") return `${index + 1}. ${item}`;
-          return `${index + 1}. ${JSON.stringify(item)}`;
-        }).join("\n")
-      : "None provided.";
-
-    const localWarning =
-      context &&
-      context.parse_packet &&
-      context.parse_packet.local_precheck_warning
-        ? context.parse_packet.local_precheck_warning
-        : "";
-
-    const localScopeNote =
-      context &&
-      context.parse_packet &&
-      context.parse_packet.local_scope_ambiguity_note
-        ? context.parse_packet.local_scope_ambiguity_note
-        : "";
-
-    const localSuspiciousSegmentationNote =
-      context &&
-      context.parse_packet &&
-      context.parse_packet.local_suspicious_segmentation_note
-        ? context.parse_packet.local_suspicious_segmentation_note
-        : "";
-
-    const localPreferredParseSuggestion =
-      context &&
-      context.parse_packet &&
-      context.parse_packet.local_preferred_parse_suggestion
-        ? context.parse_packet.local_preferred_parse_suggestion
-        : "";
-
-    const localNotation =
-      context &&
-      context.parse_packet &&
-      context.parse_packet.local_notation_interpretation
-        ? context.parse_packet.local_notation_interpretation
-        : "";
-
-    const localSurfaceReconstruction =
-      context &&
-      context.parse_packet &&
-      context.parse_packet.local_surface_reconstruction
-        ? context.parse_packet.local_surface_reconstruction
-        : null;
-
-    const localSurfaceText = localSurfaceReconstruction
-      ? JSON.stringify(localSurfaceReconstruction, null, 2)
-      : "None.";
-
-    const localOmittedInflection =
-      context &&
-      context.parse_packet &&
-      context.parse_packet.local_omitted_inflection_after_reconstruction
-        ? context.parse_packet.local_omitted_inflection_after_reconstruction
-        : null;
-
-    const localOmittedInflectionText = localOmittedInflection
-      ? JSON.stringify(localOmittedInflection, null, 2)
-      : "None.";
-
-    const reliability = getMorphReviewReliability(parsed, context);
-
-    const reliabilityText = reliability.ok
-      ? "No reliability warnings."
-      : reliability.reasons.map(reason => `- ${reason}`).join("\n");
-
+  function formatTeacherReviewDisplay(packet, reviewText) {
     return `
-Status: ${status}
-Confidence: ${confidence}
+Word:
+${packet.word || "Not provided"}
 
-Database parse reviewed, exact from row:
-${dbParse || "Not provided."}
+Exact database parse:
+${packet.exact_database_parse || "Not provided"}
 
-Local BAWF notation interpretation:
-${localNotation || "Not available."}
+Database columns:
+- Baseword: ${packet.baseword || "none listed"}
+- Root: ${packet.root || "none listed"}
+- Prefixes: ${packet.prefixes.length ? packet.prefixes.join(", ") : "none listed"}
+- Suffixes: ${packet.suffixes.length ? packet.suffixes.join(", ") : "none listed"}
 
-Local surface reconstruction:
-${localSurfaceText}
+Detected notation parts:
+- Prefixes: ${packet.notation_parts.prefixes.length ? packet.notation_parts.prefixes.join(", ") : "none"}
+- Bases: ${packet.notation_parts.bases.length ? packet.notation_parts.bases.join(", ") : "none"}
+- Roots: ${packet.notation_parts.roots.length ? packet.notation_parts.roots.join(", ") : "none"}
+- Suffixes: ${packet.notation_parts.suffixes.length ? packet.notation_parts.suffixes.join(", ") : "none"}
 
-Local omitted inflection after reconstruction:
-${localOmittedInflectionText}
+Simple local hint:
+${packet.simple_local_hint || "No obvious local issue detected."}
 
-AI echo of database parse:
-${aiEcho || "Not provided."}
-
-AI notation interpretation:
-${notationInterpretation || "Not provided."}
-
-Surface spelling check:
-${surfaceSpellingCheck || "Not provided."}
-
-Critical check:
-${criticalCheck || "Not provided."}
-
-Suggested parse:
-${suggestedParse || "No alternative suggested."}
-
-Alternative analyses:
-${alternativeText}
-
-Parse mismatch category:
-${parseMismatch}
-
-Recommended action:
-${recommendedAction}
-
-Local pre-check:
-${localWarning || "None."}
-
-Local scope/ambiguity note:
-${localScopeNote || "None."}
-
-Local suspicious segmentation note:
-${localSuspiciousSegmentationNote || "None."}
-
-Local preferred parse suggestion:
-${localPreferredParseSuggestion || "None."}
-
-Review reliability warnings:
-${reliabilityText}
-
-Issues:
-${issues.length ? issues.map(x => "- " + x).join("\n") : "None listed."}
-
-Explanation:
-${explanation || "No explanation provided."}
-
-Teaching note:
-${teachingNote || "No teaching note provided."}
+AI teacher comment:
+${reviewText || "No response returned."}
 `.trim();
   }
 
@@ -4225,7 +2596,7 @@ ${teachingNote || "No teaching note provided."}
     const reportStatusEl = $("morphReportStatus");
     const submitBtn = $("submitMorphReportBtn");
 
-    statusEl.textContent = "Checking exact database parse...";
+    statusEl.textContent = "Asking AI for a simple teacher-friendly parse review...";
     statusEl.style.color = "#1d4ed8";
     resultEl.textContent = "";
     notesEl.value = "";
@@ -4233,8 +2604,8 @@ ${teachingNote || "No teaching note provided."}
     submitBtn.disabled = false;
     submitBtn.textContent = "⚠️ Report Disagreement/Error";
 
-    const reviewPacket = buildMorphReviewPacket(row, key);
-    const userPrompt = buildMorphCheckUserPromptFromPacket(reviewPacket);
+    const packet = buildTeacherMorphReviewPacket(row, key);
+    const userPrompt = buildTeacherMorphReviewPrompt(packet);
 
     lastMorphCheckPrompt = userPrompt;
     lastMorphCheckText = "";
@@ -4243,71 +2614,26 @@ ${teachingNote || "No teaching note provided."}
     morphCheckContext = {
       dataset: key,
       rowIndex: Number(rowIndex),
-      word: reviewPacket.surface_word,
-      baseword: reviewPacket.database_baseword,
-      current_parse: reviewPacket.database_parse_exact,
-      root: reviewPacket.database_root_exact,
-      prefix_1: reviewPacket.database_prefixes_exact[0] || "",
-      suffix_1: reviewPacket.database_suffixes_exact[0] || "",
+      word: packet.word,
+      baseword: packet.baseword,
+      current_parse: packet.exact_database_parse,
+      root: packet.root,
+      prefix_1: packet.prefixes[0] || "",
+      suffix_1: packet.suffixes[0] || "",
       row: row,
-      parse_packet: reviewPacket,
+      parse_packet: packet,
       prompt: userPrompt,
       ai_review_text: "",
       ai_review_json: "",
-      ai_status: "",
+      ai_status: "teacher_review",
       ai_confidence: "",
       ai_suggested_parse: ""
     };
 
-    const deterministicReview = getDeterministicMorphReview(reviewPacket);
-
-    if (deterministicReview) {
-      const formatted = formatMorphCheckParsed(deterministicReview, morphCheckContext);
-      const badgeClass = getMorphBadgeClass(deterministicReview.status);
-
-      statusEl.innerHTML =
-        `Result: <span class="morph-badge ${badgeClass}">${escapeHTML(deterministicReview.status)}</span> &nbsp; Confidence: <strong>${escapeHTML(deterministicReview.confidence)}</strong>`;
-
-      statusEl.style.color = "#111827";
-      resultEl.textContent = formatted;
-
-      lastMorphCheckRawJSON = JSON.stringify(deterministicReview, null, 2);
-      lastMorphCheckText = formatted;
-
-      morphCheckContext.ai_review_text = formatted;
-      morphCheckContext.ai_review_json = lastMorphCheckRawJSON;
-      morphCheckContext.ai_status = deterministicReview.status;
-      morphCheckContext.ai_confidence = deterministicReview.confidence;
-      morphCheckContext.ai_suggested_parse = deterministicReview.suggested_parse;
-
-      return;
-    }
-
-    const preliminaryNotes = [];
-
-    if (reviewPacket.local_precheck_warning) {
-      preliminaryNotes.push(`Local pre-check:\n${reviewPacket.local_precheck_warning}`);
-    }
-
-    if (reviewPacket.local_scope_ambiguity_note) {
-      preliminaryNotes.push(`Local scope/ambiguity note:\n${reviewPacket.local_scope_ambiguity_note}`);
-    }
-
-    if (reviewPacket.local_suspicious_segmentation_note) {
-      preliminaryNotes.push(`Local suspicious segmentation note:\n${reviewPacket.local_suspicious_segmentation_note}`);
-    }
-
-    if (reviewPacket.local_omitted_inflection_after_reconstruction) {
-      preliminaryNotes.push(
-        `Local omitted-inflection note:\n${JSON.stringify(reviewPacket.local_omitted_inflection_after_reconstruction, null, 2)}`
-      );
-    }
-
-    if (preliminaryNotes.length) {
-      resultEl.textContent = `${preliminaryNotes.join("\n\n")}\n\nWaiting for AI review...`;
-    }
-
-    statusEl.textContent = "Checking exact database parse with AI...";
+    resultEl.textContent = formatTeacherReviewDisplay(
+      packet,
+      "Waiting for AI review..."
+    );
 
     try {
       const response = await fetch(MORPH_CHECK_ENDPOINT, {
@@ -4316,8 +2642,6 @@ ${teachingNote || "No teaching note provided."}
           "Content-Type": "application/json"
         },
         body: JSON.stringify({
-          temperature: 0,
-          max_tokens: 1400,
           messages: [
             {
               role: "system",
@@ -4336,7 +2660,11 @@ ${teachingNote || "No teaching note provided."}
       try {
         data = await response.json();
       } catch {
-        data = { error: { message: "Endpoint did not return valid JSON." } };
+        data = {
+          error: {
+            message: "Endpoint did not return valid JSON."
+          }
+        };
       }
 
       if (!response.ok || data.error) {
@@ -4346,7 +2674,10 @@ ${teachingNote || "No teaching note provided."}
 
         statusEl.textContent = "AI review failed.";
         statusEl.style.color = "#dc2626";
-        resultEl.textContent = `API Error: ${errDetail}`;
+        resultEl.textContent = formatTeacherReviewDisplay(
+          packet,
+          `API Error: ${errDetail}`
+        );
 
         lastMorphCheckText = resultEl.textContent;
 
@@ -4357,53 +2688,25 @@ ${teachingNote || "No teaching note provided."}
         return;
       }
 
-      let content = "";
+      const rawText = extractLLMText(data);
+      const reviewText = cleanTeacherReviewText(rawText);
+      const finalText = formatTeacherReviewDisplay(packet, reviewText);
 
-      if (data.choices && data.choices[0] && data.choices[0].message) {
-        content = String(data.choices[0].message.content || "").trim();
-      } else if (data.content) {
-        content = String(data.content).trim();
-      } else if (data.response) {
-        content = String(data.response).trim();
-      } else {
-        content = JSON.stringify(data, null, 2);
-      }
-
-      content = cleanAIJSONContent(content);
-      lastMorphCheckRawJSON = content;
-
-      const parsedRaw = tryParseAIJSON(content);
-      const parsed = normalizeMorphReview(parsedRaw, content, morphCheckContext);
-
-      const status = parsed.status || "unknown";
-      const confidence = parsed.confidence || "unknown";
-      const badgeClass = getMorphBadgeClass(status);
-      const formatted = formatMorphCheckParsed(parsed, morphCheckContext);
-      const reliability = getMorphReviewReliability(parsed, morphCheckContext);
-
-      if (parsed.__fallback_from_unstructured) {
-        statusEl.innerHTML =
-          `Result: <span class="morph-badge warn">unstructured AI output</span> &nbsp; Converted to fallback review`;
-      } else if (!reliability.ok) {
-        statusEl.innerHTML =
-          `Result: <span class="morph-badge bad">needs review</span> &nbsp; ${escapeHTML(reliability.reasons[0])}`;
-      } else {
-        statusEl.innerHTML =
-          `Result: <span class="morph-badge ${badgeClass}">${escapeHTML(status)}</span> &nbsp; Confidence: <strong>${escapeHTML(confidence)}</strong>`;
-      }
+      statusEl.innerHTML =
+        `Result: <span class="morph-badge good">teacher review ready</span>`;
 
       statusEl.style.color = "#111827";
-      resultEl.textContent = formatted;
-      lastMorphCheckText = formatted;
+      resultEl.textContent = finalText;
+
+      lastMorphCheckText = finalText;
+      lastMorphCheckRawJSON = JSON.stringify(data, null, 2);
 
       if (morphCheckContext) {
-        morphCheckContext.ai_review_text = formatted;
-        morphCheckContext.ai_review_json = parsedRaw
-          ? JSON.stringify(parsedRaw, null, 2)
-          : content;
-        morphCheckContext.ai_status = status;
-        morphCheckContext.ai_confidence = confidence;
-        morphCheckContext.ai_suggested_parse = parsed.suggested_parse || "";
+        morphCheckContext.ai_review_text = finalText;
+        morphCheckContext.ai_review_json = lastMorphCheckRawJSON;
+        morphCheckContext.ai_status = "teacher_review_ready";
+        morphCheckContext.ai_confidence = "";
+        morphCheckContext.ai_suggested_parse = "";
       }
     } catch (error) {
       console.error(error);
@@ -4417,7 +2720,12 @@ ${teachingNote || "No teaching note provided."}
         : "Review processing error.";
 
       statusEl.style.color = "#dc2626";
-      resultEl.textContent = `${error.name || "Error"}: ${error.message || error}`;
+
+      resultEl.textContent = formatTeacherReviewDisplay(
+        packet,
+        `${error.name || "Error"}: ${error.message || error}`
+      );
+
       lastMorphCheckText = resultEl.textContent;
 
       if (morphCheckContext) {
@@ -4425,7 +2733,6 @@ ${teachingNote || "No teaching note provided."}
       }
     }
   }
-
 
   async function submitMorphDisagreement() {
     const notesEl = $("morphDisagreementNotes");
