@@ -1070,13 +1070,15 @@ const MORPH_CHECK_PROMPT = `You are an expert in English morphology, etymology, 
 
 You are auditing ONE exact row from the BAWF morphological database.
 
+Your job is not to validate the row automatically. Your job is to critically audit the database parse.
+
 You must judge only the row provided by the user. Do not use, invent, or copy words from examples, prior rows, or instructions. If a word, root, base, prefix, or suffix is not present in the current row packet, do not put it in suggested_parse unless you clearly explain it as a correction.
 
 BAWF notation guide:
 1. Roots are written inside parentheses.
-   Example pattern: (root)
+   Pattern: (root)
 2. Bases/basewords are written inside square brackets.
-   Example pattern: [base] or [(root)]
+   Pattern: [base] or [(root)]
 3. Affixes are written with angle brackets.
 4. Prefixes appear before the base/root.
 5. Suffixes appear after the base/root.
@@ -1092,13 +1094,29 @@ BAWF notation guide:
 11. Copy database_parse_exact into database_parse_exact_seen exactly, or as close as possible.
 12. Do not silently repair or normalize database_parse_exact before judging it.
 13. Put corrections only in suggested_parse.
-14. If the surface word equals the baseword, the parse shows the same word as the base/root, and no prefixes or suffixes are listed, the parse is usually accurate.
-15. For high-frequency function words such as articles, pronouns, conjunctions, and prepositions, do not invent derivational morphology. A simple parse showing the word itself as the base/root can be acceptable.
-16. A morpheme count including inflections does not mean the written parse actually shows those inflections.
-17. Do not over-segment words into pieces that are not meaningful in current English.
-18. Distinguish prefixes, suffixes, bases, bound bases, roots, combining forms, and inflectional endings.
-19. Treat Greek/Latin roots carefully. If uncertain, say so.
-20. Do not claim certainty when the evidence is uncertain.
+
+Critical audit checklist:
+A. Does the notation itself make sense?
+B. Does the notation agree with the Word, Baseword, Root, Prefix, and Suffix columns?
+C. Does the parse account for the surface spelling?
+D. Does the parse account for the likely morphology of the word?
+E. Are any real prefixes, suffixes, or inflections missing?
+F. Are any listed prefixes or suffixes not actually meaningful in the word?
+G. Is the baseword/root plausible?
+H. Is there semantic or attachment ambiguity?
+I. If more than one analysis is plausible, list the alternatives.
+J. If the row is plausible but ambiguous, do not mark it simply accurate without noting the ambiguity.
+
+Special rule for prefix + base + -able/-ible words:
+If a word contains a prefix such as un- plus a base plus -able/-ible, consider affix scope carefully.
+The flat morpheme sequence may be correct, but the meaning may depend on attachment:
+- negative prefix attaching to an adjective-like form: prefix + [base + suffix]
+- reversative or other prefix attaching to a verb before suffixation: [prefix + base] + suffix
+If the row does not specify meaning or scope, mention this as a possible ambiguity.
+
+For high-frequency function words such as articles, pronouns, conjunctions, and prepositions, do not invent derivational morphology. A simple parse showing the word itself as the base/root can be acceptable.
+
+A morpheme count including inflections does not mean the written parse actually shows those inflections.
 
 Return ONLY a raw JSON object. Do not use markdown code blocks. Do not include commentary outside the JSON.
 
@@ -1108,11 +1126,14 @@ The JSON object must have exactly these keys:
   "confidence": "high | medium | low",
   "database_parse_exact_seen": "",
   "notation_interpretation": "",
+  "critical_check": "",
   "suggested_parse": "",
-  "parse_mismatch": "none | omitted_surface_inflection | omitted_derivational_affix | wrong_base_or_root | unclear_notation | notation_misread | hallucinated_unrelated_word | other | uncertain",
+  "alternative_analyses": [],
+  "parse_mismatch": "none | omitted_surface_inflection | omitted_derivational_affix | wrong_base_or_root | wrong_affix | affix_scope_ambiguous | unclear_notation | notation_misread | hallucinated_unrelated_word | other | uncertain",
   "issues": [],
   "explanation": "",
-  "teaching_note": ""
+  "teaching_note": "",
+  "recommended_action": "keep | keep_but_note_ambiguity | revise | flag_for_human_review | uncertain"
 }`;
 
   const DISPLAY_LABELS = {
@@ -1344,7 +1365,47 @@ The JSON object must have exactly these keys:
   function displayColumnName(col) {
     return DISPLAY_LABELS[col] || col;
   }
+function detectPotentialAffixScopeAmbiguity(row) {
+  const parse = getExactDatabaseParse(row);
+  const notationParts = extractBAWFNotationParts(parse);
 
+  const notationPrefixes = notationParts.prefixes || [];
+  const notationSuffixes = notationParts.suffixes || [];
+
+  const columnPrefixes = getAffixValues(row, PREFIX_COLS);
+  const columnSuffixes = getAffixValues(row, SUFFIX_COLS);
+
+  const prefixes = uniqueCleanList([
+    ...notationPrefixes,
+    ...columnPrefixes
+  ]).map(x => x.toLowerCase().replace(/^-/, ""));
+
+  const suffixes = uniqueCleanList([
+    ...notationSuffixes,
+    ...columnSuffixes
+  ]).map(x => x.toLowerCase().replace(/^-/, ""));
+
+  const word = cleanMorphValue(getFirstNonEmpty(row, [
+    "Word",
+    "FLemma",
+    "Compound",
+    "Compound_Word"
+  ]));
+
+  const baseword = cleanMorphValue(getFirstNonEmpty(row, [
+    "Baseword",
+    "Baseword_1"
+  ]));
+
+  const hasUn = prefixes.includes("un");
+  const hasAble = suffixes.includes("able") || suffixes.includes("ible");
+
+  if (hasUn && hasAble) {
+    return `Potential affix-scope ambiguity: "${word || "this word"}" contains un- and -able/-ible. Depending on meaning, the analysis may be negative un- attaching to a derived adjective, roughly un-[${baseword || "base"}-able], or a prefixed verb/base followed by -able, roughly [un-${baseword || "base"}]-able. If the database records only flat morpheme sequence, the parse may be acceptable; if it records semantic scope, this should be checked.`;
+  }
+
+  return "";
+}
   function buildDatasetShell(key) {
     const wrap = $(`${key}Wrap`);
     if (!wrap) return;
@@ -2895,6 +2956,7 @@ function getDeterministicMorphReview(packet) {
     reading_aoa: cleanMorphValue(row["Reading AoA Green et al._ 2025"]),
 
     local_precheck_warning: detectLikelySurfaceInflectionOmission(row),
+    local_scope_ambiguity_note: detectPotentialAffixScopeAmbiguity(row),
     full_non_empty_row_json: compactRow
   };
 }
@@ -2914,7 +2976,9 @@ Important:
 - Do not treat a root/base inside [] or () as a suffix.
 - If you think the parse should include something else, put that in suggested_parse.
 - If local_precheck_warning is not empty, explicitly address it.
-- If local_notation_interpretation says there are no suffixes, do not invent a suffix unless there is strong morphological evidence.
+- If local_scope_ambiguity_note is not empty, explicitly address it.
+- If the parse is plausible but ambiguous, list alternative analyses.
+- Be critical. Do not simply approve the parse unless it is actually plausible and complete.
 
 BAWF parse review packet:
 ${JSON.stringify(packet, null, 2)}
@@ -3267,7 +3331,7 @@ function getMorphReviewReliability(parsed, context) {
     parsed.database_parse_exact_seen ||
     parsed.current_parse ||
     "";
-
+  
   if (dbParse && !aiEcho) {
     reasons.push("AI did not echo the exact database parse.");
   } else if (
@@ -3277,7 +3341,33 @@ function getMorphReviewReliability(parsed, context) {
   ) {
     reasons.push("AI echoed a different parse from the exact database parse.");
   }
+  const localScopeNote =
+    context &&
+    context.parse_packet &&
+    context.parse_packet.local_scope_ambiguity_note
+      ? context.parse_packet.local_scope_ambiguity_note
+      : "";
 
+  const aiAllText = [
+    parsed.notation_interpretation,
+    parsed.critical_check,
+    parsed.suggested_parse,
+    Array.isArray(parsed.alternative_analyses) ? parsed.alternative_analyses.join(" ") : "",
+    parsed.parse_mismatch,
+    parsed.explanation,
+    parsed.teaching_note,
+    parsed.recommended_action,
+    Array.isArray(parsed.issues) ? parsed.issues.join(" ") : ""
+  ].join(" ").toLowerCase();
+
+  if (
+    localScopeNote &&
+    !aiAllText.includes("scope") &&
+    !aiAllText.includes("ambig") &&
+    !aiAllText.includes("alternative")
+  ) {
+    reasons.push("AI appears to have ignored the local affix-scope ambiguity note.");
+  }
   const localWarning =
     context &&
     context.parse_packet &&
@@ -3341,17 +3431,40 @@ function formatMorphCheckParsed(parsed, context = morphCheckContext) {
     "";
 
   const notationInterpretation = parsed.notation_interpretation || "";
+  const criticalCheck = parsed.critical_check || "";
   const suggestedParse = parsed.suggested_parse || "";
   const parseMismatch = parsed.parse_mismatch || "not provided";
   const issues = Array.isArray(parsed.issues) ? parsed.issues : [];
   const explanation = parsed.explanation || "";
   const teachingNote = parsed.teaching_note || "";
+  const recommendedAction = parsed.recommended_action || "not provided";
+
+  const alternativeAnalyses = Array.isArray(parsed.alternative_analyses)
+    ? parsed.alternative_analyses
+    : [];
+
+  const alternativeText = alternativeAnalyses.length
+    ? alternativeAnalyses.map((item, index) => {
+        if (typeof item === "string") {
+          return `${index + 1}. ${item}`;
+        }
+
+        return `${index + 1}. ${JSON.stringify(item)}`;
+      }).join("\n")
+    : "None provided.";
 
   const localWarning =
     context &&
     context.parse_packet &&
     context.parse_packet.local_precheck_warning
       ? context.parse_packet.local_precheck_warning
+      : "";
+
+  const localScopeNote =
+    context &&
+    context.parse_packet &&
+    context.parse_packet.local_scope_ambiguity_note
+      ? context.parse_packet.local_scope_ambiguity_note
       : "";
 
   const localNotation =
@@ -3383,14 +3496,26 @@ ${aiEcho || "Not provided."}
 AI notation interpretation:
 ${notationInterpretation || "Not provided."}
 
+Critical check:
+${criticalCheck || "Not provided."}
+
 Suggested parse:
 ${suggestedParse || "No alternative suggested."}
+
+Alternative analyses:
+${alternativeText}
 
 Parse mismatch category:
 ${parseMismatch}
 
+Recommended action:
+${recommendedAction}
+
 Local pre-check:
 ${localWarning || "None."}
+
+Local scope/ambiguity note:
+${localScopeNote || "None."}
 
 Review reliability warnings:
 ${reliabilityText}
