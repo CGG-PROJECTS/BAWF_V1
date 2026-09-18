@@ -39,7 +39,8 @@
       font-weight: 700;
     }
 
-    h2, h3 {
+    h2,
+    h3 {
       color: #1d4ed8;
     }
 
@@ -285,6 +286,13 @@
       font-size: 0.95rem;
     }
 
+    .cell-copy-tip {
+      text-align: center;
+      color: #4b5563;
+      font-size: 0.9rem;
+      margin: 6px 0 12px;
+    }
+
     .db-loading {
       text-align: center;
       padding: 28px 8px;
@@ -322,10 +330,22 @@
       top: 0;
       z-index: 5;
       cursor: pointer;
+      user-select: none;
     }
 
     .db-table tr:hover td {
       background: #f0f9ff;
+    }
+
+    .db-table td.db-cell {
+      cursor: cell;
+      user-select: none;
+    }
+
+    .db-table td.db-cell.cell-selected {
+      background: #bfdbfe !important;
+      outline: 2px solid #2563eb;
+      outline-offset: -2px;
     }
 
     .filter-row input,
@@ -574,6 +594,28 @@
     .morph-badge.unknown {
       background: #6b7280;
     }
+
+    .copy-toast {
+      position: fixed;
+      right: 20px;
+      bottom: 20px;
+      z-index: 2147483647;
+      background: #111827;
+      color: white;
+      padding: 12px 16px;
+      border-radius: 10px;
+      box-shadow: 0 8px 24px rgba(0,0,0,0.25);
+      opacity: 0;
+      transform: translateY(10px);
+      transition: opacity 0.18s ease, transform 0.18s ease;
+      pointer-events: none;
+      font-weight: 600;
+    }
+
+    .copy-toast.show {
+      opacity: 1;
+      transform: translateY(0);
+    }
   </style>
 </head>
 
@@ -614,16 +656,16 @@
   </div>
 
   <div style="text-align:center; margin:25px 0;">
-    <button class="key-btn" onclick="showColumnKey()">📋 Column Information Key</button>
+    <button type="button" class="key-btn" onclick="showColumnKey()">📋 Column Information Key</button>
   </div>
 
   <div class="tabs">
-    <button class="tab-btn active" onclick="openTab('curated', this)">Curated Frequent & Familiar Word Families</button>
-    <button class="tab-btn" onclick="openTab('word-families', this)">Full Database: Word Families</button>
-    <button class="tab-btn" onclick="openTab('compounds', this)">Full Database: Compound Words</button>
-    <button class="tab-btn" onclick="openTab('adv-queries', this)">Advanced Query Builder</button>
-    <button class="tab-btn" onclick="openTab('wordcloud', this)">Word Cloud Generator</button>
-    <button class="tab-btn" onclick="openTab('llm-generator', this)">🪄 Generate AI Stories & Worksheets</button>
+    <button type="button" class="tab-btn active" onclick="openTab('curated', this)">Curated Frequent & Familiar Word Families</button>
+    <button type="button" class="tab-btn" onclick="openTab('word-families', this)">Full Database: Word Families</button>
+    <button type="button" class="tab-btn" onclick="openTab('compounds', this)">Full Database: Compound Words</button>
+    <button type="button" class="tab-btn" onclick="openTab('adv-queries', this)">Advanced Query Builder</button>
+    <button type="button" class="tab-btn" onclick="openTab('wordcloud', this)">Word Cloud Generator</button>
+    <button type="button" class="tab-btn" onclick="openTab('llm-generator', this)">🪄 Generate AI Stories & Worksheets</button>
   </div>
 
   <div id="curated" class="tab-content active">
@@ -636,19 +678,14 @@
       <p>
         The full database is for exploring all words attested in the largest current corpora. The focused database is a
         trimmed version that lists only word families with familiarity ratings above approximately 3.5, suggesting that
-        these words are widely known by most speakers of English. GPT familiarity estimates below 3.5 are unlikely to be
-        known to 90% of people, following Brysbaert et al. 2025. These words are likely to be more useful for teaching
-        than words that are not well known by English-language speakers.
-      </p>
-      <p>
-        This filtered spreadsheet does not contain all database information. It includes the basewords and members of
-        familiar word-family derivations. It lists word-family size and word-family frequency differently than the main
-        database because these measures are computed only among familiar items.
+        these words are widely known by most speakers of English.
       </p>
     </div>
+
     <div class="download-section">
       <a class="download-btn" href="BAWF__freq_and_familair_families.csv.gz" download>↓ Download Curated Word Families (.csv.gz)</a>
     </div>
+
     <div class="db-wrap" id="cfWrap"></div>
   </div>
 
@@ -660,9 +697,11 @@
         extensive morphological, root, affix, frequency, familiarity, and educational information.
       </p>
     </div>
+
     <div class="download-section">
       <a class="download-btn" href="BAWF_FINAL.csv.gz" download>↓ Download Full Word Families (.csv.gz)</a>
     </div>
+
     <div class="db-wrap" id="wfWrap"></div>
   </div>
 
@@ -671,9 +710,10 @@
       <h3>Full Database: Compound Words</h3>
       <p>This section contains compound words and compound-related family statistics.</p>
     </div>
+
     <div class="subtabs">
-      <button class="subtab-btn active" onclick="openCompoundSubTab('comp-main', this)">Main Compound File</button>
-      <button class="subtab-btn" onclick="openCompoundSubTab('comp-stats', this)">Word Family Size Stats</button>
+      <button type="button" class="subtab-btn active" onclick="openCompoundSubTab('comp-main', this)">Main Compound File</button>
+      <button type="button" class="subtab-btn" onclick="openCompoundSubTab('comp-stats', this)">Word Family Size Stats</button>
     </div>
 
     <div id="comp-main" class="subtab-pane active">
@@ -749,8 +789,8 @@
       </div>
 
       <div style="text-align:center;">
-        <button class="key-btn" onclick="runAdvancedQuery()">Generate Custom Wordlist</button>
-        <button class="db-btn secondary" onclick="clearAdvancedQuery()">Clear Filters</button>
+        <button type="button" class="key-btn" onclick="runAdvancedQuery()">Generate Custom Wordlist</button>
+        <button type="button" class="db-btn secondary" onclick="clearAdvancedQuery()">Clear Filters</button>
       </div>
     </div>
 
@@ -759,11 +799,13 @@
         <div class="db-meta" style="margin:0; font-size:1.1rem;">
           Found <strong id="advCount" style="color:#1d4ed8;">0</strong> unique results
         </div>
+
         <div style="display:flex; gap:10px;">
-          <button class="db-btn" onclick="downloadAdvancedList()">↓ Download List (.txt)</button>
-          <button class="db-btn secondary" onclick="copyAdvancedList()">📋 Copy to Clipboard</button>
+          <button type="button" class="db-btn" onclick="downloadAdvancedList()">↓ Download List (.txt)</button>
+          <button type="button" class="db-btn secondary" onclick="copyAdvancedList()">📋 Copy to Clipboard</button>
         </div>
       </div>
+
       <textarea id="advResultsText" style="width:100%; height:350px; padding:16px; font-family:ui-monospace, monospace; font-size:1.05rem; border:2px solid #d1d5db; border-radius:8px; resize:vertical; background:#f9fafb;" placeholder="Your custom wordlist will appear here..." readonly></textarea>
     </div>
   </div>
@@ -772,9 +814,10 @@
     <div style="max-width:900px; margin:0 auto; text-align:center;">
       <p><strong>Instructions:</strong> Paste word + frequency, one per line.</p>
       <textarea id="wordInput" placeholder="analysis 120&#10;morphology 95&#10;prefix 78"></textarea><br><br>
-      <button onclick="generateWordCloud()" class="key-btn">Generate Word Cloud</button>
+      <button type="button" onclick="generateWordCloud()" class="key-btn">Generate Word Cloud</button>
       <p id="cloudStatus" style="margin-top:12px; font-weight:500;"></p>
     </div>
+
     <canvas id="wordCanvas" width="1100" height="700"></canvas>
   </div>
 
@@ -843,9 +886,10 @@
           <option value="chatgpt">ChatGPT</option>
           <option value="claude">Claude</option>
         </select>
-        <button onclick="generateWithLLM()" class="db-btn">Generate Prompt</button>
-        <button onclick="copyLLMPrompt()" class="db-btn secondary">Copy Prompt</button>
-        <button onclick="openInLLM()" class="db-btn">Open in LLM</button>
+
+        <button type="button" onclick="generateWithLLM()" class="db-btn">Generate Prompt</button>
+        <button type="button" onclick="copyLLMPrompt()" class="db-btn secondary">Copy Prompt</button>
+        <button type="button" onclick="openInLLM()" class="db-btn">Open in LLM</button>
       </div>
 
       <p id="llmStatus" style="text-align:center; font-weight:600; min-height:24px;"></p>
@@ -854,13 +898,13 @@
   </div>
 </div>
 
-<!-- Column key modal -->
-<div id="columnModal" class="modal">
+<div id="columnModal" class="modal" role="dialog" aria-modal="true">
   <div class="modal-content">
     <div class="modal-header">
       <h2>Column Definitions</h2>
-      <button class="close" onclick="closeModal()">×</button>
+      <button type="button" class="close" onclick="closeModal()">×</button>
     </div>
+
     <div class="modal-body">
       <h3>Core Word Information</h3>
       <ul>
@@ -897,13 +941,13 @@
   </div>
 </div>
 
-<!-- Explain modal -->
-<div id="explainModalBackdrop" class="modal">
+<div id="explainModalBackdrop" class="modal" role="dialog" aria-modal="true">
   <div class="modal-content" style="max-width:780px;">
     <div class="modal-header">
       <h3>Explain Morphology Row</h3>
-      <button class="close" onclick="closeExplainModal()">×</button>
+      <button type="button" class="close" onclick="closeExplainModal()">×</button>
     </div>
+
     <div class="modal-body">
       <div style="margin-bottom:10px;">
         <label for="explainTask" style="font-weight:600;">What should AI do?</label>
@@ -929,25 +973,23 @@
       </div>
 
       <div class="modal-actions">
-        <button class="db-btn secondary" onclick="copyExplainPrompt()">📋 Copy</button>
-        <button class="db-btn" onclick="openExplainInAI()">Open AI Tool</button>
+        <button type="button" class="db-btn secondary" onclick="copyExplainPrompt()">📋 Copy</button>
+        <button type="button" class="db-btn" onclick="openExplainInAI()">Open AI Tool</button>
       </div>
     </div>
   </div>
 </div>
 
-<!-- Morphology AI review modal -->
-<div id="morphCheckModalBackdrop" class="modal">
+<div id="morphCheckModalBackdrop" class="modal" role="dialog" aria-modal="true">
   <div class="modal-content" style="max-width:900px;">
     <div class="modal-header">
       <h3>AI Morphological Parse Review</h3>
-      <button class="close" onclick="closeMorphCheckModal()">×</button>
+      <button type="button" class="close" onclick="closeMorphCheckModal()">×</button>
     </div>
 
     <div class="modal-body">
       <p style="margin-top:0; color:#4b5563;">
-        This AI review is advisory. It may help catch possible parsing errors, but it should not be treated as definitive
-        without expert review, dictionaries, and etymological sources.
+        This AI review is advisory. It checks the <strong>exact database-coded parse</strong>, not a silently repaired parse.
       </p>
 
       <div id="morphCheckStatus" style="font-weight:700; color:#1d4ed8; margin-bottom:12px;">
@@ -960,6 +1002,7 @@
         <label for="morphDisagreementNotes" style="font-weight:700; display:block; margin-bottom:6px;">
           Report disagreement/error notes
         </label>
+
         <textarea
           id="morphDisagreementNotes"
           placeholder="If the AI review or database parse seems wrong, explain the issue here..."
@@ -970,21 +1013,20 @@
       <p id="morphReportStatus" style="text-align:right; font-weight:600; margin-top:8px; font-size:0.9rem;"></p>
 
       <div class="modal-actions">
-        <button class="db-btn secondary" onclick="copyMorphCheckResult()">📋 Copy AI Review</button>
-        
-        <button class="db-btn" onclick="submitMorphDisagreement()" id="submitMorphReportBtn">⚠️ Report Disagreement/Error</button>
-        <button class="db-btn secondary" onclick="closeMorphCheckModal()">Close</button>
+        <button type="button" class="db-btn secondary" onclick="copyMorphCheckResult()">📋 Copy AI Review</button>
+        <button type="button" class="db-btn secondary" onclick="openMorphReviewPromptInAI()">Open Prompt in ChatGPT</button>
+        <button type="button" class="db-btn" onclick="submitMorphDisagreement()" id="submitMorphReportBtn">⚠️ Report Disagreement/Error</button>
+        <button type="button" class="db-btn secondary" onclick="closeMorphCheckModal()">Close</button>
       </div>
     </div>
   </div>
 </div>
 
-<!-- Normal report modal -->
-<div id="reportModalBackdrop" class="modal">
+<div id="reportModalBackdrop" class="modal" role="dialog" aria-modal="true">
   <div class="modal-content" style="max-width:600px;">
     <div class="modal-header">
       <h3>Report Database Error</h3>
-      <button class="close" onclick="closeReportModal()">×</button>
+      <button type="button" class="close" onclick="closeReportModal()">×</button>
     </div>
 
     <div class="modal-body">
@@ -1001,8 +1043,8 @@
       </div>
 
       <div class="modal-actions">
-        <button class="db-btn secondary" onclick="closeReportModal()">Cancel</button>
-        <button class="db-btn" onclick="submitErrorReport()" id="submitReportBtn">Submit Report</button>
+        <button type="button" class="db-btn secondary" onclick="closeReportModal()">Cancel</button>
+        <button type="button" class="db-btn" onclick="submitErrorReport()" id="submitReportBtn">Submit Report</button>
       </div>
 
       <p id="reportStatus" style="text-align:right; font-weight:600; margin-top:8px; font-size:0.9rem;"></p>
@@ -1011,6 +1053,9 @@
 </div>
 
 <script>
+  const $ = id => document.getElementById(id);
+  const $$ = (selector, root = document) => Array.from(root.querySelectorAll(selector));
+
   const EMPTY_HEADER_PREFIX = "__EMPTY_COL_";
   const MORPHEME_COL_WITHOUT_INFLECTIONS = "N_Morphemes_from_GPT_parse_without_inflections";
   const MORPHEME_COL_PLUS_INFLECTIONS = "N_Morphemes_from_GPT_parse_plus_inflections";
@@ -1018,42 +1063,44 @@
   const MORPH_CHECK_ENDPOINT = "https://wwt-classifier.clarenceggreen.workers.dev";
   const GOOGLE_ERROR_REPORT_ENDPOINT = "https://script.google.com/macros/s/AKfycbydBfAee3LRNRjT8O-K2rutdLR67KS-2Lp_0TjBuER38EAhRRd7LyITADcbzDALCYgw/exec";
 
+  const PREFIX_COLS = ["Prefix_1", "Prefix_2", "Prefix_3"];
+  const SUFFIX_COLS = ["Suffix_1", "Suffix_2", "Suffix_3", "Suffix_4", "Suffix_5", "Suffix_6"];
+
   const MORPH_CHECK_PROMPT = `You are an expert in English morphology, etymology, structured word inquiry, and vocabulary instruction.
 
-Your task is to review the likely accuracy of a morphological parse from a database row.
+You are auditing an EXACT database parse. You are not allowed to silently repair or normalize the database parse before judging it.
 
-You will receive information such as:
-- Word
-- Baseword
-- GPT-coded word parts
-- Root
-- Greek/Latin root
-- Prefixes
-- Suffixes
-- Morpheme counts
-- Frequency/familiarity fields when available
+The user will send a JSON object. The most important field is:
 
-Evaluate whether the parse is morphologically reasonable.
+- database_parse_exact
 
-Important principles:
-1. Do not over-segment words into pieces that are not meaningful in current English.
-2. Distinguish prefixes, suffixes, bases, bound bases, roots, combining forms, and inflectional endings.
-3. Treat Greek/Latin roots carefully. If uncertain, say so.
-4. Consider spelling changes such as final-e deletion, y-to-i changes, consonant doubling, assimilation, and combining vowels.
-5. If the database parse is plausible, say it is plausible rather than inventing a correction.
-6. If multiple analyses are possible, explain the alternatives briefly.
-7. Do not claim certainty when the evidence is uncertain.
-8. Keep the output useful for teachers, researchers, and database editors.
-9. You are checking the parse, not simply defining the word.
+This is the current parse stored in the database. You must treat it as the parse being reviewed.
 
-Return ONLY a raw JSON object. Do not use markdown code blocks. Do not include extra commentary outside the JSON.
+Critical rules:
+1. Copy database_parse_exact into database_parse_exact_seen exactly, or as close as possible.
+2. Do NOT put inferred, corrected, or improved morphology into database_parse_exact_seen.
+3. Put corrections only in suggested_parse.
+4. If the surface word has a visible suffix or inflection such as -s, -es, -ed, -ing, -er, or -est, but database_parse_exact and the suffix columns do not show it, mention that as a possible mismatch.
+5. A morpheme count including inflections does not mean the written parse actually shows those inflections.
+6. If the database parse gives only the baseword, for example "(succeed)", and the word is "succeeding", do not describe the current parse as "succeed + -ing". The current parse is still exactly "(succeed)".
+7. If the base/root analysis is plausible but the surface inflection is omitted, do not mark the entry simply "accurate" without qualification. Use "mostly_accurate" or "questionable", depending on the database purpose.
+8. Do not over-segment words into pieces that are not meaningful in current English.
+9. Distinguish prefixes, suffixes, bases, bound bases, roots, combining forms, and inflectional endings.
+10. Treat Greek/Latin roots carefully. If uncertain, say so.
+11. Consider spelling changes such as final-e deletion, y-to-i changes, consonant doubling, assimilation, and combining vowels.
+12. If multiple analyses are possible, explain the alternatives briefly.
+13. Do not claim certainty when the evidence is uncertain.
+14. Keep the output useful for teachers, researchers, and database editors.
+
+Return ONLY a raw JSON object. Do not use markdown code blocks. Do not include commentary outside the JSON.
 
 The JSON object must have exactly these keys:
 {
   "status": "accurate | mostly_accurate | questionable | likely_incorrect | uncertain",
   "confidence": "high | medium | low",
-  "current_parse": "",
+  "database_parse_exact_seen": "",
   "suggested_parse": "",
+  "parse_mismatch": "none | omitted_surface_inflection | omitted_derivational_affix | wrong_base_or_root | unclear_notation | other | uncertain",
   "issues": [],
   "explanation": "",
   "teaching_note": ""
@@ -1068,16 +1115,13 @@ The JSON object must have exactly these keys:
     [MORPHEME_COL_WITHOUT_INFLECTIONS]: "N morphemes excl. inflections"
   };
 
-  function displayColumnName(col) {
-    return DISPLAY_LABELS[col] || col;
-  }
-
   const DATASETS = {
     cf: {
       file: "BAWF__freq_and_familair_families.csv.gz",
       name: "Curated Frequent and Familiar Word Families",
       loaded: false,
       loading: false,
+      promise: null,
       data: [],
       filtered: [],
       all: [],
@@ -1085,13 +1129,15 @@ The JSON object must have exactly these keys:
       page: 1,
       rpp: 100,
       sortBy: "",
-      sortDesc: false
+      sortDesc: false,
+      uniqueValues: {}
     },
     wf: {
       file: "BAWF_FINAL.csv.gz",
       name: "Full Word Families",
       loaded: false,
       loading: false,
+      promise: null,
       data: [],
       filtered: [],
       all: [],
@@ -1099,13 +1145,15 @@ The JSON object must have exactly these keys:
       page: 1,
       rpp: 100,
       sortBy: "",
-      sortDesc: false
+      sortDesc: false,
+      uniqueValues: {}
     },
     cm: {
       file: "BAWF_Compound_Words_FINAL__Main_Compound.csv.gz",
       name: "Compound Main",
       loaded: false,
       loading: false,
+      promise: null,
       data: [],
       filtered: [],
       all: [],
@@ -1113,13 +1161,15 @@ The JSON object must have exactly these keys:
       page: 1,
       rpp: 100,
       sortBy: "",
-      sortDesc: false
+      sortDesc: false,
+      uniqueValues: {}
     },
     cs: {
       file: "BAWF_Compound_Words_FINAL__Word_Family_Size_Stats.csv.gz",
       name: "Compound Stats",
       loaded: false,
       loading: false,
+      promise: null,
       data: [],
       filtered: [],
       all: [],
@@ -1127,7 +1177,8 @@ The JSON object must have exactly these keys:
       page: 1,
       rpp: 100,
       sortBy: "",
-      sortDesc: false
+      sortDesc: false,
+      uniqueValues: {}
     }
   };
 
@@ -1141,37 +1192,204 @@ The JSON object must have exactly these keys:
   let lastMorphCheckPrompt = "";
   let morphCheckContext = null;
 
+  const cellSelection = {
+    mouseDown: false,
+    key: null,
+    anchor: null,
+    focus: null
+  };
+
   window.addEventListener("DOMContentLoaded", () => {
+    setupDelegatedEvents();
+
     buildDatasetShell("cf");
     buildDatasetShell("wf");
     buildDatasetShell("cm");
     buildDatasetShell("cs");
+
     initDataset("cf");
+
+    const advSource = $("advSource");
+    if (advSource) {
+      advSource.addEventListener("change", () => {
+        initDataset(advSource.value);
+      });
+    }
   });
 
+  function setupDelegatedEvents() {
+    document.addEventListener("input", event => {
+      const globalSearch = event.target.closest("[data-global-search]");
+      if (globalSearch) {
+        filterTableDebounced(globalSearch.dataset.globalSearch);
+        return;
+      }
+
+      const filterInput = event.target.closest("[data-filter-ds]");
+      if (filterInput && filterInput.tagName === "INPUT") {
+        onColumnFilter(
+          filterInput.dataset.filterDs,
+          filterInput.dataset.filterCol,
+          filterInput.value,
+          filterInput.dataset.filterMode || "contains"
+        );
+      }
+    });
+
+    document.addEventListener("change", event => {
+      const rowsPerPage = event.target.closest("[data-rows-per-page]");
+      if (rowsPerPage) {
+        changeRowsPerPage(rowsPerPage.dataset.rowsPerPage, rowsPerPage.value);
+        return;
+      }
+
+      const filterSelect = event.target.closest("[data-filter-ds]");
+      if (filterSelect && filterSelect.tagName === "SELECT") {
+        onColumnFilter(
+          filterSelect.dataset.filterDs,
+          filterSelect.dataset.filterCol,
+          filterSelect.value,
+          filterSelect.dataset.filterMode || "exact"
+        );
+      }
+    });
+
+    document.addEventListener("click", event => {
+      if (event.target === $("columnModal")) closeModal();
+      if (event.target === $("explainModalBackdrop")) closeExplainModal();
+      if (event.target === $("morphCheckModalBackdrop")) closeMorphCheckModal();
+      if (event.target === $("reportModalBackdrop")) closeReportModal();
+
+      const sortHeader = event.target.closest("[data-sort-ds]");
+      if (sortHeader) {
+        sortTable(sortHeader.dataset.sortDs, sortHeader.dataset.sortCol);
+        return;
+      }
+
+      const uiButton = event.target.closest("[data-ui-action]");
+      if (uiButton) {
+        const key = uiButton.dataset.ds;
+        const action = uiButton.dataset.uiAction;
+
+        if (action === "copy-column") copyColumnValues(key);
+        if (action === "export-csv") exportCSV(key);
+        if (action === "add-columns") addSelectedColumns(key);
+        if (action === "remove-columns") removeSelectedColumns(key);
+        if (action === "reset-columns") resetColumns(key);
+        if (action === "clear-filters") clearFilters(key);
+        if (action === "prev-page") prevPage(key);
+        if (action === "next-page") nextPage(key);
+
+        return;
+      }
+
+      const rowButton = event.target.closest("[data-row-action]");
+      if (rowButton) {
+        const action = rowButton.dataset.rowAction;
+        const word = rowButton.dataset.word || "";
+        const key = rowButton.dataset.ds;
+        const rowIndex = Number(rowButton.dataset.rowIndex);
+
+        if (action === "google") lookupGoogle(word);
+        if (action === "definition") lookupDefinition(word);
+        if (action === "etymology") lookupEtymology(word);
+        if (action === "wordnik") lookupWordnik(word);
+        if (action === "explain") showExplainFromIndex(key, rowIndex);
+        if (action === "review-parse") checkMorphologyFromIndex(key, rowIndex);
+        if (action === "report") showReportFromIndex(key, rowIndex);
+
+        return;
+      }
+    });
+
+    document.addEventListener("mousedown", handleCellMouseDown);
+    document.addEventListener("mouseover", handleCellMouseOver);
+    document.addEventListener("mouseup", () => {
+      cellSelection.mouseDown = false;
+    });
+
+    document.addEventListener("keydown", event => {
+      if (event.key === "Escape") {
+        if (hasOpenModal()) {
+          closeAllModals();
+        } else {
+          clearCellSelection();
+        }
+        return;
+      }
+
+      if ((event.ctrlKey || event.metaKey) && event.key.toLowerCase() === "c") {
+        if (isEditableTarget(event.target)) return;
+
+        const selectedText = getSelectedCellsText();
+        if (selectedText) {
+          event.preventDefault();
+          copyText(selectedText).then(() => {
+            showCopyToast("Selected cells copied");
+          });
+        }
+      }
+    });
+  }
+
+  function displayColumnName(col) {
+    return DISPLAY_LABELS[col] || col;
+  }
+
   function buildDatasetShell(key) {
-    const wrap = document.getElementById(`${key}Wrap`);
+    const wrap = $(`${key}Wrap`);
     if (!wrap) return;
 
     wrap.innerHTML = `
       <div class="db-controls">
-        <input id="${key}GlobalSearch" class="db-input" type="text" placeholder="Search visible columns..." oninput="filterTableDebounced('${key}')">
+        <input
+          id="${key}GlobalSearch"
+          class="db-input"
+          type="text"
+          placeholder="Search visible columns..."
+          data-global-search="${key}"
+        >
+
         <select id="${key}CopyColumnSelect" class="db-select"></select>
-        <button class="db-btn secondary" onclick="copyColumnValues('${key}')">📋 Copy Column Cells</button>
-        <button class="db-btn" onclick="exportCSV('${key}', '${DATASETS[key].name.replace(/[^a-z0-9]+/gi, "_")}_Filtered.csv')">↓ Export Filtered CSV</button>
+
+        <button type="button" class="db-btn secondary" data-ui-action="copy-column" data-ds="${key}">
+          📋 Copy Column Cells
+        </button>
+
+        <button type="button" class="db-btn" data-ui-action="export-csv" data-ds="${key}">
+          ↓ Export Filtered CSV
+        </button>
+
         <select id="${key}AddCols" class="db-select" multiple size="4"></select>
-        <button class="db-btn secondary" onclick="addSelectedColumns('${key}')">➕ Add Selected Columns</button>
+
+        <button type="button" class="db-btn secondary" data-ui-action="add-columns" data-ds="${key}">
+          ➕ Add Selected Columns
+        </button>
+
         <select id="${key}RemoveCols" class="db-select" multiple size="4"></select>
-        <button class="db-btn secondary" onclick="removeSelectedColumns('${key}')">➖ Remove Selected Columns</button>
-        <button class="db-btn secondary" onclick="resetColumns('${key}')">↩ Reset Default Columns</button>
-        <button class="db-btn secondary" onclick="clearFilters('${key}')">Clear Filters</button>
+
+        <button type="button" class="db-btn secondary" data-ui-action="remove-columns" data-ds="${key}">
+          ➖ Remove Selected Columns
+        </button>
+
+        <button type="button" class="db-btn secondary" data-ui-action="reset-columns" data-ds="${key}">
+          ↩ Reset Default Columns
+        </button>
+
+        <button type="button" class="db-btn secondary" data-ui-action="clear-filters" data-ds="${key}">
+          Clear Filters
+        </button>
+      </div>
+
+      <div class="cell-copy-tip">
+        Tip: click one cell or drag across cells, then press <strong>Ctrl+C</strong> or <strong>Cmd+C</strong> to copy selected cells.
       </div>
 
       <div class="db-meta">
         Showing <strong id="${key}RowCount">0</strong> rows
       </div>
 
-      <div id="${key}Loading" class="db-loading">Loading ${DATASETS[key].name}...</div>
+      <div id="${key}Loading" class="db-loading">Loading ${escapeHTML(DATASETS[key].name)}...</div>
 
       <div class="db-table-wrap">
         <table id="${key}Table" class="db-table" style="display:none;">
@@ -1184,10 +1402,16 @@ The JSON object must have exactly these keys:
       </div>
 
       <div id="${key}Pagination" class="pagination" style="display:none;">
-        <button onclick="prevPage('${key}')">← Previous</button>
-        <span>Page <span id="${key}CurrentPage">1</span> of <span id="${key}TotalPages">1</span></span>
-        <button onclick="nextPage('${key}')">Next →</button>
-        <select id="${key}RowsPerPage" onchange="changeRowsPerPage('${key}')">
+        <button type="button" data-ui-action="prev-page" data-ds="${key}">← Previous</button>
+
+        <span>
+          Page <span id="${key}CurrentPage">1</span>
+          of <span id="${key}TotalPages">1</span>
+        </span>
+
+        <button type="button" data-ui-action="next-page" data-ds="${key}">Next →</button>
+
+        <select id="${key}RowsPerPage" data-rows-per-page="${key}">
           <option value="50">50 rows</option>
           <option value="100" selected>100 rows</option>
           <option value="250">250 rows</option>
@@ -1215,6 +1439,7 @@ The JSON object must have exactly these keys:
         "Suffix_4",
         MORPHEME_COL_PLUS_INFLECTIONS
       ];
+
       const found = preferred.filter(c => headers.includes(c));
       return found.length ? found : headers.slice(0, 16);
     }
@@ -1240,6 +1465,7 @@ The JSON object must have exactly these keys:
         MORPHEME_COL_PLUS_INFLECTIONS,
         "Vocabulary eXpected Grade Level Flor et al._ 2024"
       ];
+
       const found = preferred.filter(c => headers.includes(c));
       return found.length ? found : headers.slice(0, 20);
     }
@@ -1263,157 +1489,224 @@ The JSON object must have exactly these keys:
     const config = DATASETS[key];
     if (!config || !config.data) return [];
 
+    if (config.uniqueValues[col]) {
+      return config.uniqueValues[col];
+    }
+
     const values = new Set();
 
-    config.data.forEach(row => {
+    for (const row of config.data) {
       let val = row[col];
-      if (val === null || val === undefined) return;
+
+      if (val === null || val === undefined) continue;
+
       val = String(val)
         .replace(/�+/g, "")
         .replace(/\xa0/g, " ")
         .trim();
 
-      if (!val) return;
-      if (val.toLowerCase() === "nan") return;
-      values.add(val);
-    });
+      if (!val || val.toLowerCase() === "nan") continue;
 
-    return Array.from(values).sort((a, b) => a.localeCompare(b));
+      values.add(val);
+    }
+
+    config.uniqueValues[col] = Array.from(values).sort((a, b) => a.localeCompare(b));
+    return config.uniqueValues[col];
   }
 
   async function initDataset(key) {
     const config = DATASETS[key];
-    const loadingEl = document.getElementById(`${key}Loading`);
-
     if (!config) return;
 
-    if (config.loaded || config.loading) {
+    if (config.loaded) {
       renderTable(key);
       return;
     }
 
+    if (config.loading && config.promise) {
+      return config.promise;
+    }
+
     config.loading = true;
 
-    try {
-      if (loadingEl) loadingEl.textContent = `Downloading ${config.name}...`;
+    config.promise = (async () => {
+      const loadingEl = $(`${key}Loading`);
 
-      const response = await fetch(config.file);
-      if (!response.ok) throw new Error(`HTTP ${response.status}: ${config.file}`);
-
-      if (loadingEl) loadingEl.textContent = "Decompressing data...";
-
-      const buffer = await response.arrayBuffer();
-      const inflatedBytes = pako.ungzip(new Uint8Array(buffer));
-      const blob = new Blob([inflatedBytes], { type: "text/csv;charset=utf-8" });
-
-      if (loadingEl) loadingEl.textContent = "Parsing records...";
-
-      config.data = [];
-      config.filtered = [];
-      config.all = [];
-      config.visible = [];
-
-      let firstPaint = false;
-
-      Papa.parse(blob, {
-        header: true,
-        skipEmptyLines: "greedy",
-        chunkSize: 1024 * 1024 * 4,
-        quoteChar: '"',
-        escapeChar: '"',
-        delimiter: "",
-        newline: "",
-        dynamicTyping: false,
-
-        transformHeader: function(h, i) {
-          const clean = String(h || "")
-            .replace(/^[\uFEFF\u200B\u200C\u200D\u200E\u200Fï»¿]+/, "")
-            .replace(/\xa0/g, " ")
-            .trim();
-
-          return clean || `${EMPTY_HEADER_PREFIX}${i}`;
-        },
-
-        chunk: function(results) {
-          if (!config.all.length) {
-            const fields = results.meta && results.meta.fields ? results.meta.fields : [];
-            config.all = fields.filter(f => f && !String(f).startsWith(EMPTY_HEADER_PREFIX));
-            config.visible = chooseDefaultColumns(key, config.all);
-            buildDropdowns(key);
-          }
-
-          const validRows = results.data.filter(row => {
-            return Object.values(row || {}).some(v => String(v || "").trim());
-          });
-
-          validRows.forEach(row => {
-            Object.keys(row).forEach(col => {
-              if (typeof row[col] === "string") {
-                row[col] = row[col].replace(/�+/g, "").trim();
-              }
-            });
-          });
-
-          config.data.push(...validRows);
-
-          if (!firstPaint && config.data.length >= config.rpp) {
-            firstPaint = true;
-            config.filtered = [...config.data];
-
-            document.getElementById(`${key}Table`).style.display = "table";
-            document.getElementById(`${key}Pagination`).style.display = "flex";
-
-            if (loadingEl) {
-              loadingEl.textContent = `Loading remaining records in background... (${config.data.length.toLocaleString()} loaded)`;
-            }
-
-            renderTable(key);
-          } else if (firstPaint && loadingEl) {
-            loadingEl.textContent = `Loading remaining records in background... (${config.data.length.toLocaleString()} loaded)`;
-          }
-        },
-
-        complete: function() {
-          config.loaded = true;
-          config.loading = false;
-          config.filtered = [...config.data];
-          config.page = 1;
-
-          buildDropdowns(key);
-          renderTable(key);
-
-          document.getElementById(`${key}Table`).style.display = "table";
-          document.getElementById(`${key}Pagination`).style.display = "flex";
-
-          if (loadingEl) loadingEl.style.display = "none";
-        },
-
-        error: function(err) {
-          throw err;
+      try {
+        if (loadingEl) {
+          loadingEl.style.display = "block";
+          loadingEl.textContent = `Downloading ${config.name}...`;
         }
-      });
 
-    } catch (err) {
-      console.error(err);
-      config.loading = false;
+        const response = await fetch(config.file);
 
-      if (loadingEl) {
-        loadingEl.textContent = `Failed to load ${config.name}: ${err.message}`;
+        if (!response.ok) {
+          throw new Error(`HTTP ${response.status}: ${config.file}`);
+        }
+
+        if (loadingEl) loadingEl.textContent = "Decompressing data...";
+
+        const buffer = await response.arrayBuffer();
+        let csvBytes = new Uint8Array(buffer);
+
+        try {
+          csvBytes = pako.ungzip(csvBytes);
+        } catch (ungzipError) {
+          console.warn("Could not ungzip. Trying file as plain CSV.", ungzipError);
+        }
+
+        const blob = new Blob([csvBytes], { type: "text/csv;charset=utf-8" });
+
+        config.data = [];
+        config.filtered = [];
+        config.all = [];
+        config.visible = [];
+        config.uniqueValues = {};
+
+        let firstPaint = false;
+
+        if (loadingEl) loadingEl.textContent = "Parsing records...";
+
+        await new Promise((resolve, reject) => {
+          let rejected = false;
+
+          Papa.parse(blob, {
+            header: true,
+            skipEmptyLines: "greedy",
+            chunkSize: 1024 * 1024 * 4,
+            quoteChar: '"',
+            escapeChar: '"',
+            delimiter: "",
+            newline: "",
+            dynamicTyping: false,
+
+            transformHeader: function(h, i) {
+              const clean = String(h || "")
+                .replace(/^[\uFEFF\u200B\u200C\u200D\u200E\u200Fï»¿]+/, "")
+                .replace(/\xa0/g, " ")
+                .trim();
+
+              return clean || `${EMPTY_HEADER_PREFIX}${i}`;
+            },
+
+            chunk: function(results, parser) {
+              try {
+                if (!config.all.length) {
+                  const fields = results.meta && results.meta.fields ? results.meta.fields : [];
+                  config.all = fields.filter(f => f && !String(f).startsWith(EMPTY_HEADER_PREFIX));
+                  config.visible = chooseDefaultColumns(key, config.all);
+                  buildDropdowns(key);
+                }
+
+                const validRows = results.data.filter(row => {
+                  return Object.values(row || {}).some(v => String(v || "").trim());
+                });
+
+                for (const row of validRows) {
+                  for (const col of Object.keys(row)) {
+                    if (typeof row[col] === "string") {
+                      row[col] = row[col]
+                        .replace(/�+/g, "")
+                        .replace(/\xa0/g, " ")
+                        .trim();
+                    }
+                  }
+                }
+
+                config.data.push(...validRows);
+
+                if (!firstPaint && config.data.length >= config.rpp) {
+                  firstPaint = true;
+                  config.filtered = [...config.data];
+
+                  const table = $(`${key}Table`);
+                  const pagination = $(`${key}Pagination`);
+
+                  if (table) table.style.display = "table";
+                  if (pagination) pagination.style.display = "flex";
+
+                  if (loadingEl) {
+                    loadingEl.textContent = `Loading remaining records in background... (${config.data.length.toLocaleString()} loaded)`;
+                  }
+
+                  renderTable(key);
+                } else if (firstPaint && loadingEl) {
+                  loadingEl.textContent = `Loading remaining records in background... (${config.data.length.toLocaleString()} loaded)`;
+                }
+              } catch (err) {
+                rejected = true;
+                parser.abort();
+                reject(err);
+              }
+            },
+
+            complete: function() {
+              if (!rejected) resolve();
+            },
+
+            error: function(err) {
+              reject(err);
+            }
+          });
+        });
+
+        config.loaded = true;
+        config.loading = false;
+        config.uniqueValues = {};
+        config.page = 1;
+
+        buildDropdowns(key);
+
+        if (hasActiveFilterState(key)) {
+          filterTable(key);
+        } else {
+          config.filtered = [...config.data];
+          renderTable(key);
+        }
+
+        const table = $(`${key}Table`);
+        const pagination = $(`${key}Pagination`);
+
+        if (table) table.style.display = "table";
+        if (pagination) pagination.style.display = "flex";
+        if (loadingEl) loadingEl.style.display = "none";
+      } catch (err) {
+        console.error(err);
+
+        config.loaded = false;
+        config.loading = false;
+
+        if (loadingEl) {
+          loadingEl.textContent = `Failed to load ${config.name}: ${err.message}`;
+          loadingEl.style.display = "block";
+        }
+      } finally {
+        config.loading = false;
+        config.promise = null;
       }
-    }
+    })();
+
+    return config.promise;
+  }
+
+  function hasActiveFilterState(key) {
+    const search = $(`${key}GlobalSearch`);
+    const hasSearch = search && search.value.trim();
+    const hasFilters = columnFilters[key] && Object.keys(columnFilters[key]).length > 0;
+    return Boolean(hasSearch || hasFilters);
   }
 
   function buildDropdowns(key) {
     const config = DATASETS[key];
 
-    const copySelect = document.getElementById(`${key}CopyColumnSelect`);
+    const copySelect = $(`${key}CopyColumnSelect`);
     if (copySelect) {
       copySelect.innerHTML = config.visible
         .map(c => `<option value="${escapeHTML(c)}">${escapeHTML(displayColumnName(c))}</option>`)
         .join("");
     }
 
-    const addSelect = document.getElementById(`${key}AddCols`);
+    const addSelect = $(`${key}AddCols`);
     if (addSelect) {
       addSelect.innerHTML = config.all
         .filter(c => !config.visible.includes(c))
@@ -1421,7 +1714,7 @@ The JSON object must have exactly these keys:
         .join("");
     }
 
-    const removeSelect = document.getElementById(`${key}RemoveCols`);
+    const removeSelect = $(`${key}RemoveCols`);
     if (removeSelect) {
       removeSelect.innerHTML = config.visible
         .map(c => `<option value="${escapeHTML(c)}">${escapeHTML(displayColumnName(c))}</option>`)
@@ -1433,20 +1726,27 @@ The JSON object must have exactly these keys:
     const config = DATASETS[key];
     if (!config) return;
 
-    const rowCountEl = document.getElementById(`${key}RowCount`);
+    clearCellSelection();
+
+    const rowCountEl = $(`${key}RowCount`);
+    const headerRow = $(`${key}HeaderRow`);
+    const filterRow = $(`${key}FilterRow`);
+    const tbody = $(`${key}TableBody`);
+
     if (rowCountEl) {
       rowCountEl.textContent = config.filtered.length.toLocaleString();
     }
-
-    const headerRow = document.getElementById(`${key}HeaderRow`);
-    const filterRow = document.getElementById(`${key}FilterRow`);
-    const tbody = document.getElementById(`${key}TableBody`);
 
     if (!headerRow || !filterRow || !tbody) return;
 
     headerRow.innerHTML = config.visible.map(col => {
       const symbol = config.sortBy === col ? (config.sortDesc ? " 🔽" : " 🔼") : "";
-      return `<th onclick="sortTable('${key}', '${escapeJS(col)}')">${escapeHTML(displayColumnName(col))}${symbol}</th>`;
+
+      return `
+        <th data-sort-ds="${key}" data-sort-col="${escapeHTML(col)}">
+          ${escapeHTML(displayColumnName(col))}${symbol}
+        </th>
+      `;
     }).join("") + `<th>Actions</th>`;
 
     filterRow.innerHTML = config.visible.map(col => {
@@ -1455,19 +1755,38 @@ The JSON object must have exactly these keys:
 
       if (shouldUseDropdownFilter(key, col)) {
         const options = getUniqueColumnValues(key, col);
-        let html = `<td><select onchange="onColumnFilter('${key}', '${escapeJS(col)}', this.value, 'exact')">`;
-        html += `<option value="">All</option>`;
 
-        options.forEach(opt => {
+        let html = `
+          <td>
+            <select
+              data-filter-ds="${key}"
+              data-filter-col="${escapeHTML(col)}"
+              data-filter-mode="exact"
+            >
+              <option value="">All</option>
+        `;
+
+        for (const opt of options) {
           const selected = currentVal === opt ? "selected" : "";
           html += `<option value="${escapeHTML(opt)}" ${selected}>${escapeHTML(opt)}</option>`;
-        });
+        }
 
         html += `</select></td>`;
         return html;
       }
 
-      return `<td><input type="text" placeholder="Filter..." value="${escapeHTML(currentVal)}" oninput="onColumnFilter('${key}', '${escapeJS(col)}', this.value, 'contains')"></td>`;
+      return `
+        <td>
+          <input
+            type="text"
+            placeholder="Filter..."
+            value="${escapeHTML(currentVal)}"
+            data-filter-ds="${key}"
+            data-filter-col="${escapeHTML(col)}"
+            data-filter-mode="contains"
+          >
+        </td>
+      `;
     }).join("") + `<td></td>`;
 
     const totalPages = Math.ceil(config.filtered.length / config.rpp) || 1;
@@ -1476,8 +1795,8 @@ The JSON object must have exactly these keys:
       config.page = totalPages;
     }
 
-    const currentPageEl = document.getElementById(`${key}CurrentPage`);
-    const totalPagesEl = document.getElementById(`${key}TotalPages`);
+    const currentPageEl = $(`${key}CurrentPage`);
+    const totalPagesEl = $(`${key}TotalPages`);
 
     if (currentPageEl) currentPageEl.textContent = config.page;
     if (totalPagesEl) totalPagesEl.textContent = totalPages;
@@ -1497,7 +1816,7 @@ The JSON object must have exactly these keys:
 
       html += "<tr>";
 
-      config.visible.forEach(col => {
+      config.visible.forEach((col, colIndex) => {
         let rawVal = row[col] ?? "";
 
         if (typeof rawVal === "string") {
@@ -1511,22 +1830,30 @@ The JSON object must have exactly these keys:
         const displayVal = formatCellValue(col, rawVal);
         const cellClass = String(displayVal).length > 60 ? "long-text" : "";
 
-        html += `<td class="${cellClass}">${escapeHTML(displayVal)}</td>`;
+        html += `
+          <td
+            class="db-cell ${cellClass}"
+            data-ds="${key}"
+            data-row-index="${rowIndex}"
+            data-col-index="${colIndex}"
+            data-col="${escapeHTML(col)}"
+            title="Click or drag cells, then press Ctrl/Cmd+C to copy"
+          >${escapeHTML(displayVal)}</td>
+        `;
       });
 
       const lookupWord = getLookupWordFromRow(row);
-      const escWord = escapeJS(lookupWord);
 
       html += `
         <td>
           <div class="row-actions">
-            <button class="source-btn" ${lookupWord ? `onclick="lookupGoogle('${escWord}')"` : "disabled"}>🔎 Google</button>
-            <button class="lookup-btn wiktionary" ${lookupWord ? `onclick="lookupDefinition('${escWord}')"` : "disabled"}>📖 Definition</button>
-            <button class="lookup-btn etymonline" ${lookupWord ? `onclick="lookupEtymology('${escWord}')"` : "disabled"}>🏛 Etymology</button>
-            <button class="lookup-btn wordnik" ${lookupWord ? `onclick="lookupWordnik('${escWord}')"` : "disabled"}>🧠 Wordnik</button>
-            <button class="explain-btn" onclick="showExplainFromIndex('${key}', ${rowIndex})">✨ Explain</button>
-            <button class="check-btn" onclick="checkMorphologyFromIndex('${key}', ${rowIndex})">🧪 Review Parse</button>
-            <button class="report-btn" onclick="showReportFromIndex('${key}', ${rowIndex})">⚠️ Report</button>
+            <button type="button" class="source-btn" data-row-action="google" data-word="${escapeHTML(lookupWord)}" ${lookupWord ? "" : "disabled"}>🔎 Google</button>
+            <button type="button" class="lookup-btn wiktionary" data-row-action="definition" data-word="${escapeHTML(lookupWord)}" ${lookupWord ? "" : "disabled"}>📖 Definition</button>
+            <button type="button" class="lookup-btn etymonline" data-row-action="etymology" data-word="${escapeHTML(lookupWord)}" ${lookupWord ? "" : "disabled"}>🏛 Etymology</button>
+            <button type="button" class="lookup-btn wordnik" data-row-action="wordnik" data-word="${escapeHTML(lookupWord)}" ${lookupWord ? "" : "disabled"}>🧠 Wordnik</button>
+            <button type="button" class="explain-btn" data-row-action="explain" data-ds="${key}" data-row-index="${rowIndex}">✨ Explain</button>
+            <button type="button" class="check-btn" data-row-action="review-parse" data-ds="${key}" data-row-index="${rowIndex}">🧪 Review Parse</button>
+            <button type="button" class="report-btn" data-row-action="report" data-ds="${key}" data-row-index="${rowIndex}">⚠️ Report</button>
           </div>
         </td>
       `;
@@ -1581,16 +1908,15 @@ The JSON object must have exactly these keys:
 
   function filterTableDebounced(key) {
     clearTimeout(filterTimeouts[key]);
-    filterTimeouts[key] = setTimeout(() => filterTable(key), 350);
+    filterTimeouts[key] = setTimeout(() => filterTable(key), 300);
   }
 
   function filterTable(key) {
     const config = DATASETS[key];
     if (!config) return;
 
-    const globalSearchEl = document.getElementById(`${key}GlobalSearch`);
+    const globalSearchEl = $(`${key}GlobalSearch`);
     const globalQuery = globalSearchEl ? globalSearchEl.value.trim().toLowerCase() : "";
-
     const colFilters = columnFilters[key] || {};
     const filterCols = Object.keys(colFilters);
 
@@ -1604,9 +1930,8 @@ The JSON object must have exactly these keys:
     config.filtered = config.data.filter(row => {
       for (const col of filterCols) {
         const filterDef = colFilters[col];
-        const rawCell = row[col] ?? "";
 
-        const cell = String(rawCell)
+        const cell = String(row[col] ?? "")
           .replace(/�+/g, "")
           .trim();
 
@@ -1624,6 +1949,7 @@ The JSON object must have exactly these keys:
 
         for (const col of config.visible) {
           const cell = String(row[col] ?? "").toLowerCase();
+
           if (cell.includes(globalQuery)) {
             found = true;
             break;
@@ -1642,13 +1968,16 @@ The JSON object must have exactly these keys:
 
   function clearFilters(key) {
     columnFilters[key] = {};
-    const search = document.getElementById(`${key}GlobalSearch`);
+
+    const search = $(`${key}GlobalSearch`);
     if (search) search.value = "";
+
     filterTable(key);
   }
 
   function sortTable(key, col) {
     const config = DATASETS[key];
+    if (!config) return;
 
     if (config.sortBy === col) {
       config.sortDesc = !config.sortDesc;
@@ -1660,7 +1989,6 @@ The JSON object must have exactly these keys:
     config.filtered.sort((a, b) => {
       const av = a[col] ?? "";
       const bv = b[col] ?? "";
-
       const an = Number(av);
       const bn = Number(bv);
 
@@ -1680,14 +2008,19 @@ The JSON object must have exactly these keys:
   }
 
   function prevPage(key) {
-    if (DATASETS[key].page > 1) {
-      DATASETS[key].page--;
+    const config = DATASETS[key];
+    if (!config) return;
+
+    if (config.page > 1) {
+      config.page--;
       renderTable(key);
     }
   }
 
   function nextPage(key) {
     const config = DATASETS[key];
+    if (!config) return;
+
     const totalPages = Math.ceil(config.filtered.length / config.rpp) || 1;
 
     if (config.page < totalPages) {
@@ -1696,27 +2029,29 @@ The JSON object must have exactly these keys:
     }
   }
 
-  function changeRowsPerPage(key) {
-    const el = document.getElementById(`${key}RowsPerPage`);
-    if (!el) return;
+  function changeRowsPerPage(key, value) {
+    const config = DATASETS[key];
+    if (!config) return;
 
-    DATASETS[key].rpp = parseInt(el.value, 10);
-    DATASETS[key].page = 1;
+    config.rpp = parseInt(value, 10) || 100;
+    config.page = 1;
 
     renderTable(key);
   }
 
   function addSelectedColumns(key) {
     const config = DATASETS[key];
-    const select = document.getElementById(`${key}AddCols`);
-    if (!select) return;
+    const select = $(`${key}AddCols`);
+    if (!config || !select) return;
 
     const selected = Array.from(select.selectedOptions).map(o => o.value);
     if (!selected.length) return;
 
-    selected.forEach(col => {
-      if (!config.visible.includes(col)) config.visible.push(col);
-    });
+    for (const col of selected) {
+      if (!config.visible.includes(col)) {
+        config.visible.push(col);
+      }
+    }
 
     buildDropdowns(key);
     renderTable(key);
@@ -1724,8 +2059,8 @@ The JSON object must have exactly these keys:
 
   function removeSelectedColumns(key) {
     const config = DATASETS[key];
-    const select = document.getElementById(`${key}RemoveCols`);
-    if (!select) return;
+    const select = $(`${key}RemoveCols`);
+    if (!config || !select) return;
 
     const selected = Array.from(select.selectedOptions).map(o => o.value);
     if (!selected.length) return;
@@ -1741,22 +2076,26 @@ The JSON object must have exactly these keys:
 
     if (columnFilters[key]) {
       Object.keys(columnFilters[key]).forEach(col => {
-        if (!config.visible.includes(col)) delete columnFilters[key][col];
+        if (!config.visible.includes(col)) {
+          delete columnFilters[key][col];
+        }
       });
     }
 
+    config.page = 1;
     buildDropdowns(key);
     renderTable(key);
   }
 
   function resetColumns(key) {
     const config = DATASETS[key];
+    if (!config) return;
+
     config.visible = chooseDefaultColumns(key, config.all);
     config.page = 1;
-
     columnFilters[key] = {};
 
-    const search = document.getElementById(`${key}GlobalSearch`);
+    const search = $(`${key}GlobalSearch`);
     if (search) search.value = "";
 
     buildDropdowns(key);
@@ -1765,8 +2104,12 @@ The JSON object must have exactly these keys:
 
   function copyColumnValues(key) {
     const config = DATASETS[key];
-    const select = document.getElementById(`${key}CopyColumnSelect`);
-    if (!select) return alert("No copy-column selector found.");
+    const select = $(`${key}CopyColumnSelect`);
+
+    if (!config || !select) {
+      alert("No copy-column selector found.");
+      return;
+    }
 
     const col = select.value;
 
@@ -1775,56 +2118,63 @@ The JSON object must have exactly these keys:
       .filter(v => String(v).trim())
       .join("\n");
 
-    navigator.clipboard.writeText(text).then(() => {
-      alert(`Copied column "${displayColumnName(col)}"!`);
+    if (!text) {
+      alert("No non-empty cells found in this column.");
+      return;
+    }
+
+    copyText(text).then(() => {
+      showCopyToast(`Copied column "${displayColumnName(col)}"`);
     });
   }
 
   function exportCSV(key, filename) {
     const config = DATASETS[key];
 
-    if (!config.filtered.length) {
+    if (!config || !config.filtered.length) {
       alert("No rows to export.");
       return;
     }
+
+    const exportName = filename || `${config.name.replace(/[^a-z0-9]+/gi, "_")}_Filtered.csv`;
 
     const csv = Papa.unparse({
       fields: config.visible,
       data: config.filtered.map(row => {
         const out = {};
-        config.visible.forEach(col => out[col] = row[col] ?? "");
+        config.visible.forEach(col => {
+          out[col] = row[col] ?? "";
+        });
         return out;
       })
     });
 
     const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
+    const url = URL.createObjectURL(blob);
     const link = document.createElement("a");
 
-    link.href = URL.createObjectURL(blob);
-    link.download = filename;
+    link.href = url;
+    link.download = exportName;
     link.click();
 
-    URL.revokeObjectURL(link.href);
+    setTimeout(() => URL.revokeObjectURL(url), 0);
   }
 
   function openTab(tabName, btnEl) {
-    document.querySelectorAll(".tab-content").forEach(el => el.classList.remove("active"));
-    document.querySelectorAll(".tab-btn").forEach(el => el.classList.remove("active"));
+    $$(".tab-content").forEach(el => el.classList.remove("active"));
+    $$(".tab-btn").forEach(el => el.classList.remove("active"));
 
-    document.getElementById(tabName).classList.add("active");
+    const tab = $(tabName);
+    if (tab) tab.classList.add("active");
     if (btnEl) btnEl.classList.add("active");
 
     if (tabName === "curated") {
       activeKey = "cf";
       initDataset("cf");
-    }
-
-    if (tabName === "word-families") {
+    } else if (tabName === "word-families") {
       activeKey = "wf";
       initDataset("wf");
-    }
-
-    if (tabName === "compounds") {
+    } else if (tabName === "compounds") {
       const activeSub = document.querySelector("#compounds .subtab-pane.active");
       activeKey = activeSub && activeSub.id === "comp-stats" ? "cs" : "cm";
       initDataset(activeKey);
@@ -1832,15 +2182,19 @@ The JSON object must have exactly these keys:
   }
 
   function openCompoundSubTab(subPaneId, btn) {
-    const parent = document.getElementById("compounds");
+    const parent = $("compounds");
+    if (!parent) return;
 
     parent.querySelectorAll(".subtab-btn").forEach(b => b.classList.remove("active"));
     parent.querySelectorAll(".subtab-pane").forEach(p => p.classList.remove("active"));
 
     btn.classList.add("active");
-    document.getElementById(subPaneId).classList.add("active");
+
+    const pane = $(subPaneId);
+    if (pane) pane.classList.add("active");
 
     const key = subPaneId === "comp-main" ? "cm" : "cs";
+
     activeKey = key;
     initDataset(key);
   }
@@ -1862,6 +2216,7 @@ The JSON object must have exactly these keys:
       const v = String(row && row[c] !== undefined ? row[c] : "").trim();
       if (v) return v;
     }
+
     return "";
   }
 
@@ -1905,19 +2260,42 @@ The JSON object must have exactly these keys:
     );
   }
 
+  function showModal(id) {
+    const modal = $(id);
+    if (modal) modal.classList.add("show");
+    updateModalOpenState();
+  }
+
+  function hideModal(id) {
+    const modal = $(id);
+    if (modal) modal.classList.remove("show");
+    updateModalOpenState();
+  }
+
+  function hasOpenModal() {
+    return $$(".modal.show").length > 0;
+  }
+
+  function updateModalOpenState() {
+    document.body.classList.toggle("modal-open", hasOpenModal());
+  }
+
+  function closeAllModals() {
+    $$(".modal.show").forEach(modal => modal.classList.remove("show"));
+    updateModalOpenState();
+  }
+
   function showColumnKey() {
-    document.getElementById("columnModal").classList.add("show");
-    document.body.classList.add("modal-open");
+    showModal("columnModal");
   }
 
   function closeModal() {
-    document.getElementById("columnModal").classList.remove("show");
-    document.body.classList.remove("modal-open");
+    hideModal("columnModal");
   }
 
   function showExplainFromIndex(key, rowIndex) {
     const config = DATASETS[key];
-    const row = config.filtered[Number(rowIndex)];
+    const row = config && config.filtered[Number(rowIndex)];
 
     if (!row) {
       alert("Could not open explanation for this row.");
@@ -1928,8 +2306,8 @@ The JSON object must have exactly these keys:
   }
 
   function showExplainModal(key, row) {
-    const preview = document.getElementById("explainPreview");
-    const task = document.getElementById("explainTask");
+    const preview = $("explainPreview");
+    const task = $("explainTask");
 
     preview.value = buildExplainPrompt(row, task.value || "both", key);
 
@@ -1937,25 +2315,36 @@ The JSON object must have exactly these keys:
       preview.value = buildExplainPrompt(row, task.value || "both", key);
     };
 
-    document.getElementById("explainModalBackdrop").classList.add("show");
-    document.body.classList.add("modal-open");
+    showModal("explainModalBackdrop");
   }
 
   function closeExplainModal() {
-    document.getElementById("explainModalBackdrop").classList.remove("show");
-    document.body.classList.remove("modal-open");
+    hideModal("explainModalBackdrop");
   }
 
   function copyExplainPrompt() {
-    const text = document.getElementById("explainPreview").value.trim();
-    navigator.clipboard.writeText(text).then(() => alert("Prompt copied."));
+    const text = $("explainPreview").value.trim();
+
+    if (!text) {
+      alert("No prompt to copy.");
+      return;
+    }
+
+    copyText(text).then(() => showCopyToast("Prompt copied"));
   }
 
   function openExplainInAI() {
-    const prompt = document.getElementById("explainPreview").value.trim();
-    const provider = document.getElementById("explainProvider").value;
-    const encoded = encodeURIComponent(prompt);
+    const prompt = $("explainPreview").value.trim();
+    const provider = $("explainProvider").value;
 
+    if (!prompt) {
+      alert("No prompt to open.");
+      return;
+    }
+
+    copyText(prompt).catch(() => {});
+
+    const encoded = encodeURIComponent(prompt);
     let url = `https://chatgpt.com/?q=${encoded}`;
 
     if (provider === "gemini") {
@@ -1966,9 +2355,7 @@ The JSON object must have exactly these keys:
       url = "https://claude.ai/new";
     }
 
-    navigator.clipboard.writeText(prompt).catch(() => {});
     window.open(url, "_blank", "noopener");
-
     closeExplainModal();
   }
 
@@ -1978,8 +2365,15 @@ The JSON object must have exactly these keys:
     const root = getFirstNonEmpty(row, ["GPT_Root", "Root_1", "Greek_Latin_Root_1"]);
     const parts = getFirstNonEmpty(row, ["GPT_Coded_Word_Parts", "GPT_CODES"]);
 
-    const prefixes = ["Prefix_1", "Prefix_2", "Prefix_3"].map(c => row[c]).filter(Boolean).join(", ");
-    const suffixes = ["Suffix_1", "Suffix_2", "Suffix_3", "Suffix_4", "Suffix_5", "Suffix_6"].map(c => row[c]).filter(Boolean).join(", ");
+    const prefixes = PREFIX_COLS
+      .map(c => row[c])
+      .filter(Boolean)
+      .join(", ");
+
+    const suffixes = SUFFIX_COLS
+      .map(c => row[c])
+      .filter(Boolean)
+      .join(", ");
 
     let instruction = "Explain this vocabulary entry, its morphology, and its etymology/history when available.";
 
@@ -1991,12 +2385,10 @@ The JSON object must have exactly these keys:
       instruction = "Focus on etymology/history if available.";
     }
 
-    const sheetName =
-      key === "cf" ? "Curated Frequent and Familiar Word Families" :
-      key === "wf" ? "Full Word Families" :
-      "Compound Words";
+    const sheetName = getDatasetLabel(key);
 
     return `You are a literacy and morphology expert.
+
 ${instruction}
 
 This row is from the ${sheetName} sheet.
@@ -2018,13 +2410,11 @@ Please:
   }
 
   function openMorphCheckModal() {
-    document.getElementById("morphCheckModalBackdrop").classList.add("show");
-    document.body.classList.add("modal-open");
+    showModal("morphCheckModalBackdrop");
   }
 
   function closeMorphCheckModal() {
-    document.getElementById("morphCheckModalBackdrop").classList.remove("show");
-    document.body.classList.remove("modal-open");
+    hideModal("morphCheckModalBackdrop");
   }
 
   function copyMorphCheckResult() {
@@ -2033,8 +2423,8 @@ Please:
       return;
     }
 
-    navigator.clipboard.writeText(lastMorphCheckText).then(() => {
-      alert("AI morphology review copied.");
+    copyText(lastMorphCheckText).then(() => {
+      showCopyToast("AI morphology review copied");
     });
   }
 
@@ -2044,79 +2434,240 @@ Please:
       return;
     }
 
-    navigator.clipboard.writeText(lastMorphCheckPrompt).catch(() => {});
+    copyText(lastMorphCheckPrompt).catch(() => {});
 
     const encoded = encodeURIComponent(lastMorphCheckPrompt);
     window.open(`https://chatgpt.com/?q=${encoded}`, "_blank", "noopener");
   }
 
-  function buildMorphCheckUserPrompt(row, key) {
-    const word = getFirstNonEmpty(row, ["Word", "FLemma", "Compound", "Compound_Word"]);
-    const baseword = getFirstNonEmpty(row, ["Baseword", "Baseword_1"]);
-    const root = getFirstNonEmpty(row, ["GPT_Root", "Root_1"]);
-    const greekLatinRoot = getFirstNonEmpty(row, ["Greek_Latin_Root_1", "Greek_Latin_Root"]);
-    const parts = getFirstNonEmpty(row, ["GPT_Coded_Word_Parts", "GPT_CODES"]);
+  function cleanMorphValue(value) {
+    return String(value ?? "")
+      .replace(/�+/g, "")
+      .replace(/\xa0/g, " ")
+      .trim();
+  }
 
-    const prefixes = ["Prefix_1", "Prefix_2", "Prefix_3"]
-      .map(c => row[c])
-      .filter(v => v && String(v).trim())
-      .join(", ");
+  function getDatasetLabel(key) {
+    if (key === "cf") return "Curated Frequent and Familiar Word Families";
+    if (key === "wf") return "Full Word Families";
+    if (key === "cm") return "Compound Words Main File";
+    if (key === "cs") return "Compound Word Family Stats";
+    return "BAWF dataset";
+  }
 
-    const suffixes = ["Suffix_1", "Suffix_2", "Suffix_3", "Suffix_4", "Suffix_5", "Suffix_6"]
-      .map(c => row[c])
-      .filter(v => v && String(v).trim())
-      .join(", ");
+  function getExactDatabaseParse(row) {
+    return cleanMorphValue(getFirstNonEmpty(row, [
+      "GPT_Coded_Word_Parts",
+      "GPT_CODES"
+    ]));
+  }
 
-    const morphNoInfl = row[MORPHEME_COL_WITHOUT_INFLECTIONS] || "";
-    const morphPlusInfl = row[MORPHEME_COL_PLUS_INFLECTIONS] || "";
-    const wordZipf = getFirstNonEmpty(row, ["Word_frq_Zipf_Recomputed", "Word_frq_Zipf"]);
-    const familyZipf = getFirstNonEmpty(row, ["Baseword_frq_Zipf"]);
-    const familiarity = getFirstNonEmpty(row, ["GPT_Familiarity Brysbaert et al._ 2024"]);
-    const grade = getFirstNonEmpty(row, ["Vocabulary eXpected Grade Level Flor et al._ 2024"]);
-    const aoa = getFirstNonEmpty(row, ["Reading AoA Green et al._ 2025"]);
+  function getAffixValues(row, cols) {
+    return cols
+      .map(col => cleanMorphValue(row[col]))
+      .filter(v => v && v.toLowerCase() !== "nan");
+  }
 
-    const datasetName =
-      key === "cf" ? "Curated Frequent and Familiar Word Families" :
-      key === "wf" ? "Full Word Families" :
-      key === "cm" ? "Compound Words Main File" :
-      key === "cs" ? "Compound Word Family Stats" :
-      "BAWF dataset";
+  function escapeRegExp(str) {
+    return String(str).replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+  }
 
+  function parseContainsEnding(endingLabel, parse, suffixes) {
+    const endings = String(endingLabel)
+      .split("/")
+      .map(v => v.trim().replace(/^-/, "").toLowerCase())
+      .filter(Boolean);
+
+    const text = cleanMorphValue(parse).toLowerCase();
+    const compact = text.replace(/\s+/g, "");
+
+    const suffixNorms = suffixes.map(s =>
+      cleanMorphValue(s).toLowerCase().replace(/^-/, "")
+    );
+
+    return endings.some(bare => {
+      if (suffixNorms.includes(bare)) return true;
+
+  const compactPatterns = [
+  `+-${bare}`,
+  `+${bare}`,
+  `<-${bare}>`,
+  `<${bare}>`,
+  `(-${bare})`,
+  `(${bare})`
+];
+
+      if (compactPatterns.some(pattern => compact.includes(pattern))) {
+        return true;
+      }
+
+      const re = new RegExp(`(^|[^a-z])[-]?${escapeRegExp(bare)}($|[^a-z])`, "i");
+      return re.test(text);
+    });
+  }
+
+  function detectLikelySurfaceInflectionOmission(row) {
+    const word = cleanMorphValue(getFirstNonEmpty(row, [
+      "Word",
+      "FLemma",
+      "Compound",
+      "Compound_Word"
+    ]));
+
+    const base = cleanMorphValue(getFirstNonEmpty(row, [
+      "Baseword",
+      "Baseword_1"
+    ]));
+
+    if (!word || !base) return "";
+
+    const wordLower = word.toLowerCase();
+    const baseLower = base.toLowerCase();
+
+    if (wordLower === baseLower) return "";
+
+    const parse = getExactDatabaseParse(row);
+    const suffixes = getAffixValues(row, SUFFIX_COLS);
+    const candidates = [];
+
+    function addCandidate(ending, reason) {
+      candidates.push({ ending, reason });
+    }
+
+    if (wordLower === baseLower + "ing") {
+      addCandidate("-ing", `${word} appears to be ${base} + -ing`);
+    }
+
+    if (baseLower.endsWith("e") && wordLower === baseLower.slice(0, -1) + "ing") {
+      addCandidate("-ing", `${word} appears to be ${base} + -ing with final-e deletion`);
+    }
+
+    if (wordLower === baseLower + baseLower.slice(-1) + "ing") {
+      addCandidate("-ing", `${word} appears to be ${base} + -ing with consonant doubling`);
+    }
+
+    if (wordLower === baseLower + "ed") {
+      addCandidate("-ed", `${word} appears to be ${base} + -ed`);
+    }
+
+    if (baseLower.endsWith("e") && wordLower === baseLower + "d") {
+      addCandidate("-ed", `${word} appears to be ${base} + -ed, written as -d after final e`);
+    }
+
+    if (wordLower === baseLower + baseLower.slice(-1) + "ed") {
+      addCandidate("-ed", `${word} appears to be ${base} + -ed with consonant doubling`);
+    }
+
+    if (baseLower.endsWith("y") && wordLower === baseLower.slice(0, -1) + "ied") {
+      addCandidate("-ed", `${word} appears to be ${base} + -ed with y-to-i change`);
+    }
+
+    if (wordLower === baseLower + "s") {
+      addCandidate("-s", `${word} appears to be ${base} + -s`);
+    }
+
+    if (wordLower === baseLower + "es") {
+      addCandidate("-s/-es", `${word} appears to be ${base} + -es`);
+    }
+
+    if (baseLower.endsWith("y") && wordLower === baseLower.slice(0, -1) + "ies") {
+      addCandidate("-s/-es", `${word} appears to be ${base} + -s/-es with y-to-i change`);
+    }
+
+    if (wordLower === baseLower + "er") {
+      addCandidate("-er", `${word} appears to be ${base} + -er`);
+    }
+
+    if (wordLower === baseLower + "est") {
+      addCandidate("-est", `${word} appears to be ${base} + -est`);
+    }
+
+    const missing = candidates.find(c => !parseContainsEnding(c.ending, parse, suffixes));
+    if (!missing) return "";
+
+    return `Possible omitted surface inflection: ${missing.reason}. Exact database-coded parse is "${parse || "[blank]"}"; suffix columns show "${suffixes.join(", ") || "none"}".`;
+  }
+
+  function buildMorphReviewPacket(row, key) {
     const compactRow = {};
 
     Object.keys(row || {}).forEach(col => {
       const val = row[col];
+
       if (val !== null && val !== undefined && String(val).trim()) {
         compactRow[col] = String(val).trim();
       }
     });
 
-    return `Check the morphological parse for this BAWF database row.
+    return {
+      dataset_key: key,
+      dataset_name: getDatasetLabel(key),
 
-Dataset: ${datasetName}
+      surface_word: cleanMorphValue(getFirstNonEmpty(row, [
+        "Word",
+        "FLemma",
+        "Compound",
+        "Compound_Word"
+      ])),
 
-Key row information:
-- Word: ${word}
-- Baseword: ${baseword}
-- GPT-coded word parts: ${parts}
-- GPT root: ${root}
-- Greek/Latin root: ${greekLatinRoot}
-- Prefixes: ${prefixes || "none listed"}
-- Suffixes: ${suffixes || "none listed"}
-- Morpheme count excluding inflections: ${morphNoInfl}
-- Morpheme count including inflections: ${morphPlusInfl}
-- Word Zipf frequency: ${wordZipf}
-- Family Zipf frequency: ${familyZipf}
-- GPT familiarity: ${familiarity}
-- Grade estimate: ${grade}
-- Reading AoA: ${aoa}
+      database_baseword: cleanMorphValue(getFirstNonEmpty(row, [
+        "Baseword",
+        "Baseword_1"
+      ])),
 
-Full non-empty row JSON:
-${JSON.stringify(compactRow, null, 2)}
+      database_parse_exact: getExactDatabaseParse(row),
 
-Please evaluate whether the parse is morphologically accurate.
+      database_root_exact: cleanMorphValue(getFirstNonEmpty(row, [
+        "GPT_Root",
+        "Root_1"
+      ])),
+
+      database_greek_latin_root_exact: cleanMorphValue(getFirstNonEmpty(row, [
+        "Greek_Latin_Root_1",
+        "Greek_Latin_Root"
+      ])),
+
+      database_prefixes_exact: getAffixValues(row, PREFIX_COLS),
+      database_suffixes_exact: getAffixValues(row, SUFFIX_COLS),
+
+      morpheme_count_excluding_inflections: cleanMorphValue(row[MORPHEME_COL_WITHOUT_INFLECTIONS]),
+      morpheme_count_including_inflections: cleanMorphValue(row[MORPHEME_COL_PLUS_INFLECTIONS]),
+
+      word_zipf: cleanMorphValue(getFirstNonEmpty(row, [
+        "Word_frq_Zipf_Recomputed",
+        "Word_frq_Zipf"
+      ])),
+
+      family_zipf: cleanMorphValue(row["Baseword_frq_Zipf"]),
+      familiarity: cleanMorphValue(row["GPT_Familiarity Brysbaert et al._ 2024"]),
+      grade_estimate: cleanMorphValue(row["Vocabulary eXpected Grade Level Flor et al._ 2024"]),
+      reading_aoa: cleanMorphValue(row["Reading AoA Green et al._ 2025"]),
+
+      local_precheck_warning: detectLikelySurfaceInflectionOmission(row),
+      full_non_empty_row_json: compactRow
+    };
+  }
+
+  function buildMorphCheckUserPromptFromPacket(packet) {
+    return `Audit the exact BAWF database parse below.
+
+Important:
+- The current database parse is database_parse_exact.
+- Do not rewrite database_parse_exact before judging it.
+- If you think the parse should include something else, put that in suggested_parse.
+- If local_precheck_warning is not empty, explicitly address it.
+
+BAWF parse review packet:
+${JSON.stringify(packet, null, 2)}
 
 Return only the required JSON object.`;
+  }
+
+  function normalizeParseForCompare(value) {
+    return cleanMorphValue(value)
+      .toLowerCase()
+      .replace(/\s+/g, " ")
+      .trim();
   }
 
   function getMorphBadgeClass(status) {
@@ -2126,24 +2677,116 @@ Return only the required JSON object.`;
     return "unknown";
   }
 
-  function formatMorphCheckParsed(parsed) {
+  function getMorphReviewReliability(parsed, context) {
+    const reasons = [];
+
+    const dbParse =
+      context &&
+      context.parse_packet &&
+      context.parse_packet.database_parse_exact
+        ? context.parse_packet.database_parse_exact
+        : "";
+
+    const aiEcho =
+      parsed.database_parse_exact_seen ||
+      parsed.current_parse ||
+      "";
+
+    if (dbParse && !aiEcho) {
+      reasons.push("AI did not echo the exact database parse.");
+    } else if (
+      dbParse &&
+      aiEcho &&
+      normalizeParseForCompare(dbParse) !== normalizeParseForCompare(aiEcho)
+    ) {
+      reasons.push("AI echoed a different parse from the exact database parse.");
+    }
+
+    const localWarning =
+      context &&
+      context.parse_packet &&
+      context.parse_packet.local_precheck_warning
+        ? context.parse_packet.local_precheck_warning
+        : "";
+
+    const status = String(parsed.status || "").toLowerCase();
+    const mismatch = String(parsed.parse_mismatch || "").toLowerCase();
+    const issuesText = Array.isArray(parsed.issues) ? parsed.issues.join(" ").toLowerCase() : "";
+
+    if (
+      localWarning &&
+      status === "accurate" &&
+      (!mismatch || mismatch === "none") &&
+      !issuesText.includes("inflection") &&
+      !issuesText.includes("suffix")
+    ) {
+      reasons.push("AI appears to have ignored the local pre-check warning about a possible omitted surface inflection.");
+    }
+
+    return {
+      ok: reasons.length === 0,
+      reasons
+    };
+  }
+
+  function formatMorphCheckParsed(parsed, context = morphCheckContext) {
     const status = parsed.status || "unknown";
     const confidence = parsed.confidence || "unknown";
-    const currentParse = parsed.current_parse || "";
+
+    const dbParse =
+      context &&
+      context.parse_packet &&
+      context.parse_packet.database_parse_exact
+        ? context.parse_packet.database_parse_exact
+        : context && context.current_parse
+          ? context.current_parse
+          : "";
+
+    const aiEcho =
+      parsed.database_parse_exact_seen ||
+      parsed.current_parse ||
+      "";
+
     const suggestedParse = parsed.suggested_parse || "";
+    const parseMismatch = parsed.parse_mismatch || "not provided";
     const issues = Array.isArray(parsed.issues) ? parsed.issues : [];
     const explanation = parsed.explanation || "";
     const teachingNote = parsed.teaching_note || "";
+
+    const localWarning =
+      context &&
+      context.parse_packet &&
+      context.parse_packet.local_precheck_warning
+        ? context.parse_packet.local_precheck_warning
+        : "";
+
+    const reliability = getMorphReviewReliability(parsed, context);
+
+    const reliabilityText = reliability.ok
+      ? "No reliability warnings."
+      : reliability.reasons.map(reason => `- ${reason}`).join("\n");
 
     return `
 Status: ${status}
 Confidence: ${confidence}
 
-Current parse:
-${currentParse || "Not provided."}
+Database parse reviewed, exact from row:
+${dbParse || "Not provided."}
+
+AI echo of database parse:
+${aiEcho || "Not provided."}
 
 Suggested parse:
 ${suggestedParse || "No alternative suggested."}
+
+Parse mismatch category:
+${parseMismatch}
+
+Local pre-check:
+${localWarning || "None."}
+
+Review reliability warnings:
+${reliabilityText}
 
 Issues:
 ${issues.length ? issues.map(x => "- " + x).join("\n") : "None listed."}
@@ -2158,7 +2801,7 @@ ${teachingNote || "No teaching note provided."}
 
   async function checkMorphologyFromIndex(key, rowIndex) {
     const config = DATASETS[key];
-    const row = config.filtered[Number(rowIndex)];
+    const row = config && config.filtered[Number(rowIndex)];
 
     if (!row) {
       alert("Could not find this row.");
@@ -2167,13 +2810,13 @@ ${teachingNote || "No teaching note provided."}
 
     openMorphCheckModal();
 
-    const statusEl = document.getElementById("morphCheckStatus");
-    const resultEl = document.getElementById("morphCheckResult");
-    const notesEl = document.getElementById("morphDisagreementNotes");
-    const reportStatusEl = document.getElementById("morphReportStatus");
-    const submitBtn = document.getElementById("submitMorphReportBtn");
+    const statusEl = $("morphCheckStatus");
+    const resultEl = $("morphCheckResult");
+    const notesEl = $("morphDisagreementNotes");
+    const reportStatusEl = $("morphReportStatus");
+    const submitBtn = $("submitMorphReportBtn");
 
-    statusEl.textContent = "Checking morphological parse with AI...";
+    statusEl.textContent = "Checking exact database parse with AI...";
     statusEl.style.color = "#1d4ed8";
     resultEl.textContent = "";
     notesEl.value = "";
@@ -2181,7 +2824,8 @@ ${teachingNote || "No teaching note provided."}
     submitBtn.disabled = false;
     submitBtn.textContent = "⚠️ Report Disagreement/Error";
 
-    const userPrompt = buildMorphCheckUserPrompt(row, key);
+    const reviewPacket = buildMorphReviewPacket(row, key);
+    const userPrompt = buildMorphCheckUserPromptFromPacket(reviewPacket);
 
     lastMorphCheckPrompt = userPrompt;
     lastMorphCheckText = "";
@@ -2190,17 +2834,30 @@ ${teachingNote || "No teaching note provided."}
     morphCheckContext = {
       dataset: key,
       rowIndex: Number(rowIndex),
-      word: getLookupWordFromRow(row),
-      baseword: getFirstNonEmpty(row, ["Baseword", "Baseword_1"]),
-      current_parse: getFirstNonEmpty(row, ["GPT_Coded_Word_Parts", "GPT_CODES", "GPT_Root"]),
-      root: getFirstNonEmpty(row, ["GPT_Root", "Root_1"]),
-      prefix_1: getFirstNonEmpty(row, ["Prefix_1"]),
-      suffix_1: getFirstNonEmpty(row, ["Suffix_1"]),
+
+      word: reviewPacket.surface_word,
+      baseword: reviewPacket.database_baseword,
+      current_parse: reviewPacket.database_parse_exact,
+      root: reviewPacket.database_root_exact,
+
+      prefix_1: reviewPacket.database_prefixes_exact[0] || "",
+      suffix_1: reviewPacket.database_suffixes_exact[0] || "",
+
       row: row,
+      parse_packet: reviewPacket,
       prompt: userPrompt,
+
       ai_review_text: "",
-      ai_review_json: ""
+      ai_review_json: "",
+      ai_status: "",
+      ai_confidence: "",
+      ai_suggested_parse: ""
     };
+
+    if (reviewPacket.local_precheck_warning) {
+      resultEl.textContent =
+        `Local pre-check before AI review:\n${reviewPacket.local_precheck_warning}\n\nWaiting for AI review...`;
+    }
 
     try {
       const response = await fetch(MORPH_CHECK_ENDPOINT, {
@@ -2222,7 +2879,13 @@ ${teachingNote || "No teaching note provided."}
         })
       });
 
-      const data = await response.json();
+      let data = null;
+
+      try {
+        data = await response.json();
+      } catch (jsonErr) {
+        data = { error: { message: "Endpoint did not return valid JSON." } };
+      }
 
       if (!response.ok || data.error) {
         const errDetail = data.error
@@ -2232,6 +2895,7 @@ ${teachingNote || "No teaching note provided."}
         statusEl.textContent = "AI review failed.";
         statusEl.style.color = "#dc2626";
         resultEl.textContent = `API Error: ${errDetail}`;
+
         lastMorphCheckText = resultEl.textContent;
 
         if (morphCheckContext) {
@@ -2244,7 +2908,7 @@ ${teachingNote || "No teaching note provided."}
       let content = "";
 
       if (data.choices && data.choices[0] && data.choices[0].message) {
-        content = data.choices[0].message.content.trim();
+        content = String(data.choices[0].message.content || "").trim();
       } else if (data.content) {
         content = String(data.content).trim();
       } else if (data.response) {
@@ -2253,7 +2917,12 @@ ${teachingNote || "No teaching note provided."}
         content = JSON.stringify(data, null, 2);
       }
 
-      content = content.replace(/```json/g, "").replace(/```/g, "").trim();
+      content = content
+        .replace(/^```json\s*/i, "")
+        .replace(/^```\s*/i, "")
+        .replace(/```$/i, "")
+        .trim();
+
       lastMorphCheckRawJSON = content;
 
       let parsed = null;
@@ -2268,12 +2937,19 @@ ${teachingNote || "No teaching note provided."}
         const status = parsed.status || "unknown";
         const confidence = parsed.confidence || "unknown";
         const badgeClass = getMorphBadgeClass(status);
-        const formatted = formatMorphCheckParsed(parsed);
+        const formatted = formatMorphCheckParsed(parsed, morphCheckContext);
+        const reliability = getMorphReviewReliability(parsed, morphCheckContext);
 
-        statusEl.innerHTML = `Result: <span class="morph-badge ${badgeClass}">${escapeHTML(status)}</span> &nbsp; Confidence: <strong>${escapeHTML(confidence)}</strong>`;
+        if (!reliability.ok) {
+          statusEl.innerHTML =
+            `Result: <span class="morph-badge bad">needs review</span> &nbsp; ${escapeHTML(reliability.reasons[0])}`;
+        } else {
+          statusEl.innerHTML =
+            `Result: <span class="morph-badge ${badgeClass}">${escapeHTML(status)}</span> &nbsp; Confidence: <strong>${escapeHTML(confidence)}</strong>`;
+        }
+
         statusEl.style.color = "#111827";
         resultEl.textContent = formatted;
-
         lastMorphCheckText = formatted;
 
         if (morphCheckContext) {
@@ -2287,7 +2963,6 @@ ${teachingNote || "No teaching note provided."}
         statusEl.textContent = "AI returned an unstructured result.";
         statusEl.style.color = "#ca8a04";
         resultEl.textContent = content;
-
         lastMorphCheckText = content;
 
         if (morphCheckContext) {
@@ -2295,14 +2970,12 @@ ${teachingNote || "No teaching note provided."}
           morphCheckContext.ai_review_json = content;
         }
       }
-
     } catch (error) {
       console.error(error);
 
       statusEl.textContent = "Network error.";
       statusEl.style.color = "#dc2626";
       resultEl.textContent = error.message;
-
       lastMorphCheckText = error.message;
 
       if (morphCheckContext) {
@@ -2312,9 +2985,9 @@ ${teachingNote || "No teaching note provided."}
   }
 
   async function submitMorphDisagreement() {
-    const notesEl = document.getElementById("morphDisagreementNotes");
-    const btn = document.getElementById("submitMorphReportBtn");
-    const status = document.getElementById("morphReportStatus");
+    const notesEl = $("morphDisagreementNotes");
+    const btn = $("submitMorphReportBtn");
+    const status = $("morphReportStatus");
     const notes = notesEl.value.trim();
 
     if (!morphCheckContext) {
@@ -2345,6 +3018,7 @@ ${teachingNote || "No teaching note provided."}
       ai_review_text: morphCheckContext.ai_review_text || "",
       ai_review_json: morphCheckContext.ai_review_json || "",
       user_correction: notes,
+      parse_packet_json: JSON.stringify(morphCheckContext.parse_packet || {}),
       full_row_json: JSON.stringify(morphCheckContext.row || {})
     };
 
@@ -2372,13 +3046,11 @@ ${teachingNote || "No teaching note provided."}
       } else {
         throw new Error(result.message || "Google Script rejected the report.");
       }
-
     } catch (error) {
       console.error(error);
 
       status.textContent = "❌ Failed to send report. Please try again.";
       status.style.color = "#dc2626";
-
       btn.disabled = false;
       btn.textContent = "⚠️ Report Disagreement/Error";
     }
@@ -2386,7 +3058,7 @@ ${teachingNote || "No teaching note provided."}
 
   function showReportFromIndex(key, rowIndex) {
     const config = DATASETS[key];
-    const row = config.filtered[Number(rowIndex)];
+    const row = config && config.filtered[Number(rowIndex)];
 
     if (!row) {
       alert("Could not open report form for this row.");
@@ -2407,26 +3079,24 @@ ${teachingNote || "No teaching note provided."}
       row: row
     };
 
-    document.getElementById("reportWord").textContent = word;
-    document.getElementById("reportParts").textContent = parts || "N/A";
-    document.getElementById("reportNotes").value = "";
-    document.getElementById("reportStatus").textContent = "";
-    document.getElementById("submitReportBtn").disabled = false;
-    document.getElementById("submitReportBtn").textContent = "Submit Report";
+    $("reportWord").textContent = word;
+    $("reportParts").textContent = parts || "N/A";
+    $("reportNotes").value = "";
+    $("reportStatus").textContent = "";
+    $("submitReportBtn").disabled = false;
+    $("submitReportBtn").textContent = "Submit Report";
 
-    document.getElementById("reportModalBackdrop").classList.add("show");
-    document.body.classList.add("modal-open");
+    showModal("reportModalBackdrop");
   }
 
   function closeReportModal() {
-    document.getElementById("reportModalBackdrop").classList.remove("show");
-    document.body.classList.remove("modal-open");
+    hideModal("reportModalBackdrop");
   }
 
   async function submitErrorReport() {
-    const notes = document.getElementById("reportNotes").value.trim();
-    const btn = document.getElementById("submitReportBtn");
-    const status = document.getElementById("reportStatus");
+    const notes = $("reportNotes").value.trim();
+    const btn = $("submitReportBtn");
+    const status = $("reportStatus");
 
     if (!notes) {
       status.textContent = "Please enter some notes before submitting.";
@@ -2473,32 +3143,40 @@ ${teachingNote || "No teaching note provided."}
       } else {
         throw new Error(result.message || "Google Script rejected the report.");
       }
-
     } catch (error) {
       console.error(error);
 
       status.textContent = "❌ Failed to send report. Please try again.";
       status.style.color = "#dc2626";
-
       btn.disabled = false;
       btn.textContent = "Submit Report";
     }
   }
 
-  function runAdvancedQuery() {
-    const sourceKey = document.getElementById("advSource").value;
+  async function runAdvancedQuery() {
+    const sourceKey = $("advSource").value;
     const config = DATASETS[sourceKey];
 
+    if (!config.loaded) {
+      $("advCount").textContent = "loading";
+      await initDataset(sourceKey);
+    }
+
     if (!config.loaded || !config.data.length) {
-      alert("Please wait for the selected database to finish loading.");
-      initDataset(sourceKey);
+      alert("The selected database is not loaded yet. Please try again in a moment.");
+      $("advCount").textContent = "0";
       return;
     }
 
-    const target = document.getElementById("advTarget").value;
+    const target = $("advTarget").value;
+
+    if (!config.all.includes(target)) {
+      alert(`Column "${target}" was not found in the selected database.`);
+      return;
+    }
 
     const getVal = id => {
-      const n = parseFloat(document.getElementById(id).value);
+      const n = parseFloat($(id).value);
       return Number.isFinite(n) ? n : null;
     };
 
@@ -2511,10 +3189,16 @@ ${teachingNote || "No teaching note provided."}
     const mMin = getVal("advMorphMin");
     const mMax = getVal("advMorphMax");
 
-    const wordZipfCol = config.all.includes("Word_frq_Zipf_Recomputed") ? "Word_frq_Zipf_Recomputed" : "Word_frq_Zipf";
+    const wordZipfCol = config.all.includes("Word_frq_Zipf_Recomputed")
+      ? "Word_frq_Zipf_Recomputed"
+      : "Word_frq_Zipf";
+
     const baseZipfCol = "Baseword_frq_Zipf";
     const gradeCol = findColumn(config.all, "Grade Level") || "Vocabulary eXpected Grade Level Flor et al._ 2024";
-    const morphCol = config.all.includes(MORPHEME_COL_PLUS_INFLECTIONS) ? MORPHEME_COL_PLUS_INFLECTIONS : MORPHEME_COL_WITHOUT_INFLECTIONS;
+
+    const morphCol = config.all.includes(MORPHEME_COL_PLUS_INFLECTIONS)
+      ? MORPHEME_COL_PLUS_INFLECTIONS
+      : MORPHEME_COL_WITHOUT_INFLECTIONS;
 
     const results = new Set();
 
@@ -2525,29 +3209,27 @@ ${teachingNote || "No teaching note provided."}
       if (!passesRange(row[morphCol], mMin, mMax)) continue;
 
       const val = String(row[target] || "").trim();
-      const word = String(row["Word"] || "").trim();
-
-      if (!val) continue;
-
-      if (target === "Word") {
+      if (!val) continue
+            if (target === "Word") {
         results.add(val);
       } else {
+        const word = String(row["Word"] || "").trim();
         results.add(word ? `${word}: ${val}` : val);
       }
     }
 
     const out = Array.from(results).sort((a, b) => a.localeCompare(b));
 
-    document.getElementById("advCount").textContent = out.length.toLocaleString();
-    document.getElementById("advResultsText").value = out.join("\n");
+    $("advCount").textContent = out.length.toLocaleString();
+    $("advResultsText").value = out.join("\n");
   }
 
   function passesRange(value, min, max) {
     if (min === null && max === null) return true;
 
     const n = parseFloat(value);
-    if (!Number.isFinite(n)) return false;
 
+    if (!Number.isFinite(n)) return false;
     if (min !== null && n < min) return false;
     if (max !== null && n > max) return false;
 
@@ -2555,51 +3237,71 @@ ${teachingNote || "No teaching note provided."}
   }
 
   function findColumn(cols, hint) {
-    const h = hint.toLowerCase();
-    return cols.find(c => c.toLowerCase().includes(h));
+    const h = String(hint || "").toLowerCase();
+    return cols.find(c => String(c).toLowerCase().includes(h));
   }
 
   function clearAdvancedQuery() {
-    document.querySelectorAll("#adv-queries input[type='number']").forEach(el => el.value = "");
-    document.getElementById("advCount").textContent = "0";
-    document.getElementById("advResultsText").value = "";
+    document.querySelectorAll("#adv-queries input[type='number']").forEach(el => {
+      el.value = "";
+    });
+
+    $("advCount").textContent = "0";
+    $("advResultsText").value = "";
   }
 
   function copyAdvancedList() {
-    const text = document.getElementById("advResultsText").value;
+    const text = $("advResultsText").value;
 
-    if (!text) return alert("Please generate a wordlist first.");
+    if (!text) {
+      alert("Please generate a wordlist first.");
+      return;
+    }
 
-    navigator.clipboard.writeText(text).then(() => {
-      alert("List copied to clipboard.");
+    copyText(text).then(() => {
+      showCopyToast("List copied");
     });
   }
 
   function downloadAdvancedList() {
-    const text = document.getElementById("advResultsText").value;
+    const text = $("advResultsText").value;
 
-    if (!text) return alert("Please generate a wordlist first.");
+    if (!text) {
+      alert("Please generate a wordlist first.");
+      return;
+    }
 
     const blob = new Blob([text], { type: "text/plain;charset=utf-8" });
+    const url = URL.createObjectURL(blob);
     const link = document.createElement("a");
 
-    link.href = URL.createObjectURL(blob);
+    link.href = url;
     link.download = "Custom_BAWF_Wordlist.txt";
     link.click();
 
-    URL.revokeObjectURL(link.href);
+    setTimeout(() => URL.revokeObjectURL(url), 0);
   }
 
   function generateWordCloud() {
-    const input = document.getElementById("wordInput").value;
-    const lines = input.split(/\r?\n/).map(l => l.trim()).filter(Boolean);
+    const input = $("wordInput").value;
+    const status = $("cloudStatus");
+    const canvas = $("wordCanvas");
 
-    if (!lines.length) return;
+    const lines = input
+      .split(/\r?\n/)
+      .map(l => l.trim())
+      .filter(Boolean);
+
+    if (!lines.length) {
+      status.textContent = "Please paste word-frequency pairs first.";
+      return;
+    }
 
     const parsed = [];
 
     for (const line of lines) {
       const parts = line.split(/\s+/);
+
       if (parts.length < 2) continue;
 
       const value = Number(parts[parts.length - 1]);
@@ -2611,27 +3313,37 @@ ${teachingNote || "No teaching note provided."}
     }
 
     if (!parsed.length) {
-      document.getElementById("cloudStatus").textContent = "No valid word-frequency pairs found.";
+      status.textContent = "No valid word-frequency pairs found.";
+      return;
+    }
+
+    if (typeof WordCloud !== "function") {
+      status.textContent = "WordCloud library did not load.";
       return;
     }
 
     const looksLikeZipf = parsed.every(x => x[1] >= 1 && x[1] <= 8);
-    const list = parsed.map(([w, v]) => [w, looksLikeZipf ? Math.pow(10, v - 1) : v]);
 
-    WordCloud(document.getElementById("wordCanvas"), {
-      list: list,
-      gridSize: 8,
-      weightFactor: s => Math.min(Math.max(Math.sqrt(s) * 8, 14), 120),
-      color: "random-dark",
-      backgroundColor: "#ffffff",
-      rotateRatio: 0.3
+    const list = parsed.map(([word, value]) => {
+      return [word, looksLikeZipf ? Math.pow(10, value - 1) : value];
     });
 
-    document.getElementById("cloudStatus").textContent = "Word cloud generated.";
+    WordCloud(canvas, {
+      list: list,
+      gridSize: 8,
+      weightFactor: size => Math.min(Math.max(Math.sqrt(size) * 8, 14), 120),
+      color: "random-dark",
+      backgroundColor: "#ffffff",
+      rotateRatio: 0.3,
+      drawOutOfBound: false,
+      shrinkToFit: true
+    });
+
+    status.textContent = "Word cloud generated.";
   }
 
   function generateWithLLM() {
-    const words = document.getElementById("llmInput").value.trim();
+    const words = $("llmInput").value.trim();
 
     if (!words) {
       alert("Please paste target words first.");
@@ -2649,44 +3361,276 @@ Generate a high-quality teaching resource using the target words below.
 Target words:
 ${words}
 
-Resource type: ${document.getElementById("llmTextType").value}
-Grade level: ${document.getElementById("llmGrade").value}
-Length: ${document.getElementById("llmLength").value}
-Content area/context: ${document.getElementById("llmContentArea").value.trim()}
-Teacher focus: ${document.getElementById("llmFocus").value.trim()}
+Resource type: ${$("llmTextType").value}
+Grade level: ${$("llmGrade").value}
+Length: ${$("llmLength").value}
+Content area/context: ${$("llmContentArea").value.trim() || "general vocabulary and literacy"}
+Teacher focus: ${$("llmFocus").value.trim() || "morphology, vocabulary knowledge, and word-family connections"}
 
 Required activities:
-${checkedOptions}
+${checkedOptions || "- No specific activities selected"}
 
-Please make the output classroom-ready, accurate, and engaging.`;
+Please make the output classroom-ready, accurate, engaging, and appropriate for the specified grade level.
 
-    document.getElementById("finalPrompt").value = prompt;
-    document.getElementById("llmStatus").textContent = "🚀 Prompt compiled.";
+Please include:
+1. A short teacher-facing overview.
+2. The main text, story, or worksheet.
+3. Explicit vocabulary/morphology teaching notes.
+4. Student-friendly explanations of important word parts.
+5. Practice items.
+6. An answer key when relevant.`;
+
+    $("finalPrompt").value = prompt;
+    $("llmStatus").textContent = "🚀 Prompt compiled.";
   }
 
   function copyLLMPrompt() {
-    const text = document.getElementById("finalPrompt").value;
+    const text = $("finalPrompt").value.trim();
 
     if (!text) {
       alert("Generate a prompt first.");
       return;
     }
 
-    navigator.clipboard.writeText(text).then(() => {
-      alert("Prompt copied.");
+    copyText(text).then(() => {
+      showCopyToast("Prompt copied");
     });
   }
 
   function openInLLM() {
-    const provider = document.getElementById("llmProvider").value;
+    const provider = $("llmProvider").value;
+    const prompt = $("finalPrompt").value.trim();
+
+    if (!prompt) {
+      alert("Generate a prompt first.");
+      return;
+    }
+
+    copyText(prompt).catch(() => {});
+
+    const encoded = encodeURIComponent(prompt);
 
     if (provider === "gemini") {
-      window.open("https://gemini.google.com/app", "_blank", "noopener");
+      window.open(`https://gemini.google.com/app?prompt=${encoded}`, "_blank", "noopener");
     } else if (provider === "chatgpt") {
-      window.open("https://chatgpt.com/", "_blank", "noopener");
+      window.open(`https://chatgpt.com/?q=${encoded}`, "_blank", "noopener");
     } else {
       window.open("https://claude.ai/new", "_blank", "noopener");
     }
+
+    $("llmStatus").textContent = "Prompt copied. Paste it into the opened AI tool if needed.";
+  }
+
+  function handleCellMouseDown(event) {
+    if (event.button !== 0) return;
+
+    const cell = event.target.closest("td.db-cell");
+    if (!cell) return;
+
+    if (isEditableTarget(event.target)) return;
+
+    event.preventDefault();
+
+    const info = getCellInfo(cell);
+    if (!info) return;
+
+    if (!event.shiftKey || !cellSelection.anchor || cellSelection.key !== info.key) {
+      clearCellSelection(false);
+      cellSelection.anchor = info;
+    }
+
+    cellSelection.mouseDown = true;
+    cellSelection.key = info.key;
+    cellSelection.focus = info;
+
+    updateCellSelectionDisplay();
+  }
+
+  function handleCellMouseOver(event) {
+    if (!cellSelection.mouseDown) return;
+
+    const cell = event.target.closest("td.db-cell");
+    if (!cell) return;
+
+    const info = getCellInfo(cell);
+    if (!info) return;
+
+    if (cellSelection.key !== info.key) return;
+
+    cellSelection.focus = info;
+    updateCellSelectionDisplay();
+  }
+
+  function getCellInfo(cell) {
+    const key = cell.dataset.ds;
+    const rowIndex = Number(cell.dataset.rowIndex);
+    const colIndex = Number(cell.dataset.colIndex);
+
+    if (!key || !Number.isFinite(rowIndex) || !Number.isFinite(colIndex)) {
+      return null;
+    }
+
+    return {
+      key,
+      rowIndex,
+      colIndex
+    };
+  }
+
+  function clearCellSelection(resetState = true) {
+    document.querySelectorAll("td.db-cell.cell-selected").forEach(cell => {
+      cell.classList.remove("cell-selected");
+    });
+
+    if (resetState) {
+      cellSelection.mouseDown = false;
+      cellSelection.key = null;
+      cellSelection.anchor = null;
+      cellSelection.focus = null;
+    }
+  }
+
+  function updateCellSelectionDisplay() {
+    document.querySelectorAll("td.db-cell.cell-selected").forEach(cell => {
+      cell.classList.remove("cell-selected");
+    });
+
+    if (!cellSelection.anchor || !cellSelection.focus || !cellSelection.key) return;
+
+    const minRow = Math.min(cellSelection.anchor.rowIndex, cellSelection.focus.rowIndex);
+    const maxRow = Math.max(cellSelection.anchor.rowIndex, cellSelection.focus.rowIndex);
+    const minCol = Math.min(cellSelection.anchor.colIndex, cellSelection.focus.colIndex);
+    const maxCol = Math.max(cellSelection.anchor.colIndex, cellSelection.focus.colIndex);
+
+    document.querySelectorAll(`td.db-cell[data-ds="${cellSelection.key}"]`).forEach(cell => {
+      const rowIndex = Number(cell.dataset.rowIndex);
+      const colIndex = Number(cell.dataset.colIndex);
+
+      if (
+        rowIndex >= minRow &&
+        rowIndex <= maxRow &&
+        colIndex >= minCol &&
+        colIndex <= maxCol
+      ) {
+        cell.classList.add("cell-selected");
+      }
+    });
+  }
+
+  function getSelectedCellsText() {
+    if (!cellSelection.anchor || !cellSelection.focus || !cellSelection.key) {
+      return "";
+    }
+
+    const config = DATASETS[cellSelection.key];
+    if (!config) return "";
+
+    const minRow = Math.min(cellSelection.anchor.rowIndex, cellSelection.focus.rowIndex);
+    const maxRow = Math.max(cellSelection.anchor.rowIndex, cellSelection.focus.rowIndex);
+    const minCol = Math.min(cellSelection.anchor.colIndex, cellSelection.focus.colIndex);
+    const maxCol = Math.max(cellSelection.anchor.colIndex, cellSelection.focus.colIndex);
+
+    const lines = [];
+
+    for (let rowIndex = minRow; rowIndex <= maxRow; rowIndex++) {
+      const row = config.filtered[rowIndex];
+      if (!row) continue;
+
+      const cells = [];
+
+      for (let colIndex = minCol; colIndex <= maxCol; colIndex++) {
+        const col = config.visible[colIndex];
+        const value = col ? formatCellValue(col, row[col] ?? "") : "";
+
+        cells.push(cleanClipboardCell(value));
+      }
+
+      lines.push(cells.join("\t"));
+    }
+
+    return lines.join("\n");
+  }
+
+  function cleanClipboardCell(value) {
+    return String(value ?? "")
+      .replace(/\r?\n/g, " ")
+      .replace(/\t/g, " ")
+      .trim();
+  }
+
+  function isEditableTarget(target) {
+    if (!target) return false;
+
+    const tag = String(target.tagName || "").toLowerCase();
+
+    return (
+      tag === "input" ||
+      tag === "textarea" ||
+      tag === "select" ||
+      target.isContentEditable
+    );
+  }
+
+  async function copyText(text) {
+    const value = String(text ?? "");
+
+    if (!value) return;
+
+    if (navigator.clipboard && window.isSecureContext) {
+      return navigator.clipboard.writeText(value);
+    }
+
+    return new Promise((resolve, reject) => {
+      const textarea = document.createElement("textarea");
+
+      textarea.value = value;
+      textarea.setAttribute("readonly", "");
+      textarea.style.position = "fixed";
+      textarea.style.left = "-9999px";
+      textarea.style.top = "0";
+      textarea.style.opacity = "0";
+
+      document.body.appendChild(textarea);
+
+      textarea.focus();
+      textarea.select();
+
+      try {
+        const successful = document.execCommand("copy");
+        document.body.removeChild(textarea);
+
+        if (successful) {
+          resolve();
+        } else {
+          reject(new Error("Copy command was unsuccessful."));
+        }
+      } catch (err) {
+        document.body.removeChild(textarea);
+        reject(err);
+      }
+    });
+  }
+
+  let toastTimeout = null;
+
+  function showCopyToast(message) {
+    let toast = $("copyToast");
+
+    if (!toast) {
+      toast = document.createElement("div");
+      toast.id = "copyToast";
+      toast.className = "copy-toast";
+      document.body.appendChild(toast);
+    }
+
+    toast.textContent = message || "Copied";
+    toast.classList.add("show");
+
+    clearTimeout(toastTimeout);
+
+    toastTimeout = setTimeout(() => {
+      toast.classList.remove("show");
+    }, 1600);
   }
 
   function escapeHTML(str = "") {
@@ -2705,13 +3649,12 @@ Please make the output classroom-ready, accurate, and engaging.`;
       .replace(/\n/g, "\\n")
       .replace(/\r/g, "");
   }
-
-  window.addEventListener("click", e => {
-    if (e.target === document.getElementById("columnModal")) closeModal();
-    if (e.target === document.getElementById("explainModalBackdrop")) closeExplainModal();
-    if (e.target === document.getElementById("morphCheckModalBackdrop")) closeMorphCheckModal();
-    if (e.target === document.getElementById("reportModalBackdrop")) closeReportModal();
-  });
 </script>
 </body>
 </html>
+
+
+
+
+
+    
