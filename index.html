@@ -2935,7 +2935,324 @@ Return only the required JSON object.`;
     if (status === "likely_incorrect") return "bad";
     return "unknown";
   }
+function normalizeMorphToken(value) {
+  return cleanMorphValue(value)
+    .toLowerCase()
+    .replace(/^[^a-z0-9]+|[^a-z0-9]+$/g, "")
+    .trim();
+}
 
+function tokenizeMorphWords(text) {
+  return String(text || "")
+    .toLowerCase()
+    .match(/[a-z][a-z'-]*/g) || [];
+}
+
+function getCommonMorphWordsToIgnore() {
+  return new Set([
+    "prefix",
+    "prefixes",
+    "suffix",
+    "suffixes",
+    "root",
+    "roots",
+    "base",
+    "bases",
+    "baseword",
+    "word",
+    "words",
+    "morpheme",
+    "morphemes",
+    "bound",
+    "free",
+    "compound",
+    "inflection",
+    "inflections",
+    "inflectional",
+    "derivation",
+    "derivational",
+    "parse",
+    "parsed",
+    "notation",
+    "current",
+    "database",
+    "surface",
+    "suggested",
+    "accurate",
+    "questionable",
+    "incorrect",
+    "uncertain",
+    "none",
+    "listed",
+    "shown",
+    "shows",
+    "does",
+    "not",
+    "and",
+    "or",
+    "but",
+    "with",
+    "without",
+    "from",
+    "into",
+    "itself",
+    "it",
+    "this",
+    "that",
+    "the",
+    "a",
+    "an",
+    "as",
+    "is",
+    "are",
+    "be",
+    "because",
+    "evidence",
+    "entry",
+    "row"
+  ]);
+}
+
+function detectLexicalIntrusionByAI(parsed, context) {
+  if (!parsed || !context || !context.parse_packet) return "";
+
+  const packet = context.parse_packet;
+
+  const notationParts =
+    packet.database_notation_parts_detected_locally ||
+    extractBAWFNotationParts(packet.database_parse_exact);
+
+  const allowedSourceValues = [
+    packet.surface_word,
+    packet.database_baseword,
+    packet.database_parse_exact,
+    packet.database_root_exact,
+    packet.database_greek_latin_root_exact,
+    ...(packet.database_prefixes_exact || []),
+    ...(packet.database_suffixes_exact || []),
+    ...(notationParts.prefixes || []),
+    ...(notationParts.suffixes || []),
+    ...(notationParts.bases || []),
+    ...(notationParts.roots || [])
+  ];
+
+  const allowedTokens = new Set(
+    tokenizeMorphWords(allowedSourceValues.join(" "))
+      .map(normalizeMorphToken)
+      .filter(Boolean)
+  );
+
+  const surface = normalizeMorphToken(packet.surface_word);
+  const baseword = normalizeMorphToken(packet.database_baseword);
+
+  const commonMorphWords = getCommonMorphWordsToIgnore();
+
+  const commonRealAffixes = new Set([
+    "s",
+    "es",
+    "ed",
+    "ing",
+    "er",
+    "est",
+    "ly",
+    "ness",
+    "ment",
+    "tion",
+    "sion",
+    "able",
+    "ible",
+    "al",
+    "ous",
+    "ful",
+    "less",
+    "un",
+    "re",
+    "pre",
+    "dis",
+    "mis",
+    "over",
+    "under",
+    "sub",
+    "super",
+    "anti",
+    "inter",
+    "intra",
+    "non"
+  ]);
+
+  const aiSuggestedOnly = String(parsed.suggested_parse || "");
+
+  if (!aiSuggestedOnly.trim()) return "";
+
+  const tokens = tokenizeMorphWords(aiSuggestedOnly)
+    .map(normalizeMorphToken)
+    .filter(Boolean);
+
+  const intruders = [];
+
+  for (const token of tokens) {
+    if (token.length < 3) continue;
+    if (commonMorphWords.has(token)) continue;
+    if (commonRealAffixes.has(token)) continue;
+    if (allowedTokens.has(token)) continue;
+
+    if (surface && surface.includes(token)) continue;
+    if (baseword && baseword.includes(token)) continue;
+
+    let allowedByOverlap = false;
+
+    for (const allowed of allowedTokens) {
+      if (!allowed) continue;
+
+      if (allowed.includes(token) || token.includes(allowed)) {
+        allowedByOverlap = true;
+        break;
+      }
+    }
+
+    if (!allowedByOverlap) {
+      intruders.push(token);
+    }
+  }
+
+  const uniqueIntruders = Array.from(new Set(intruders));
+
+  if (!uniqueIntruders.length) return "";
+
+  return `AI suggested parse contains word parts not found in the current row or surface word: ${uniqueIntruders.join(", ")}. This may be example leakage or hallucination.`;
+}
+
+function detectAIWrongSurfaceWordMention(parsed, context) {
+  if (!parsed || !context || !context.parse_packet) return "";
+
+  const packet = context.parse_packet;
+  const currentWord = normalizeMorphToken(packet.surface_word);
+  const currentBase = normalizeMorphToken(packet.database_baseword);
+
+  if (!currentWord) return "";
+
+  const aiText = [
+    parsed.notation_interpretation,
+    parsed.explanation,
+    parsed.teaching_note,
+    Array.isArray(parsed.issues) ? parsed.issues.join(" ") : ""
+  ].join(" ");
+
+  const matches = Array.from(
+    aiText.matchAll(/\bword\s+['"“”‘’`]([a-z][a-z'-]*)['"“”‘’`]/gi)
+  );
+
+  for (const match of matches) {
+    const mentioned = normalizeMorphToken(match[1]);
+
+    if (
+      mentioned &&
+      mentioned !== currentWord &&
+      mentioned !== currentBase
+    ) {
+      return `AI appears to be discussing a different word "${match[1]}" instead of the current word "${packet.surface_word}".`;
+    }
+  }
+
+  return "";
+}
+
+function detectLikelyNotationMisreadByAI(parsed, context) {
+  if (!parsed || !context || !context.parse_packet) return "";
+
+  const packet = context.parse_packet;
+  const parse = packet.database_parse_exact || "";
+  const notationParts = extractBAWFNotationParts(parse);
+
+  const aiText = [
+    parsed.notation_interpretation,
+    parsed.suggested_parse,
+    parsed.parse_mismatch,
+    parsed.explanation,
+    parsed.teaching_note,
+    Array.isArray(parsed.issues) ? parsed.issues.join(" ") : ""
+  ].join(" ").toLowerCase();
+
+  const protectedBaseRootParts = uniqueCleanList([
+    ...(notationParts.roots || []),
+    ...(notationParts.bases || []),
+    packet.database_baseword,
+    packet.database_root_exact
+  ]).map(x => x.toLowerCase());
+
+  for (const part of protectedBaseRootParts) {
+    if (!part) continue;
+
+    const saysPartIsSuffix =
+      aiText.includes(`-${part} suffix`) ||
+      aiText.includes(`suffix -${part}`) ||
+      aiText.includes(`suffix (${part})`) ||
+      aiText.includes(`visible suffix -${part}`);
+
+    if (saysPartIsSuffix) {
+      return `AI appears to have misread "${part}" as a suffix, but in the database notation it is a base/root, not a suffix.`;
+    }
+  }
+
+  return "";
+}
+
+function getDeterministicMorphReview(packet) {
+  if (!packet) return null;
+
+  const word = normalizeMorphToken(packet.surface_word);
+  const baseword = normalizeMorphToken(packet.database_baseword);
+
+  if (!word || !baseword) return null;
+  if (word !== baseword) return null;
+  if (packet.local_precheck_warning) return null;
+
+  const notationParts =
+    packet.database_notation_parts_detected_locally ||
+    extractBAWFNotationParts(packet.database_parse_exact);
+
+  const notationPrefixes = notationParts.prefixes || [];
+  const notationSuffixes = notationParts.suffixes || [];
+  const columnPrefixes = packet.database_prefixes_exact || [];
+  const columnSuffixes = packet.database_suffixes_exact || [];
+
+  const hasAffixes =
+    notationPrefixes.length > 0 ||
+    notationSuffixes.length > 0 ||
+    columnPrefixes.length > 0 ||
+    columnSuffixes.length > 0;
+
+  if (hasAffixes) return null;
+
+  const basesAndRoots = uniqueCleanList([
+    ...(notationParts.bases || []),
+    ...(notationParts.roots || [])
+  ]).map(normalizeMorphToken);
+
+  if (!basesAndRoots.length) return null;
+
+  const allPartsMatchWord = basesAndRoots.every(part => {
+    return part === word || part === baseword;
+  });
+
+  if (!allPartsMatchWord) return null;
+
+  return {
+    status: "accurate",
+    confidence: "high",
+    database_parse_exact_seen: packet.database_parse_exact,
+    notation_interpretation:
+      `The database parse marks "${packet.surface_word}" as the base/root itself. No prefixes or suffixes are shown in the notation or suffix columns.`,
+    suggested_parse: packet.database_parse_exact,
+    parse_mismatch: "none",
+    issues: [],
+    explanation:
+      `This appears to be a simplex entry. The surface word, baseword, and database-coded base/root all match. There is no evidence in this row of a missing prefix, suffix, or inflection.`,
+    teaching_note:
+      `For a high-frequency function word such as "${packet.surface_word}", do not force an affix analysis. The word can be treated as a simple base/root entry for database purposes.`
+  };
+}
+  
 function getMorphReviewReliability(parsed, context) {
   const reasons = [];
 
@@ -2970,7 +3287,9 @@ function getMorphReviewReliability(parsed, context) {
 
   const status = String(parsed.status || "").toLowerCase();
   const mismatch = String(parsed.parse_mismatch || "").toLowerCase();
-  const issuesText = Array.isArray(parsed.issues) ? parsed.issues.join(" ").toLowerCase() : "";
+  const issuesText = Array.isArray(parsed.issues)
+    ? parsed.issues.join(" ").toLowerCase()
+    : "";
 
   if (
     localWarning &&
@@ -2982,19 +3301,19 @@ function getMorphReviewReliability(parsed, context) {
     reasons.push("AI appears to have ignored the local pre-check warning about a possible omitted surface inflection.");
   }
 
-  const notationMisread = detectLikelyNotationMisreadByAI(parsed, context);
-  if (notationMisread) {
-    reasons.push(notationMisread);
+  if (typeof detectLikelyNotationMisreadByAI === "function") {
+    const notationMisread = detectLikelyNotationMisreadByAI(parsed, context);
+    if (notationMisread) reasons.push(notationMisread);
   }
 
-  const lexicalIntrusion = detectLexicalIntrusionByAI(parsed, context);
-  if (lexicalIntrusion) {
-    reasons.push(lexicalIntrusion);
+  if (typeof detectLexicalIntrusionByAI === "function") {
+    const lexicalIntrusion = detectLexicalIntrusionByAI(parsed, context);
+    if (lexicalIntrusion) reasons.push(lexicalIntrusion);
   }
 
-  const wrongWordMention = detectAIWrongSurfaceWordMention(parsed, context);
-  if (wrongWordMention) {
-    reasons.push(wrongWordMention);
+  if (typeof detectAIWrongSurfaceWordMention === "function") {
+    const wrongWordMention = detectAIWrongSurfaceWordMention(parsed, context);
+    if (wrongWordMention) reasons.push(wrongWordMention);
   }
 
   return {
@@ -3142,13 +3461,16 @@ ${teachingNote || "No teaching note provided."}
       ai_suggested_parse: ""
     };
     const deterministicReview = getDeterministicMorphReview(reviewPacket);
-    if (deterministicReview) {
-      const formatted = formatMorphCheckParsed(deterministicReview, morphCheckContext);
-      const badgeClass = getMorphBadgeClass(deterministicReview.status);
-      statusEl.innerHTML =
-        `Result: <span class="morph-badge ${badgeClass}">${escapeHTML(deterministicReview.status)}</span> &nbsp; Confidence: <strong>${escapeHTML(deterministicReview.confidence)}</strong>`;
-      statusEl.style.color = "#111827";
-      resultEl.textContent = formatted;
+
+if (deterministicReview) {
+  const formatted = formatMorphCheckParsed(deterministicReview, morphCheckContext);
+  const badgeClass = getMorphBadgeClass(deterministicReview.status);
+
+  statusEl.innerHTML =
+    `Result: <span class="morph-badge ${badgeClass}">${escapeHTML(deterministicReview.status)}</span> &nbsp; Confidence: <strong>${escapeHTML(deterministicReview.confidence)}</strong>`;
+
+  statusEl.style.color = "#111827";
+  resultEl.textContent = formatted;
 
   lastMorphCheckRawJSON = JSON.stringify(deterministicReview, null, 2);
   lastMorphCheckText = formatted;
@@ -3278,18 +3600,26 @@ ${teachingNote || "No teaching note provided."}
           morphCheckContext.ai_review_json = content;
         }
       }
-    } catch (error) {
-      console.error(error);
+} catch (error) {
+  console.error(error);
 
-      statusEl.textContent = "Network error.";
-      statusEl.style.color = "#dc2626";
-      resultEl.textContent = error.message;
-      lastMorphCheckText = error.message;
+  const looksLikeNetworkError =
+    error instanceof TypeError &&
+    /fetch|network|failed to fetch|load/i.test(String(error.message || ""));
 
-      if (morphCheckContext) {
-        morphCheckContext.ai_review_text = error.message;
-      }
-    }
+  statusEl.textContent = looksLikeNetworkError
+    ? "Network error."
+    : "Review processing error.";
+
+  statusEl.style.color = "#dc2626";
+
+  resultEl.textContent = `${error.name || "Error"}: ${error.message || error}`;
+  lastMorphCheckText = resultEl.textContent;
+
+  if (morphCheckContext) {
+    morphCheckContext.ai_review_text = resultEl.textContent;
+  }
+}
   }
 
   async function submitMorphDisagreement() {
