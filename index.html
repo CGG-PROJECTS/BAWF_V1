@@ -2983,9 +2983,18 @@ function getMorphReviewReliability(parsed, context) {
   }
 
   const notationMisread = detectLikelyNotationMisreadByAI(parsed, context);
-
   if (notationMisread) {
     reasons.push(notationMisread);
+  }
+
+  const lexicalIntrusion = detectLexicalIntrusionByAI(parsed, context);
+  if (lexicalIntrusion) {
+    reasons.push(lexicalIntrusion);
+  }
+
+  const wrongWordMention = detectAIWrongSurfaceWordMention(parsed, context);
+  if (wrongWordMention) {
+    reasons.push(wrongWordMention);
   }
 
   return {
