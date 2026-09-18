@@ -39,8 +39,7 @@
       font-weight: 700;
     }
 
-    h2,
-    h3 {
+    h2, h3 {
       color: #1d4ed8;
     }
 
@@ -622,7 +621,7 @@
 <body>
 <div class="container">
   <header>
-    <h1>The British and American Word Families Morphological Database</h1>
+    <h1>The British and American Word Families Project: A Morphological Database</h1>
     <div class="tagline">Morphology, roots, affixes, compounds, frequency, and word-family structure</div>
   </header>
 
@@ -646,9 +645,7 @@
       <li>Report possible database errors or disagreements back to the project using the report tools.</li>
       <li>Download the raw compressed CSV files for offline use and advanced analysis.</li>
     </ul>
-    <p style="margin-top:16px; font-style:italic;">
-      Be inspired by joyful word learning and reading — dive in and explore!
-    </p>
+    <p style="margin-top:16px; font-style:italic;">Be inspired by joyful word learning and reading — dive in and explore!</p>
   </div>
 
   <div class="loading-note">
@@ -671,37 +668,23 @@
   <div id="curated" class="tab-content active">
     <div class="info-card">
       <h3>Curated Word Family List: Frequent and Familiar Words</h3>
-      <p>
-        This curated word family list contains frequent and familiar word families that most people know and that cover
-        much of the text children read.
-      </p>
-      <p>
-        The full database is for exploring all words attested in the largest current corpora. The focused database is a
-        trimmed version that lists only word families with familiarity ratings above approximately 3.5, suggesting that
-        these words are widely known by most speakers of English.
-      </p>
+      <p>This curated word family list contains frequent and familiar word families that most people know and that cover much of the text children read.</p>
+      <p>The full database is for exploring all words attested in the largest current corpora. The focused database is a trimmed version that lists only word families with familiarity ratings above approximately 3.5.</p>
     </div>
-
     <div class="download-section">
       <a class="download-btn" href="BAWF__freq_and_familair_families.csv.gz" download>↓ Download Curated Word Families (.csv.gz)</a>
     </div>
-
     <div class="db-wrap" id="cfWrap"></div>
   </div>
 
   <div id="word-families" class="tab-content">
     <div class="info-card">
       <h3>Full Database: Word Families</h3>
-      <p>
-        The full database is for exploring a broad set of words attested in large current English corpora. It includes
-        extensive morphological, root, affix, frequency, familiarity, and educational information.
-      </p>
+      <p>The full database is for exploring a broad set of words attested in large current English corpora. It includes extensive morphological, root, affix, frequency, familiarity, and educational information.</p>
     </div>
-
     <div class="download-section">
       <a class="download-btn" href="BAWF_FINAL.csv.gz" download>↓ Download Full Word Families (.csv.gz)</a>
     </div>
-
     <div class="db-wrap" id="wfWrap"></div>
   </div>
 
@@ -799,13 +782,11 @@
         <div class="db-meta" style="margin:0; font-size:1.1rem;">
           Found <strong id="advCount" style="color:#1d4ed8;">0</strong> unique results
         </div>
-
         <div style="display:flex; gap:10px;">
           <button type="button" class="db-btn" onclick="downloadAdvancedList()">↓ Download List (.txt)</button>
           <button type="button" class="db-btn secondary" onclick="copyAdvancedList()">📋 Copy to Clipboard</button>
         </div>
       </div>
-
       <textarea id="advResultsText" style="width:100%; height:350px; padding:16px; font-family:ui-monospace, monospace; font-size:1.05rem; border:2px solid #d1d5db; border-radius:8px; resize:vertical; background:#f9fafb;" placeholder="Your custom wordlist will appear here..." readonly></textarea>
     </div>
   </div>
@@ -817,14 +798,12 @@
       <button type="button" onclick="generateWordCloud()" class="key-btn">Generate Word Cloud</button>
       <p id="cloudStatus" style="margin-top:12px; font-weight:500;"></p>
     </div>
-
     <canvas id="wordCanvas" width="1100" height="700"></canvas>
   </div>
 
   <div id="llm-generator" class="tab-content">
     <div style="max-width:1100px; margin:0 auto;">
       <h2 style="text-align:center;">🪄 AI Prompt Generator</h2>
-
       <textarea id="llmInput" rows="8" style="width:100%; padding:14px; font-family:monospace; font-size:1.02rem; border:2px solid #d1d5db; border-radius:10px; resize:vertical;" placeholder="Paste target words, one per line"></textarea>
 
       <div style="display:grid; grid-template-columns:repeat(auto-fit,minmax(220px,1fr)); gap:12px; margin:14px 0;">
@@ -886,7 +865,6 @@
           <option value="chatgpt">ChatGPT</option>
           <option value="claude">Claude</option>
         </select>
-
         <button type="button" onclick="generateWithLLM()" class="db-btn">Generate Prompt</button>
         <button type="button" onclick="copyLLMPrompt()" class="db-btn secondary">Copy Prompt</button>
         <button type="button" onclick="openInLLM()" class="db-btn">Open in LLM</button>
@@ -989,25 +967,17 @@
 
     <div class="modal-body">
       <p style="margin-top:0; color:#4b5563;">
-        This AI review is advisory. It checks the <strong>exact database-coded parse</strong>, not a silently repaired parse.
+        This review checks the <strong>exact database-coded parse</strong>. Some obvious cases are reviewed locally before calling AI.
       </p>
 
-      <div id="morphCheckStatus" style="font-weight:700; color:#1d4ed8; margin-bottom:12px;">
-        Checking...
-      </div>
-
+      <div id="morphCheckStatus" style="font-weight:700; color:#1d4ed8; margin-bottom:12px;">Checking...</div>
       <div id="morphCheckResult" class="morph-check-box"></div>
 
       <div style="margin-top:16px;">
         <label for="morphDisagreementNotes" style="font-weight:700; display:block; margin-bottom:6px;">
           Report disagreement/error notes
         </label>
-
-        <textarea
-          id="morphDisagreementNotes"
-          placeholder="If the AI review or database parse seems wrong, explain the issue here..."
-          style="width:100%; min-height:95px; border:1px solid #cbd5e1; border-radius:8px; padding:10px; font-family:inherit;"
-        ></textarea>
+        <textarea id="morphDisagreementNotes" placeholder="If the AI review or database parse seems wrong, explain the issue here..." style="width:100%; min-height:95px; border:1px solid #cbd5e1; border-radius:8px; padding:10px; font-family:inherit;"></textarea>
       </div>
 
       <p id="morphReportStatus" style="text-align:right; font-weight:600; margin-top:8px; font-size:0.9rem;"></p>
@@ -1051,7 +1021,6 @@
     </div>
   </div>
 </div>
-
 <script>
   const $ = id => document.getElementById(id);
   const $$ = (selector, root = document) => Array.from(root.querySelectorAll(selector));
@@ -1066,57 +1035,40 @@
   const PREFIX_COLS = ["Prefix_1", "Prefix_2", "Prefix_3"];
   const SUFFIX_COLS = ["Suffix_1", "Suffix_2", "Suffix_3", "Suffix_4", "Suffix_5", "Suffix_6"];
 
-const MORPH_CHECK_PROMPT = `You are an expert in English morphology, etymology, structured word inquiry, and vocabulary instruction.
+  const MORPH_CHECK_PROMPT = `You are an expert in English morphology, etymology, structured word inquiry, and vocabulary instruction.
 
 You are auditing ONE exact row from the BAWF morphological database.
 
-Your job is not to validate the row automatically. Your job is to critically audit the database parse.
+Your job is to critically audit the database parse. Do not simply validate it automatically, but also do not invent errors.
 
-You must judge only the row provided by the user. Do not use, invent, or copy words from examples, prior rows, or instructions. If a word, root, base, prefix, or suffix is not present in the current row packet, do not put it in suggested_parse unless you clearly explain it as a correction.
+Judge only the row provided by the user. Do not copy words from examples, prior rows, or instructions.
 
 BAWF notation guide:
-1. Roots are written inside parentheses.
-   Pattern: (root)
-2. Bases/basewords are written inside square brackets.
-   Pattern: [base] or [(root)]
+1. Roots are written inside parentheses. Pattern: (root)
+2. Bases/basewords are written inside square brackets. Pattern: [base] or [(root)]
 3. Affixes are written with angle brackets.
-4. Prefixes appear before the base/root.
-5. Suffixes appear after the base/root.
+4. Prefixes appear before the base/root. Pattern: <prefix<
+5. Suffixes appear after the base/root. Pattern: >suffix>
 6. Do NOT treat material inside [] or () as a suffix.
-7. Use the database columns too:
-   - Prefix_1, Prefix_2, Prefix_3 list prefixes.
-   - Suffix_1 through Suffix_6 list suffixes.
-   - GPT_Root lists the root.
-   - Baseword lists the baseword.
-8. Do not infer that the final part of a surface word is a suffix simply because it comes at the end.
-9. Only call something an omitted suffix or inflection if it is a real suffix/inflection, such as -s, -es, -ed, -ing, -er, -est, -ly, -ness, -ment, -tion, etc.
-10. The most important field is database_parse_exact. This is the exact current parse stored in the database.
-11. Copy database_parse_exact into database_parse_exact_seen exactly, or as close as possible.
-12. Do not silently repair or normalize database_parse_exact before judging it.
-13. Put corrections only in suggested_parse.
-
-Critical audit checklist:
-A. Does the notation itself make sense?
-B. Does the notation agree with the Word, Baseword, Root, Prefix, and Suffix columns?
-C. Does the parse account for the surface spelling?
-D. Does the parse account for the likely morphology of the word?
-E. Are any real prefixes, suffixes, or inflections missing?
-F. Are any listed prefixes or suffixes not actually meaningful in the word?
-G. Is the baseword/root plausible?
-H. Is there semantic or attachment ambiguity?
-I. If more than one analysis is plausible, list the alternatives.
-J. If the row is plausible but ambiguous, do not mark it simply accurate without noting the ambiguity.
-
-Special rule for prefix + base + -able/-ible words:
-If a word contains a prefix such as un- plus a base plus -able/-ible, consider affix scope carefully.
-The flat morpheme sequence may be correct, but the meaning may depend on attachment:
-- negative prefix attaching to an adjective-like form: prefix + [base + suffix]
-- reversative or other prefix attaching to a verb before suffixation: [prefix + base] + suffix
-If the row does not specify meaning or scope, mention this as a possible ambiguity.
-
-For high-frequency function words such as articles, pronouns, conjunctions, and prepositions, do not invent derivational morphology. A simple parse showing the word itself as the base/root can be acceptable.
-
-A morpheme count including inflections does not mean the written parse actually shows those inflections.
+7. Do NOT wrap an entire baseword in angle brackets. Angle brackets are for affixes.
+8. If the word is simplex, suggested_parse should normally look like [(word)], not <word>.
+9. Use the database columns too: Prefix_1-3 list prefixes; Suffix_1-6 list suffixes; GPT_Root lists root; Baseword lists baseword.
+10. Do not say the base/root is wrong merely because the surface word is longer than the base. Prefixes and suffixes may explain the extra letters.
+11. Check whether prefix + base/root + suffixes reconstructs the surface word.
+12. If the parse reconstructs almost the whole word but misses final -s, describe that specifically. Do not call it wrong_base_or_root unless the base/root itself is implausible.
+13. The suffixes -ward and -wards are closely related. If the database has >ward> but the surface word ends in wards, the issue may be suffix variant normalization or omitted final adverbial -s, not a wrong base.
+14. Only call something an omitted suffix or inflection if it is a real suffix/inflection, such as -s, -es, -ed, -ing, -er, -est, -ly, -ness, -ment, -tion, -ward, -wards, etc.
+15. The most important field is database_parse_exact. This is the exact current parse stored in the database.
+16. Copy database_parse_exact into database_parse_exact_seen exactly, or as close as possible.
+17. Do not silently repair or normalize database_parse_exact before judging it.
+18. Put corrections only in suggested_parse.
+19. The critical_check field must be an actual evaluation of this row. Do not repeat the checklist as questions.
+20. If more than one analysis is plausible, list concrete alternatives.
+21. If the row is plausible but ambiguous or normalized, use mostly_accurate or questionable rather than likely_incorrect.
+22. For high-frequency function words, do not invent derivational morphology.
+23. Be skeptical of parses that split a word into a long prefix plus a very short unrelated base simply because the letters match.
+24. If a suffix column contains an unusual letter sequence that is not a recognized suffix, flag it.
+25. For un- + base + -able/-ible words, consider affix scope ambiguity: un-[base-able] versus [un-base]-able.
 
 Return ONLY a raw JSON object. Do not use markdown code blocks. Do not include commentary outside the JSON.
 
@@ -1126,10 +1078,11 @@ The JSON object must have exactly these keys:
   "confidence": "high | medium | low",
   "database_parse_exact_seen": "",
   "notation_interpretation": "",
+  "surface_spelling_check": "",
   "critical_check": "",
   "suggested_parse": "",
   "alternative_analyses": [],
-  "parse_mismatch": "none | omitted_surface_inflection | omitted_derivational_affix | wrong_base_or_root | wrong_affix | affix_scope_ambiguous | unclear_notation | notation_misread | hallucinated_unrelated_word | other | uncertain",
+  "parse_mismatch": "none | omitted_surface_inflection | suffix_spelling_variant_or_final_s | omitted_derivational_affix | wrong_base_or_root | wrong_affix | affix_scope_ambiguous | unclear_notation | invalid_suggested_notation | notation_misread | hallucinated_unrelated_word | other | uncertain",
   "issues": [],
   "explanation": "",
   "teaching_note": "",
@@ -1340,11 +1293,8 @@ The JSON object must have exactly these keys:
 
     document.addEventListener("keydown", event => {
       if (event.key === "Escape") {
-        if (hasOpenModal()) {
-          closeAllModals();
-        } else {
-          clearCellSelection();
-        }
+        if (hasOpenModal()) closeAllModals();
+        else clearCellSelection();
         return;
       }
 
@@ -1365,100 +1315,30 @@ The JSON object must have exactly these keys:
   function displayColumnName(col) {
     return DISPLAY_LABELS[col] || col;
   }
-function detectPotentialAffixScopeAmbiguity(row) {
-  const parse = getExactDatabaseParse(row);
-  const notationParts = extractBAWFNotationParts(parse);
 
-  const notationPrefixes = notationParts.prefixes || [];
-  const notationSuffixes = notationParts.suffixes || [];
-
-  const columnPrefixes = getAffixValues(row, PREFIX_COLS);
-  const columnSuffixes = getAffixValues(row, SUFFIX_COLS);
-
-  const prefixes = uniqueCleanList([
-    ...notationPrefixes,
-    ...columnPrefixes
-  ]).map(x => x.toLowerCase().replace(/^-/, ""));
-
-  const suffixes = uniqueCleanList([
-    ...notationSuffixes,
-    ...columnSuffixes
-  ]).map(x => x.toLowerCase().replace(/^-/, ""));
-
-  const word = cleanMorphValue(getFirstNonEmpty(row, [
-    "Word",
-    "FLemma",
-    "Compound",
-    "Compound_Word"
-  ]));
-
-  const baseword = cleanMorphValue(getFirstNonEmpty(row, [
-    "Baseword",
-    "Baseword_1"
-  ]));
-
-  const hasUn = prefixes.includes("un");
-  const hasAble = suffixes.includes("able") || suffixes.includes("ible");
-
-  if (hasUn && hasAble) {
-    return `Potential affix-scope ambiguity: "${word || "this word"}" contains un- and -able/-ible. Depending on meaning, the analysis may be negative un- attaching to a derived adjective, roughly un-[${baseword || "base"}-able], or a prefixed verb/base followed by -able, roughly [un-${baseword || "base"}]-able. If the database records only flat morpheme sequence, the parse may be acceptable; if it records semantic scope, this should be checked.`;
-  }
-
-  return "";
-}
   function buildDatasetShell(key) {
     const wrap = $(`${key}Wrap`);
     if (!wrap) return;
 
     wrap.innerHTML = `
       <div class="db-controls">
-        <input
-          id="${key}GlobalSearch"
-          class="db-input"
-          type="text"
-          placeholder="Search visible columns..."
-          data-global-search="${key}"
-        >
-
+        <input id="${key}GlobalSearch" class="db-input" type="text" placeholder="Search visible columns..." data-global-search="${key}">
         <select id="${key}CopyColumnSelect" class="db-select"></select>
-
-        <button type="button" class="db-btn secondary" data-ui-action="copy-column" data-ds="${key}">
-          📋 Copy Column Cells
-        </button>
-
-        <button type="button" class="db-btn" data-ui-action="export-csv" data-ds="${key}">
-          ↓ Export Filtered CSV
-        </button>
-
+        <button type="button" class="db-btn secondary" data-ui-action="copy-column" data-ds="${key}">📋 Copy Column Cells</button>
+        <button type="button" class="db-btn" data-ui-action="export-csv" data-ds="${key}">↓ Export Filtered CSV</button>
         <select id="${key}AddCols" class="db-select" multiple size="4"></select>
-
-        <button type="button" class="db-btn secondary" data-ui-action="add-columns" data-ds="${key}">
-          ➕ Add Selected Columns
-        </button>
-
+        <button type="button" class="db-btn secondary" data-ui-action="add-columns" data-ds="${key}">➕ Add Selected Columns</button>
         <select id="${key}RemoveCols" class="db-select" multiple size="4"></select>
-
-        <button type="button" class="db-btn secondary" data-ui-action="remove-columns" data-ds="${key}">
-          ➖ Remove Selected Columns
-        </button>
-
-        <button type="button" class="db-btn secondary" data-ui-action="reset-columns" data-ds="${key}">
-          ↩ Reset Default Columns
-        </button>
-
-        <button type="button" class="db-btn secondary" data-ui-action="clear-filters" data-ds="${key}">
-          Clear Filters
-        </button>
+        <button type="button" class="db-btn secondary" data-ui-action="remove-columns" data-ds="${key}">➖ Remove Selected Columns</button>
+        <button type="button" class="db-btn secondary" data-ui-action="reset-columns" data-ds="${key}">↩ Reset Default Columns</button>
+        <button type="button" class="db-btn secondary" data-ui-action="clear-filters" data-ds="${key}">Clear Filters</button>
       </div>
 
       <div class="cell-copy-tip">
         Tip: click one cell or drag across cells, then press <strong>Ctrl+C</strong> or <strong>Cmd+C</strong> to copy selected cells.
       </div>
 
-      <div class="db-meta">
-        Showing <strong id="${key}RowCount">0</strong> rows
-      </div>
-
+      <div class="db-meta">Showing <strong id="${key}RowCount">0</strong> rows</div>
       <div id="${key}Loading" class="db-loading">Loading ${escapeHTML(DATASETS[key].name)}...</div>
 
       <div class="db-table-wrap">
@@ -1473,14 +1353,8 @@ function detectPotentialAffixScopeAmbiguity(row) {
 
       <div id="${key}Pagination" class="pagination" style="display:none;">
         <button type="button" data-ui-action="prev-page" data-ds="${key}">← Previous</button>
-
-        <span>
-          Page <span id="${key}CurrentPage">1</span>
-          of <span id="${key}TotalPages">1</span>
-        </span>
-
+        <span>Page <span id="${key}CurrentPage">1</span> of <span id="${key}TotalPages">1</span></span>
         <button type="button" data-ui-action="next-page" data-ds="${key}">Next →</button>
-
         <select id="${key}RowsPerPage" data-rows-per-page="${key}">
           <option value="50">50 rows</option>
           <option value="100" selected>100 rows</option>
@@ -1559,24 +1433,17 @@ function detectPotentialAffixScopeAmbiguity(row) {
     const config = DATASETS[key];
     if (!config || !config.data) return [];
 
-    if (config.uniqueValues[col]) {
-      return config.uniqueValues[col];
-    }
+    if (config.uniqueValues[col]) return config.uniqueValues[col];
 
     const values = new Set();
 
     for (const row of config.data) {
       let val = row[col];
-
       if (val === null || val === undefined) continue;
 
-      val = String(val)
-        .replace(/�+/g, "")
-        .replace(/\xa0/g, " ")
-        .trim();
+      val = String(val).replace(/�+/g, "").replace(/\xa0/g, " ").trim();
 
       if (!val || val.toLowerCase() === "nan") continue;
-
       values.add(val);
     }
 
@@ -1593,9 +1460,7 @@ function detectPotentialAffixScopeAmbiguity(row) {
       return;
     }
 
-    if (config.loading && config.promise) {
-      return config.promise;
-    }
+    if (config.loading && config.promise) return config.promise;
 
     config.loading = true;
 
@@ -1609,10 +1474,7 @@ function detectPotentialAffixScopeAmbiguity(row) {
         }
 
         const response = await fetch(config.file);
-
-        if (!response.ok) {
-          throw new Error(`HTTP ${response.status}: ${config.file}`);
-        }
+        if (!response.ok) throw new Error(`HTTP ${response.status}: ${config.file}`);
 
         if (loadingEl) loadingEl.textContent = "Decompressing data...";
 
@@ -1675,10 +1537,7 @@ function detectPotentialAffixScopeAmbiguity(row) {
                 for (const row of validRows) {
                   for (const col of Object.keys(row)) {
                     if (typeof row[col] === "string") {
-                      row[col] = row[col]
-                        .replace(/�+/g, "")
-                        .replace(/\xa0/g, " ")
-                        .trim();
+                      row[col] = row[col].replace(/�+/g, "").replace(/\xa0/g, " ").trim();
                     }
                   }
                 }
@@ -1727,9 +1586,8 @@ function detectPotentialAffixScopeAmbiguity(row) {
 
         buildDropdowns(key);
 
-        if (hasActiveFilterState(key)) {
-          filterTable(key);
-        } else {
+        if (hasActiveFilterState(key)) filterTable(key);
+        else {
           config.filtered = [...config.data];
           renderTable(key);
         }
@@ -1803,20 +1661,12 @@ function detectPotentialAffixScopeAmbiguity(row) {
     const filterRow = $(`${key}FilterRow`);
     const tbody = $(`${key}TableBody`);
 
-    if (rowCountEl) {
-      rowCountEl.textContent = config.filtered.length.toLocaleString();
-    }
-
+    if (rowCountEl) rowCountEl.textContent = config.filtered.length.toLocaleString();
     if (!headerRow || !filterRow || !tbody) return;
 
     headerRow.innerHTML = config.visible.map(col => {
       const symbol = config.sortBy === col ? (config.sortDesc ? " 🔽" : " 🔼") : "";
-
-      return `
-        <th data-sort-ds="${key}" data-sort-col="${escapeHTML(col)}">
-          ${escapeHTML(displayColumnName(col))}${symbol}
-        </th>
-      `;
+      return `<th data-sort-ds="${key}" data-sort-col="${escapeHTML(col)}">${escapeHTML(displayColumnName(col))}${symbol}</th>`;
     }).join("") + `<th>Actions</th>`;
 
     filterRow.innerHTML = config.visible.map(col => {
@@ -1828,11 +1678,7 @@ function detectPotentialAffixScopeAmbiguity(row) {
 
         let html = `
           <td>
-            <select
-              data-filter-ds="${key}"
-              data-filter-col="${escapeHTML(col)}"
-              data-filter-mode="exact"
-            >
+            <select data-filter-ds="${key}" data-filter-col="${escapeHTML(col)}" data-filter-mode="exact">
               <option value="">All</option>
         `;
 
@@ -1847,23 +1693,13 @@ function detectPotentialAffixScopeAmbiguity(row) {
 
       return `
         <td>
-          <input
-            type="text"
-            placeholder="Filter..."
-            value="${escapeHTML(currentVal)}"
-            data-filter-ds="${key}"
-            data-filter-col="${escapeHTML(col)}"
-            data-filter-mode="contains"
-          >
+          <input type="text" placeholder="Filter..." value="${escapeHTML(currentVal)}" data-filter-ds="${key}" data-filter-col="${escapeHTML(col)}" data-filter-mode="contains">
         </td>
       `;
     }).join("") + `<td></td>`;
 
     const totalPages = Math.ceil(config.filtered.length / config.rpp) || 1;
-
-    if (config.page > totalPages) {
-      config.page = totalPages;
-    }
+    if (config.page > totalPages) config.page = totalPages;
 
     const currentPageEl = $(`${key}CurrentPage`);
     const totalPagesEl = $(`${key}TotalPages`);
@@ -1883,7 +1719,6 @@ function detectPotentialAffixScopeAmbiguity(row) {
 
     pageData.forEach((row, idx) => {
       const rowIndex = pageStart + idx;
-
       html += "<tr>";
 
       config.visible.forEach((col, colIndex) => {
@@ -1901,14 +1736,7 @@ function detectPotentialAffixScopeAmbiguity(row) {
         const cellClass = String(displayVal).length > 60 ? "long-text" : "";
 
         html += `
-          <td
-            class="db-cell ${cellClass}"
-            data-ds="${key}"
-            data-row-index="${rowIndex}"
-            data-col-index="${colIndex}"
-            data-col="${escapeHTML(col)}"
-            title="Click or drag cells, then press Ctrl/Cmd+C to copy"
-          >${escapeHTML(displayVal)}</td>
+          <td class="db-cell ${cellClass}" data-ds="${key}" data-row-index="${rowIndex}" data-col-index="${colIndex}" data-col="${escapeHTML(col)}" title="Click or drag cells, then press Ctrl/Cmd+C to copy">${escapeHTML(displayVal)}</td>
         `;
       });
 
@@ -1933,17 +1761,14 @@ function detectPotentialAffixScopeAmbiguity(row) {
 
     tbody.innerHTML = html;
   }
-
-  function formatCellValue(col, val) {
+    function formatCellValue(col, val) {
     const s = String(val ?? "").trim();
     if (!s) return "";
 
     const n = Number(s);
 
     if (Number.isFinite(n)) {
-      if (/zipf/i.test(col)) {
-        return n.toFixed(2);
-      }
+      if (/zipf/i.test(col)) return n.toFixed(2);
 
       if (/grade|familiarity|aoa/i.test(col)) {
         return Number.isInteger(n) ? String(n) : n.toFixed(2).replace(/\.?0+$/, "");
@@ -1960,9 +1785,7 @@ function detectPotentialAffixScopeAmbiguity(row) {
   }
 
   function onColumnFilter(key, col, val, mode = "contains") {
-    if (!columnFilters[key]) {
-      columnFilters[key] = {};
-    }
+    if (!columnFilters[key]) columnFilters[key] = {};
 
     if (!val || !String(val).trim()) {
       delete columnFilters[key][col];
@@ -2118,9 +1941,7 @@ function detectPotentialAffixScopeAmbiguity(row) {
     if (!selected.length) return;
 
     for (const col of selected) {
-      if (!config.visible.includes(col)) {
-        config.visible.push(col);
-      }
+      if (!config.visible.includes(col)) config.visible.push(col);
     }
 
     buildDropdowns(key);
@@ -2146,9 +1967,7 @@ function detectPotentialAffixScopeAmbiguity(row) {
 
     if (columnFilters[key]) {
       Object.keys(columnFilters[key]).forEach(col => {
-        if (!config.visible.includes(col)) {
-          delete columnFilters[key][col];
-        }
+        if (!config.visible.includes(col)) delete columnFilters[key][col];
       });
     }
 
@@ -2435,15 +2254,8 @@ function detectPotentialAffixScopeAmbiguity(row) {
     const root = getFirstNonEmpty(row, ["GPT_Root", "Root_1", "Greek_Latin_Root_1"]);
     const parts = getFirstNonEmpty(row, ["GPT_Coded_Word_Parts", "GPT_CODES"]);
 
-    const prefixes = PREFIX_COLS
-      .map(c => row[c])
-      .filter(Boolean)
-      .join(", ");
-
-    const suffixes = SUFFIX_COLS
-      .map(c => row[c])
-      .filter(Boolean)
-      .join(", ");
+    const prefixes = PREFIX_COLS.map(c => row[c]).filter(Boolean).join(", ");
+    const suffixes = SUFFIX_COLS.map(c => row[c]).filter(Boolean).join(", ");
 
     let instruction = "Explain this vocabulary entry, its morphology, and its etymology/history when available.";
 
@@ -2538,283 +2350,197 @@ Please:
       .filter(v => v && v.toLowerCase() !== "nan");
   }
 
-  function escapeRegExp(str) {
-    return String(str).replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
-  }
-function extractBAWFNotationParts(parse) {
-  const text = cleanMorphValue(parse);
-
-  const roots = [];
-  const bases = [];
-  const prefixes = [];
-  const suffixes = [];
-
-  // Roots inside parentheses, e.g. (book)
-  const rootRegex = /\(([^()]+)\)/g;
-  let rootMatch;
-
-  while ((rootMatch = rootRegex.exec(text)) !== null) {
-    const value = cleanMorphValue(rootMatch[1]);
-    if (value) roots.push(value);
-  }
-
-  // Bases inside square brackets, e.g. [(book)] or [play]
-  const baseRegex = /\[([^\]]+)\]/g;
-  let baseMatch;
-
-  while ((baseMatch = baseRegex.exec(text)) !== null) {
-    const value = cleanMorphValue(baseMatch[1])
-      .replace(/[()]/g, "")
-      .trim();
-
-    if (value) bases.push(value);
-  }
-
-  // Prefixes like <over< before a base/root.
-  const prefixRegex = /<([^<>]+)</g;
-  let prefixMatch;
-
-  while ((prefixMatch = prefixRegex.exec(text)) !== null) {
-    const value = cleanMorphValue(prefixMatch[1]);
-    if (value) prefixes.push(value);
-  }
-
-  // Suffixes like >ing> or >ed> after a base/root.
-  const suffixRegex = />([^<>]+)>/g;
-  let suffixMatch;
-
-  while ((suffixMatch = suffixRegex.exec(text)) !== null) {
-    const value = cleanMorphValue(suffixMatch[1]);
-    if (value) suffixes.push(value);
-  }
-
-  return {
-    roots: uniqueCleanList(roots),
-    bases: uniqueCleanList(bases),
-    prefixes: uniqueCleanList(prefixes),
-    suffixes: uniqueCleanList(suffixes)
-  };
-}
-
-function uniqueCleanList(items) {
-  return Array.from(
-    new Set(
-      items
-        .map(x => cleanMorphValue(x))
-        .filter(Boolean)
-    )
-  );
-}
-
-function buildLocalNotationInterpretation(row) {
-  const parse = getExactDatabaseParse(row);
-  const notationParts = extractBAWFNotationParts(parse);
-
-  const columnPrefixes = getAffixValues(row, PREFIX_COLS);
-  const columnSuffixes = getAffixValues(row, SUFFIX_COLS);
-
-  const root = cleanMorphValue(getFirstNonEmpty(row, [
-    "GPT_Root",
-    "Root_1",
-    "Greek_Latin_Root_1",
-    "Greek_Latin_Root"
-  ]));
-
-  const baseword = cleanMorphValue(getFirstNonEmpty(row, [
-    "Baseword",
-    "Baseword_1"
-  ]));
-
-  const pieces = [];
-
-  pieces.push(`Exact parse: ${parse || "[blank]"}`);
-
-  if (notationParts.prefixes.length) {
-    pieces.push(`Prefixes from notation: ${notationParts.prefixes.join(", ")}`);
-  }
-
-  if (notationParts.bases.length) {
-    pieces.push(`Bases from notation: ${notationParts.bases.join(", ")}`);
-  }
-
-  if (notationParts.roots.length) {
-    pieces.push(`Roots from notation: ${notationParts.roots.join(", ")}`);
-  }
-
-  if (notationParts.suffixes.length) {
-    pieces.push(`Suffixes from notation: ${notationParts.suffixes.join(", ")}`);
-  } else {
-    pieces.push("Suffixes from notation: none");
-  }
-
-  if (columnPrefixes.length) {
-    pieces.push(`Prefixes from columns: ${columnPrefixes.join(", ")}`);
-  }
-
-  if (columnSuffixes.length) {
-    pieces.push(`Suffixes from columns: ${columnSuffixes.join(", ")}`);
-  } else {
-    pieces.push("Suffixes from columns: none");
-  }
-
-  if (baseword) {
-    pieces.push(`Database baseword column: ${baseword}`);
-  }
-
-  if (root) {
-    pieces.push(`Database root column: ${root}`);
-  }
-
-  return pieces.join("\n");
-}
-
-function detectLikelyNotationMisreadByAI(parsed, context) {
-  if (!parsed || !context || !context.parse_packet) return "";
-
-  const packet = context.parse_packet;
-  const parse = packet.database_parse_exact || "";
-  const notationParts = extractBAWFNotationParts(parse);
-
-  const aiText = [
-    parsed.notation_interpretation,
-    parsed.suggested_parse,
-    parsed.parse_mismatch,
-    parsed.explanation,
-    parsed.teaching_note,
-    Array.isArray(parsed.issues) ? parsed.issues.join(" ") : ""
-  ].join(" ").toLowerCase();
-
-  const protectedBaseRootParts = uniqueCleanList([
-    ...(notationParts.roots || []),
-    ...(notationParts.bases || []),
-    packet.database_baseword,
-    packet.database_root_exact
-  ]).map(x => x.toLowerCase());
-
-  for (const part of protectedBaseRootParts) {
-    if (!part) continue;
-
-    const saysPartIsSuffix =
-      aiText.includes(`-${part} suffix`) ||
-      aiText.includes(`suffix -${part}`) ||
-      aiText.includes(`suffix (${part})`) ||
-      aiText.includes(`visible suffix -${part}`);
-
-    if (saysPartIsSuffix) {
-      return `AI appears to have misread "${part}" as a suffix, but in the database notation it is a base/root, not a suffix.`;
-    }
-  }
-
-  return "";
-}
-function parseContainsEnding(endingLabel, parse, suffixes) {
-  const endings = String(endingLabel)
-    .split("/")
-    .map(v => v.trim().replace(/^-/, "").toLowerCase())
-    .filter(Boolean);
-
-  const text = cleanMorphValue(parse).toLowerCase();
-  const compact = text.replace(/\s+/g, "");
-
-  const suffixNorms = suffixes.map(s =>
-    cleanMorphValue(s).toLowerCase().replace(/^-/, "")
-  );
-
-  return endings.some(bare => {
-    if (!bare) return false;
-
-    if (suffixNorms.includes(bare)) return true;
-
-    const compactPatterns = [
-      `+-${bare}`,
-      `+${bare}`,
-      `>-${bare}>`,
-      `>${bare}>`,
-      `(-${bare})`
-    ];
-
-    if (compactPatterns.some(pattern => compact.includes(pattern))) {
-      return true;
-    }
-
-    const re = new RegExp(`(^|[^a-z])[-]?${escapeRegExp(bare)}($|[^a-z])`, "i");
-    return re.test(text);
-  });
-}
-function normalizeMorphToken(value) {
-  return cleanMorphValue(value)
-    .toLowerCase()
-    .replace(/^[^a-z0-9]+|[^a-z0-9]+$/g, "")
-    .trim();
-}
-
-function getDeterministicMorphReview(packet) {
-  if (!packet) return null;
-
-  const word = normalizeMorphToken(packet.surface_word);
-  const baseword = normalizeMorphToken(packet.database_baseword);
-
-  if (!word || !baseword) return null;
-  if (word !== baseword) return null;
-  if (packet.local_precheck_warning) return null;
-
-  const notationParts =
-    packet.database_notation_parts_detected_locally ||
-    extractBAWFNotationParts(packet.database_parse_exact);
-
-  const notationPrefixes = notationParts.prefixes || [];
-  const notationSuffixes = notationParts.suffixes || [];
-  const columnPrefixes = packet.database_prefixes_exact || [];
-  const columnSuffixes = packet.database_suffixes_exact || [];
-
-  const hasAffixes =
-    notationPrefixes.length > 0 ||
-    notationSuffixes.length > 0 ||
-    columnPrefixes.length > 0 ||
-    columnSuffixes.length > 0;
-
-  if (hasAffixes) return null;
-
-  const basesAndRoots = uniqueCleanList([
-    ...(notationParts.bases || []),
-    ...(notationParts.roots || [])
-  ]).map(normalizeMorphToken);
-
-  if (!basesAndRoots.length) return null;
-
-  const allPartsMatchWord = basesAndRoots.every(part => {
-    return part === word || part === baseword;
-  });
-
-  if (!allPartsMatchWord) return null;
-
-  return {
-    status: "accurate",
-    confidence: "high",
-    database_parse_exact_seen: packet.database_parse_exact,
-    notation_interpretation:
-      `The database parse marks "${packet.surface_word}" as the base/root itself. No prefixes or suffixes are shown in the notation or suffix columns.`,
-    suggested_parse: packet.database_parse_exact,
-    parse_mismatch: "none",
-    issues: [],
-    explanation:
-      `This appears to be a simplex entry. The surface word, baseword, and database-coded base/root all match. There is no evidence in this row of a missing prefix, suffix, or inflection.`,
-    teaching_note:
-      `For a high-frequency function word such as "${packet.surface_word}", do not force an affix analysis. The word can be treated as a simple base/root entry for database purposes.`
-  };
-}
-  function detectLikelySurfaceInflectionOmission(row) {
-    const word = cleanMorphValue(getFirstNonEmpty(row, [
+  function getSurfaceWordForReview(row) {
+    return cleanMorphValue(getFirstNonEmpty(row, [
       "Word",
       "FLemma",
       "Compound",
       "Compound_Word"
     ]));
+  }
 
-    const base = cleanMorphValue(getFirstNonEmpty(row, [
+  function normalizeMorphToken(value) {
+    return cleanMorphValue(value)
+      .toLowerCase()
+      .replace(/^[^a-z0-9]+|[^a-z0-9]+$/g, "")
+      .trim();
+  }
+
+  function normalizeSurfaceForCompare(value) {
+    return cleanMorphValue(value)
+      .toLowerCase()
+      .replace(/[^a-z0-9]/g, "");
+  }
+
+  function cleanBareMorphPart(value) {
+    return cleanMorphValue(value)
+      .replace(/[<>\[\]\(\)]/g, "")
+      .replace(/^-+|-+$/g, "")
+      .trim();
+  }
+
+  function escapeRegExp(str) {
+    return String(str).replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+  }
+
+  function uniqueCleanList(items) {
+    return Array.from(
+      new Set(
+        (items || [])
+          .map(x => cleanMorphValue(x))
+          .filter(Boolean)
+      )
+    );
+  }
+
+  function extractBAWFNotationParts(parse) {
+    const text = cleanMorphValue(parse);
+
+    const roots = [];
+    const bases = [];
+    const prefixes = [];
+    const suffixes = [];
+
+    const rootRegex = /\(([^()]+)\)/g;
+    let rootMatch;
+
+    while ((rootMatch = rootRegex.exec(text)) !== null) {
+      const value = cleanMorphValue(rootMatch[1]);
+      if (value) roots.push(value);
+    }
+
+    const baseRegex = /\[([^\]]+)\]/g;
+    let baseMatch;
+
+    while ((baseMatch = baseRegex.exec(text)) !== null) {
+      const value = cleanMorphValue(baseMatch[1]).replace(/[()]/g, "").trim();
+      if (value) bases.push(value);
+    }
+
+    const prefixRegex = /<([^<>]+)</g;
+    let prefixMatch;
+
+    while ((prefixMatch = prefixRegex.exec(text)) !== null) {
+      const value = cleanMorphValue(prefixMatch[1]);
+      if (value) prefixes.push(value);
+    }
+
+    const suffixRegex = />([^<>]+)>/g;
+    let suffixMatch;
+
+    while ((suffixMatch = suffixRegex.exec(text)) !== null) {
+      const value = cleanMorphValue(suffixMatch[1]);
+      if (value) suffixes.push(value);
+    }
+
+    return {
+      roots: uniqueCleanList(roots),
+      bases: uniqueCleanList(bases),
+      prefixes: uniqueCleanList(prefixes),
+      suffixes: uniqueCleanList(suffixes)
+    };
+  }
+
+  function buildLocalNotationInterpretation(row) {
+    const parse = getExactDatabaseParse(row);
+    const notationParts = extractBAWFNotationParts(parse);
+    const columnPrefixes = getAffixValues(row, PREFIX_COLS);
+    const columnSuffixes = getAffixValues(row, SUFFIX_COLS);
+
+    const root = cleanMorphValue(getFirstNonEmpty(row, [
+      "GPT_Root",
+      "Root_1",
+      "Greek_Latin_Root_1",
+      "Greek_Latin_Root"
+    ]));
+
+    const baseword = cleanMorphValue(getFirstNonEmpty(row, [
       "Baseword",
       "Baseword_1"
     ]));
+
+    const pieces = [];
+
+    pieces.push(`Exact parse: ${parse || "[blank]"}`);
+
+    if (notationParts.prefixes.length) pieces.push(`Prefixes from notation: ${notationParts.prefixes.join(", ")}`);
+    if (notationParts.bases.length) pieces.push(`Bases from notation: ${notationParts.bases.join(", ")}`);
+    if (notationParts.roots.length) pieces.push(`Roots from notation: ${notationParts.roots.join(", ")}`);
+
+    if (notationParts.suffixes.length) pieces.push(`Suffixes from notation: ${notationParts.suffixes.join(", ")}`);
+    else pieces.push("Suffixes from notation: none");
+
+    if (columnPrefixes.length) pieces.push(`Prefixes from columns: ${columnPrefixes.join(", ")}`);
+
+    if (columnSuffixes.length) pieces.push(`Suffixes from columns: ${columnSuffixes.join(", ")}`);
+    else pieces.push("Suffixes from columns: none");
+
+    if (baseword) pieces.push(`Database baseword column: ${baseword}`);
+    if (root) pieces.push(`Database root column: ${root}`);
+
+    return pieces.join("\n");
+  }
+
+  function buildBAWFParseFromParts(prefixes, base, suffixes) {
+    const cleanPrefixes = uniqueCleanList(prefixes || [])
+      .map(cleanBareMorphPart)
+      .filter(Boolean);
+
+    const cleanBase = cleanBareMorphPart(base);
+
+    const cleanSuffixes = uniqueCleanList(suffixes || [])
+      .map(cleanBareMorphPart)
+      .filter(Boolean);
+
+    if (!cleanBase) return "";
+
+    const prefixText = cleanPrefixes.map(p => `<${p}<`).join("");
+    const baseText = `[(${cleanBase})]`;
+    const suffixText = cleanSuffixes.map(s => `>${s}>`).join("");
+
+    return `${prefixText}${baseText}${suffixText}`;
+  }
+
+  function makeSimpleBaseRootParse(word) {
+    const cleaned = cleanMorphValue(word).trim();
+    return cleaned ? `[(${cleaned})]` : "";
+  }
+
+  function parseContainsEnding(endingLabel, parse, suffixes) {
+    const endings = String(endingLabel)
+      .split("/")
+      .map(v => v.trim().replace(/^-/, "").toLowerCase())
+      .filter(Boolean);
+
+    const text = cleanMorphValue(parse).toLowerCase();
+    const compact = text.replace(/\s+/g, "");
+
+    const suffixNorms = (suffixes || []).map(s =>
+      cleanMorphValue(s).toLowerCase().replace(/^-/, "")
+    );
+
+    return endings.some(bare => {
+      if (!bare) return false;
+      if (suffixNorms.includes(bare)) return true;
+
+      const compactPatterns = [
+        `+-${bare}`,
+        `+${bare}`,
+        `>-${bare}>`,
+        `>${bare}>`,
+        `(-${bare})`
+      ];
+
+      if (compactPatterns.some(pattern => compact.includes(pattern))) return true;
+
+      const re = new RegExp(`(^|[^a-z])[-]?${escapeRegExp(bare)}($|[^a-z])`, "i");
+      return re.test(text);
+    });
+  }
+
+  function detectLikelySurfaceInflectionOmission(row) {
+    const word = getSurfaceWordForReview(row);
+    const base = cleanMorphValue(getFirstNonEmpty(row, ["Baseword", "Baseword_1"]));
 
     if (!word || !base) return "";
 
@@ -2831,53 +2557,21 @@ function getDeterministicMorphReview(packet) {
       candidates.push({ ending, reason });
     }
 
-    if (wordLower === baseLower + "ing") {
-      addCandidate("-ing", `${word} appears to be ${base} + -ing`);
-    }
+    if (wordLower === baseLower + "ing") addCandidate("-ing", `${word} appears to be ${base} + -ing`);
+    if (baseLower.endsWith("e") && wordLower === baseLower.slice(0, -1) + "ing") addCandidate("-ing", `${word} appears to be ${base} + -ing with final-e deletion`);
+    if (wordLower === baseLower + baseLower.slice(-1) + "ing") addCandidate("-ing", `${word} appears to be ${base} + -ing with consonant doubling`);
 
-    if (baseLower.endsWith("e") && wordLower === baseLower.slice(0, -1) + "ing") {
-      addCandidate("-ing", `${word} appears to be ${base} + -ing with final-e deletion`);
-    }
+    if (wordLower === baseLower + "ed") addCandidate("-ed", `${word} appears to be ${base} + -ed`);
+    if (baseLower.endsWith("e") && wordLower === baseLower + "d") addCandidate("-ed", `${word} appears to be ${base} + -ed, written as -d after final e`);
+    if (wordLower === baseLower + baseLower.slice(-1) + "ed") addCandidate("-ed", `${word} appears to be ${base} + -ed with consonant doubling`);
+    if (baseLower.endsWith("y") && wordLower === baseLower.slice(0, -1) + "ied") addCandidate("-ed", `${word} appears to be ${base} + -ed with y-to-i change`);
 
-    if (wordLower === baseLower + baseLower.slice(-1) + "ing") {
-      addCandidate("-ing", `${word} appears to be ${base} + -ing with consonant doubling`);
-    }
+    if (wordLower === baseLower + "s") addCandidate("-s", `${word} appears to be ${base} + -s`);
+    if (wordLower === baseLower + "es") addCandidate("-s/-es", `${word} appears to be ${base} + -es`);
+    if (baseLower.endsWith("y") && wordLower === baseLower.slice(0, -1) + "ies") addCandidate("-s/-es", `${word} appears to be ${base} + -s/-es with y-to-i change`);
 
-    if (wordLower === baseLower + "ed") {
-      addCandidate("-ed", `${word} appears to be ${base} + -ed`);
-    }
-
-    if (baseLower.endsWith("e") && wordLower === baseLower + "d") {
-      addCandidate("-ed", `${word} appears to be ${base} + -ed, written as -d after final e`);
-    }
-
-    if (wordLower === baseLower + baseLower.slice(-1) + "ed") {
-      addCandidate("-ed", `${word} appears to be ${base} + -ed with consonant doubling`);
-    }
-
-    if (baseLower.endsWith("y") && wordLower === baseLower.slice(0, -1) + "ied") {
-      addCandidate("-ed", `${word} appears to be ${base} + -ed with y-to-i change`);
-    }
-
-    if (wordLower === baseLower + "s") {
-      addCandidate("-s", `${word} appears to be ${base} + -s`);
-    }
-
-    if (wordLower === baseLower + "es") {
-      addCandidate("-s/-es", `${word} appears to be ${base} + -es`);
-    }
-
-    if (baseLower.endsWith("y") && wordLower === baseLower.slice(0, -1) + "ies") {
-      addCandidate("-s/-es", `${word} appears to be ${base} + -s/-es with y-to-i change`);
-    }
-
-    if (wordLower === baseLower + "er") {
-      addCandidate("-er", `${word} appears to be ${base} + -er`);
-    }
-
-    if (wordLower === baseLower + "est") {
-      addCandidate("-est", `${word} appears to be ${base} + -est`);
-    }
+    if (wordLower === baseLower + "er") addCandidate("-er", `${word} appears to be ${base} + -er`);
+    if (wordLower === baseLower + "est") addCandidate("-est", `${word} appears to be ${base} + -est`);
 
     const missing = candidates.find(c => !parseContainsEnding(c.ending, parse, suffixes));
     if (!missing) return "";
@@ -2885,84 +2579,275 @@ function getDeterministicMorphReview(packet) {
     return `Possible omitted surface inflection: ${missing.reason}. Exact database-coded parse is "${parse || "[blank]"}"; suffix columns show "${suffixes.join(", ") || "none"}".`;
   }
 
-  function buildMorphReviewPacket(row, key) {
-  const compactRow = {};
+  function getSurfaceReconstructionInfo(row) {
+    const word = getSurfaceWordForReview(row);
+    const parse = getExactDatabaseParse(row);
+    const notationParts = extractBAWFNotationParts(parse);
 
-  Object.keys(row || {}).forEach(col => {
-    const val = row[col];
+    const columnPrefixes = getAffixValues(row, PREFIX_COLS);
+    const columnSuffixes = getAffixValues(row, SUFFIX_COLS);
 
-    if (val !== null && val !== undefined && String(val).trim()) {
-      compactRow[col] = String(val).trim();
+    const hasNotationCore =
+      notationParts.prefixes.length ||
+      notationParts.bases.length ||
+      notationParts.roots.length ||
+      notationParts.suffixes.length;
+
+    const prefixes = uniqueCleanList(
+      hasNotationCore ? notationParts.prefixes : columnPrefixes
+    ).map(cleanBareMorphPart).filter(Boolean);
+
+    const suffixes = uniqueCleanList(
+      hasNotationCore ? notationParts.suffixes : columnSuffixes
+    ).map(cleanBareMorphPart).filter(Boolean);
+
+    const base =
+      cleanBareMorphPart((notationParts.bases || [])[0]) ||
+      cleanBareMorphPart((notationParts.roots || [])[0]) ||
+      cleanBareMorphPart(getFirstNonEmpty(row, ["Baseword", "Baseword_1"]));
+
+    const parseYields = `${prefixes.join("")}${base}${suffixes.join("")}`;
+
+    const surfaceNorm = normalizeSurfaceForCompare(word);
+    const parseYieldsNorm = normalizeSurfaceForCompare(parseYields);
+    const lastSuffix = suffixes.length ? suffixes[suffixes.length - 1].toLowerCase() : "";
+
+    let status = "no_reconstruction";
+    let note = "";
+    let possibleCorrectedSurfaceParse = "";
+
+    if (!word || !base || !parseYields) {
+      return {
+        surface_word: word,
+        parse_yields: parseYields,
+        surface_match_status: status,
+        note: "Could not reconstruct surface form from notation.",
+        possible_corrected_surface_parse: ""
+      };
     }
-  });
 
-  const databaseParseExact = getExactDatabaseParse(row);
-  const notationParts = extractBAWFNotationParts(databaseParseExact);
+    if (surfaceNorm === parseYieldsNorm) {
+      status = "exact_match";
+      note = `The local reconstruction from the database parse yields "${parseYields}", which matches the surface word "${word}".`;
+    } else if (surfaceNorm === `${parseYieldsNorm}s` && lastSuffix === "ward") {
+      status = "known_suffix_s_variant";
+      const correctedSuffixes = [...suffixes];
+      correctedSuffixes[correctedSuffixes.length - 1] = "wards";
+      possibleCorrectedSurfaceParse = buildBAWFParseFromParts(prefixes, base, correctedSuffixes);
 
-  return {
-    dataset_key: key,
-    dataset_name: getDatasetLabel(key),
+      note =
+        `The local reconstruction from the database parse yields "${parseYields}", but the surface word is "${word}". ` +
+        `This is probably the -ward/-wards suffix variant or a final adverbial -s issue, not a wrong base/root. ` +
+        `If exact surface-form parsing is required, consider "${possibleCorrectedSurfaceParse}".`;
+    } else if (surfaceNorm === `${parseYieldsNorm}s` && suffixes.length) {
+      status = "possible_missing_final_s_after_suffix";
+      note =
+        `The local reconstruction from the database parse yields "${parseYields}", but the surface word is "${word}". ` +
+        `The parse may be missing a final -s after an already parsed suffix. This is a surface-spelling or inflection issue, not automatically a wrong base/root.`;
+    } else {
+      status = "mismatch";
+      note =
+        `The local reconstruction from the database parse yields "${parseYields}", but the surface word is "${word}". ` +
+        `This may indicate a parse problem, spelling-change issue, or lexicalized form requiring human review.`;
+    }
 
-    bawf_notation_guide: {
-      roots: "Roots are inside parentheses, e.g. (book).",
-      bases: "Bases/basewords are inside square brackets, e.g. [(book)].",
-      prefixes: "Prefixes appear with angle brackets before the base/root, e.g. <over<[(book)] means over + book.",
-      suffixes: "Suffixes appear with angle brackets after the base/root.",
-      warning: "Do not treat material inside [] or () as a suffix. In <over<[(book)], book is a base/root, not a suffix."
-    },
+    return {
+      surface_word: word,
+      parse_yields: parseYields,
+      prefixes_used: prefixes,
+      base_used: base,
+      suffixes_used: suffixes,
+      surface_match_status: status,
+      note,
+      possible_corrected_surface_parse: possibleCorrectedSurfaceParse
+    };
+  }
 
-    surface_word: cleanMorphValue(getFirstNonEmpty(row, [
-      "Word",
-      "FLemma",
-      "Compound",
-      "Compound_Word"
-    ])),
+  function getShortFunctionBasesForSegmentation() {
+    return new Set(["a","i","am","an","as","at","be","by","do","go","he","if","in","is","it","me","my","no","of","on","or","so","to","up","us","we"]);
+  }
 
-    database_baseword: cleanMorphValue(getFirstNonEmpty(row, [
-      "Baseword",
-      "Baseword_1"
-    ])),
+  function getCommonSuffixesForSegmentationWarning() {
+    return new Set([
+      "s","es","ed","ing","er","est","ly","ness","ment","tion","sion","ation","ition",
+      "able","ible","al","ial","ous","ious","eous","ful","less","ize","ise","ity","ty",
+      "ic","ical","ive","ative","itive","en","ish","hood","ship","dom","ward","wards","wise","y"
+    ]);
+  }
 
-    database_parse_exact: databaseParseExact,
+  function detectSuspiciousDatabaseSegmentation(row) {
+    const word = getSurfaceWordForReview(row);
+    const base = cleanMorphValue(getFirstNonEmpty(row, ["Baseword", "Baseword_1"]));
 
-    database_notation_parts_detected_locally: notationParts,
+    if (!word || !base) return "";
 
-    local_notation_interpretation: buildLocalNotationInterpretation(row),
+    const wordNorm = normalizeMorphToken(word);
+    const baseNorm = normalizeMorphToken(base);
 
-    database_root_exact: cleanMorphValue(getFirstNonEmpty(row, [
-      "GPT_Root",
-      "Root_1"
-    ])),
+    if (!wordNorm || !baseNorm) return "";
 
-    database_greek_latin_root_exact: cleanMorphValue(getFirstNonEmpty(row, [
-      "Greek_Latin_Root_1",
-      "Greek_Latin_Root"
-    ])),
+    const parse = getExactDatabaseParse(row);
+    const notationParts = extractBAWFNotationParts(parse);
 
-    database_prefixes_exact: getAffixValues(row, PREFIX_COLS),
-    database_suffixes_exact: getAffixValues(row, SUFFIX_COLS),
+    const notationPrefixes = notationParts.prefixes || [];
+    const notationSuffixes = notationParts.suffixes || [];
+    const columnPrefixes = getAffixValues(row, PREFIX_COLS);
+    const columnSuffixes = getAffixValues(row, SUFFIX_COLS);
 
-    morpheme_count_excluding_inflections: cleanMorphValue(row[MORPHEME_COL_WITHOUT_INFLECTIONS]),
-    morpheme_count_including_inflections: cleanMorphValue(row[MORPHEME_COL_PLUS_INFLECTIONS]),
+    const prefixes = uniqueCleanList([...notationPrefixes, ...columnPrefixes])
+      .map(normalizeMorphToken)
+      .filter(Boolean);
 
-    word_zipf: cleanMorphValue(getFirstNonEmpty(row, [
-      "Word_frq_Zipf_Recomputed",
-      "Word_frq_Zipf"
-    ])),
+    const notationSuffixNorms = uniqueCleanList(notationSuffixes).map(normalizeMorphToken).filter(Boolean);
+    const columnSuffixNorms = uniqueCleanList(columnSuffixes).map(normalizeMorphToken).filter(Boolean);
 
-    family_zipf: cleanMorphValue(row["Baseword_frq_Zipf"]),
-    familiarity: cleanMorphValue(row["GPT_Familiarity Brysbaert et al._ 2024"]),
-    grade_estimate: cleanMorphValue(row["Vocabulary eXpected Grade Level Flor et al._ 2024"]),
-    reading_aoa: cleanMorphValue(row["Reading AoA Green et al._ 2025"]),
+    const reasons = [];
+    const shortFunctionBases = getShortFunctionBasesForSegmentation();
 
-    local_precheck_warning: detectLikelySurfaceInflectionOmission(row),
-    local_scope_ambiguity_note: detectPotentialAffixScopeAmbiguity(row),
-    full_non_empty_row_json: compactRow
-  };
-}
+    const hasLongPrefixPlusShortBase =
+      prefixes.some(prefix => prefix && prefix.length >= 4 && wordNorm === prefix + baseNorm) &&
+      (baseNorm.length <= 2 || shortFunctionBases.has(baseNorm));
 
-function buildMorphCheckUserPromptFromPacket(packet) {
-  return `Audit the exact BAWF database parse below.
+    if (hasLongPrefixPlusShortBase) {
+      reasons.push(
+        `Possible false prefix/base split: surface word "${word}" is analyzed with prefix "${prefixes.join(", ")}" plus very short base "${base}". The base may be leftover letters rather than a meaningful base in this word.`
+      );
+    }
+
+    if (columnSuffixNorms.length && !notationSuffixNorms.length) {
+      reasons.push(`Suffix columns list "${columnSuffixes.join(", ")}", but the exact coded parse does not show a suffix.`);
+    }
+
+    const commonSuffixes = getCommonSuffixesForSegmentationWarning();
+
+    const unusualColumnSuffixes = columnSuffixNorms.filter(suffix => {
+      if (!suffix) return false;
+      if (commonSuffixes.has(suffix)) return false;
+      if (notationSuffixNorms.includes(suffix)) return false;
+      return true;
+    });
+
+    if (unusualColumnSuffixes.length) {
+      reasons.push(`Suspicious suffix-column value: "${unusualColumnSuffixes.join(", ")}" is not a typical English suffix and may be a parsing artifact.`);
+    }
+
+    if (!reasons.length) return "";
+
+    const localSuggested = makeSimpleBaseRootParse(word);
+    return `${reasons.join(" ")} If this word is lexicalized or simplex in current English, a possible corrected BAWF parse is ${localSuggested}.`;
+  }
+
+  function detectPotentialAffixScopeAmbiguity(row) {
+    const parse = getExactDatabaseParse(row);
+    const notationParts = extractBAWFNotationParts(parse);
+
+    const prefixes = uniqueCleanList([
+      ...(notationParts.prefixes || []),
+      ...getAffixValues(row, PREFIX_COLS)
+    ]).map(x => x.toLowerCase().replace(/^-/, ""));
+
+    const suffixes = uniqueCleanList([
+      ...(notationParts.suffixes || []),
+      ...getAffixValues(row, SUFFIX_COLS)
+    ]).map(x => x.toLowerCase().replace(/^-/, ""));
+
+    const word = getSurfaceWordForReview(row);
+    const baseword = cleanMorphValue(getFirstNonEmpty(row, ["Baseword", "Baseword_1"]));
+
+    const hasUn = prefixes.includes("un");
+    const hasAble = suffixes.includes("able") || suffixes.includes("ible");
+
+    if (hasUn && hasAble) {
+      return `Potential affix-scope ambiguity: "${word || "this word"}" contains un- and -able/-ible. Depending on meaning, the analysis may be negative un- attaching to a derived adjective, roughly un-[${baseword || "base"}-able], or a prefixed verb/base followed by -able, roughly [un-${baseword || "base"}]-able. If the database records only flat morpheme sequence, the parse may be acceptable; if it records semantic scope, this should be checked.`;
+    }
+
+    return "";
+  }
+    function buildMorphReviewPacket(row, key) {
+    const compactRow = {};
+
+    Object.keys(row || {}).forEach(col => {
+      const val = row[col];
+
+      if (val !== null && val !== undefined && String(val).trim()) {
+        compactRow[col] = String(val).trim();
+      }
+    });
+
+    const databaseParseExact = getExactDatabaseParse(row);
+    const notationParts = extractBAWFNotationParts(databaseParseExact);
+    const surfaceWord = getSurfaceWordForReview(row);
+    const localSurfaceReconstruction = getSurfaceReconstructionInfo(row);
+    const localSuspiciousSegmentationNote = detectSuspiciousDatabaseSegmentation(row);
+
+    const localPreferredParseSuggestion =
+      localSuspiciousSegmentationNote
+        ? makeSimpleBaseRootParse(surfaceWord)
+        : (localSurfaceReconstruction.possible_corrected_surface_parse || "");
+
+    return {
+      dataset_key: key,
+      dataset_name: getDatasetLabel(key),
+
+      bawf_notation_guide: {
+        roots: "Roots are inside parentheses, e.g. (root).",
+        bases: "Bases/basewords are inside square brackets, e.g. [base] or [(root)].",
+        prefixes: "Prefixes appear with angle brackets before the base/root.",
+        suffixes: "Suffixes appear with angle brackets after the base/root.",
+        warning_1: "Do not treat material inside [] or () as a suffix.",
+        warning_2: "Do not wrap a whole baseword in angle brackets. Angle brackets mark affixes.",
+        warning_3: "If a word is simplex/lexicalized, a parse like [(word)] is usually preferable to <word>."
+      },
+
+      surface_word: surfaceWord,
+
+      database_baseword: cleanMorphValue(getFirstNonEmpty(row, [
+        "Baseword",
+        "Baseword_1"
+      ])),
+
+      database_parse_exact: databaseParseExact,
+      database_notation_parts_detected_locally: notationParts,
+      local_notation_interpretation: buildLocalNotationInterpretation(row),
+
+      database_root_exact: cleanMorphValue(getFirstNonEmpty(row, [
+        "GPT_Root",
+        "Root_1"
+      ])),
+
+      database_greek_latin_root_exact: cleanMorphValue(getFirstNonEmpty(row, [
+        "Greek_Latin_Root_1",
+        "Greek_Latin_Root"
+      ])),
+
+      database_prefixes_exact: getAffixValues(row, PREFIX_COLS),
+      database_suffixes_exact: getAffixValues(row, SUFFIX_COLS),
+
+      morpheme_count_excluding_inflections: cleanMorphValue(row[MORPHEME_COL_WITHOUT_INFLECTIONS]),
+      morpheme_count_including_inflections: cleanMorphValue(row[MORPHEME_COL_PLUS_INFLECTIONS]),
+
+      word_zipf: cleanMorphValue(getFirstNonEmpty(row, [
+        "Word_frq_Zipf_Recomputed",
+        "Word_frq_Zipf"
+      ])),
+
+      family_zipf: cleanMorphValue(row["Baseword_frq_Zipf"]),
+      familiarity: cleanMorphValue(row["GPT_Familiarity Brysbaert et al._ 2024"]),
+      grade_estimate: cleanMorphValue(row["Vocabulary eXpected Grade Level Flor et al._ 2024"]),
+      reading_aoa: cleanMorphValue(row["Reading AoA Green et al._ 2025"]),
+
+      local_precheck_warning: detectLikelySurfaceInflectionOmission(row),
+      local_scope_ambiguity_note: detectPotentialAffixScopeAmbiguity(row),
+      local_suspicious_segmentation_note: localSuspiciousSegmentationNote,
+      local_surface_reconstruction: localSurfaceReconstruction,
+      local_preferred_parse_suggestion: localPreferredParseSuggestion,
+
+      full_non_empty_row_json: compactRow
+    };
+  }
+
+  function buildMorphCheckUserPromptFromPacket(packet) {
+    return `Audit the exact BAWF database parse below.
 
 Important:
 - The current database parse is database_parse_exact.
@@ -2974,17 +2859,23 @@ Important:
 - Prefixes appear before the base/root.
 - Suffixes appear after the base/root.
 - Do not treat a root/base inside [] or () as a suffix.
-- If you think the parse should include something else, put that in suggested_parse.
+- Do not put a whole word or whole base in angle brackets. Angle brackets mark affixes.
+- Do not say the base/root is wrong merely because the surface word is longer than the base. Affixes may account for the extra letters.
+- Use local_surface_reconstruction to decide whether the parse accounts for the surface spelling.
+- If local_surface_reconstruction says exact_match, do not call the base/root wrong unless there is a separate morphological reason.
+- If local_surface_reconstruction says known_suffix_s_variant, discuss it as a suffix spelling variant or final -s issue, not as wrong_base_or_root.
 - If local_precheck_warning is not empty, explicitly address it.
 - If local_scope_ambiguity_note is not empty, explicitly address it.
-- If the parse is plausible but ambiguous, list alternative analyses.
-- Be critical. Do not simply approve the parse unless it is actually plausible and complete.
+- If local_suspicious_segmentation_note is not empty, explicitly address it.
+- If local_preferred_parse_suggestion is not empty, consider whether that suggestion is better than the database parse.
+- The critical_check field must be a concrete evaluation, not a copied checklist.
+- Be helpful: state what is right, what is wrong or uncertain, and what exact revised parse would be best.
 
 BAWF parse review packet:
 ${JSON.stringify(packet, null, 2)}
 
 Return only the required JSON object.`;
-}
+  }
 
   function normalizeParseForCompare(value) {
     return cleanMorphValue(value)
@@ -2999,488 +2890,737 @@ Return only the required JSON object.`;
     if (status === "likely_incorrect") return "bad";
     return "unknown";
   }
-function normalizeMorphToken(value) {
-  return cleanMorphValue(value)
-    .toLowerCase()
-    .replace(/^[^a-z0-9]+|[^a-z0-9]+$/g, "")
-    .trim();
-}
 
-function tokenizeMorphWords(text) {
-  return String(text || "")
-    .toLowerCase()
-    .match(/[a-z][a-z'-]*/g) || [];
-}
+  function getDeterministicMorphReview(packet) {
+    return (
+      getDeterministicSimpleMorphReview(packet) ||
+      getDeterministicKnownSuffixVariantReview(packet) ||
+      getDeterministicSuspiciousSegmentationReview(packet)
+    );
+  }
 
-function getCommonMorphWordsToIgnore() {
-  return new Set([
-    "prefix",
-    "prefixes",
-    "suffix",
-    "suffixes",
-    "root",
-    "roots",
-    "base",
-    "bases",
-    "baseword",
-    "word",
-    "words",
-    "morpheme",
-    "morphemes",
-    "bound",
-    "free",
-    "compound",
-    "inflection",
-    "inflections",
-    "inflectional",
-    "derivation",
-    "derivational",
-    "parse",
-    "parsed",
-    "notation",
-    "current",
-    "database",
-    "surface",
-    "suggested",
-    "accurate",
-    "questionable",
-    "incorrect",
-    "uncertain",
-    "none",
-    "listed",
-    "shown",
-    "shows",
-    "does",
-    "not",
-    "and",
-    "or",
-    "but",
-    "with",
-    "without",
-    "from",
-    "into",
-    "itself",
-    "it",
-    "this",
-    "that",
-    "the",
-    "a",
-    "an",
-    "as",
-    "is",
-    "are",
-    "be",
-    "because",
-    "evidence",
-    "entry",
-    "row"
-  ]);
-}
+  function getDeterministicSimpleMorphReview(packet) {
+    if (!packet) return null;
 
-function detectLexicalIntrusionByAI(parsed, context) {
-  if (!parsed || !context || !context.parse_packet) return "";
+    const word = normalizeMorphToken(packet.surface_word);
+    const baseword = normalizeMorphToken(packet.database_baseword);
 
-  const packet = context.parse_packet;
+    if (!word || !baseword) return null;
+    if (word !== baseword) return null;
+    if (packet.local_precheck_warning) return null;
 
-  const notationParts =
-    packet.database_notation_parts_detected_locally ||
-    extractBAWFNotationParts(packet.database_parse_exact);
+    const notationParts =
+      packet.database_notation_parts_detected_locally ||
+      extractBAWFNotationParts(packet.database_parse_exact);
 
-  const allowedSourceValues = [
-    packet.surface_word,
-    packet.database_baseword,
-    packet.database_parse_exact,
-    packet.database_root_exact,
-    packet.database_greek_latin_root_exact,
-    ...(packet.database_prefixes_exact || []),
-    ...(packet.database_suffixes_exact || []),
-    ...(notationParts.prefixes || []),
-    ...(notationParts.suffixes || []),
-    ...(notationParts.bases || []),
-    ...(notationParts.roots || [])
-  ];
+    const hasAffixes =
+      (notationParts.prefixes || []).length > 0 ||
+      (notationParts.suffixes || []).length > 0 ||
+      (packet.database_prefixes_exact || []).length > 0 ||
+      (packet.database_suffixes_exact || []).length > 0;
 
-  const allowedTokens = new Set(
-    tokenizeMorphWords(allowedSourceValues.join(" "))
-      .map(normalizeMorphToken)
-      .filter(Boolean)
-  );
+    if (hasAffixes) return null;
 
-  const surface = normalizeMorphToken(packet.surface_word);
-  const baseword = normalizeMorphToken(packet.database_baseword);
+    const basesAndRoots = uniqueCleanList([
+      ...(notationParts.bases || []),
+      ...(notationParts.roots || [])
+    ]).map(normalizeMorphToken);
 
-  const commonMorphWords = getCommonMorphWordsToIgnore();
+    if (!basesAndRoots.length) return null;
 
-  const commonRealAffixes = new Set([
-    "s",
-    "es",
-    "ed",
-    "ing",
-    "er",
-    "est",
-    "ly",
-    "ness",
-    "ment",
-    "tion",
-    "sion",
-    "able",
-    "ible",
-    "al",
-    "ous",
-    "ful",
-    "less",
-    "un",
-    "re",
-    "pre",
-    "dis",
-    "mis",
-    "over",
-    "under",
-    "sub",
-    "super",
-    "anti",
-    "inter",
-    "intra",
-    "non"
-  ]);
+    const allPartsMatchWord = basesAndRoots.every(part => part === word || part === baseword);
+    if (!allPartsMatchWord) return null;
 
-  const aiSuggestedOnly = String(parsed.suggested_parse || "");
+    return {
+      status: "accurate",
+      confidence: "high",
+      database_parse_exact_seen: packet.database_parse_exact,
+      notation_interpretation:
+        `The database parse marks "${packet.surface_word}" as the base/root itself. No prefixes or suffixes are shown in the notation or suffix columns.`,
+      surface_spelling_check:
+        `The surface word, baseword, and coded base/root all match: "${packet.surface_word}".`,
+      critical_check:
+        `This appears to be a simplex entry. There is no evidence in this row of a missing prefix, suffix, or inflection.`,
+      suggested_parse: packet.database_parse_exact,
+      alternative_analyses: [],
+      parse_mismatch: "none",
+      issues: [],
+      explanation: "The parse is appropriate for a simple unsegmented word.",
+      teaching_note: `Do not force an affix analysis for a simple high-frequency word.`,
+      recommended_action: "keep"
+    };
+  }
 
-  if (!aiSuggestedOnly.trim()) return "";
+  function getDeterministicKnownSuffixVariantReview(packet) {
+    if (!packet || !packet.local_surface_reconstruction) return null;
 
-  const tokens = tokenizeMorphWords(aiSuggestedOnly)
-    .map(normalizeMorphToken)
-    .filter(Boolean);
+    const info = packet.local_surface_reconstruction;
 
-  const intruders = [];
+    if (info.surface_match_status !== "known_suffix_s_variant") return null;
 
-  for (const token of tokens) {
-    if (token.length < 3) continue;
-    if (commonMorphWords.has(token)) continue;
-    if (commonRealAffixes.has(token)) continue;
-    if (allowedTokens.has(token)) continue;
+    const suggested = info.possible_corrected_surface_parse || packet.database_parse_exact;
 
-    if (surface && surface.includes(token)) continue;
-    if (baseword && baseword.includes(token)) continue;
+    return {
+      status: "mostly_accurate",
+      confidence: "medium",
+      database_parse_exact_seen: packet.database_parse_exact,
+      notation_interpretation:
+        packet.local_notation_interpretation ||
+        `The parse marks "${info.base_used}" as the base/root and "${info.suffixes_used.join(", ")}" as suffix material.`,
+      surface_spelling_check: info.note,
+      critical_check:
+        `The base/root "${info.base_used}" is not necessarily wrong. The parse reconstructs "${info.parse_yields}", and the surface word is "${info.surface_word}". The main issue is the -ward/-wards surface variant or final adverbial -s, not the identity of the base/root.`,
+      suggested_parse: suggested,
+      alternative_analyses: [
+        `Keep ${packet.database_parse_exact} if the database intentionally normalizes the suffix family under -ward.`,
+        `Revise to ${suggested} if the database is intended to encode the exact surface suffix -wards.`
+      ],
+      parse_mismatch: "suffix_spelling_variant_or_final_s",
+      issues: [
+        `The parse accounts for "${info.parse_yields}" but the surface word is "${info.surface_word}".`,
+        `This should not be classified as wrong_base_or_root unless there is independent evidence that "${info.base_used}" is not the intended base/root.`
+      ],
+      explanation:
+        `The database parse is structurally plausible, but it may not fully encode the final -s in the surface form. In English, -ward and -wards are closely related adverbial suffix forms.`,
+      teaching_note:
+        `This is a useful case for teaching that a word can have a valid base plus suffix analysis even when the surface spelling has a variant ending.`,
+      recommended_action: "keep_but_note_ambiguity"
+    };
+  }
 
-    let allowedByOverlap = false;
+  function getDeterministicSuspiciousSegmentationReview(packet) {
+    if (!packet || !packet.local_suspicious_segmentation_note) return null;
 
-    for (const allowed of allowedTokens) {
-      if (!allowed) continue;
+    const suggested =
+      packet.local_preferred_parse_suggestion ||
+      makeSimpleBaseRootParse(packet.surface_word);
 
-      if (allowed.includes(token) || token.includes(allowed)) {
-        allowedByOverlap = true;
-        break;
+    return {
+      status: "likely_incorrect",
+      confidence: "medium",
+      database_parse_exact_seen: packet.database_parse_exact,
+      notation_interpretation: packet.local_notation_interpretation || "",
+      surface_spelling_check:
+        packet.local_surface_reconstruction
+          ? packet.local_surface_reconstruction.note
+          : "Surface reconstruction unavailable.",
+      critical_check:
+        `The row has a suspicious segmentation. ${packet.local_suspicious_segmentation_note}`,
+      suggested_parse: suggested,
+      alternative_analyses: [
+        `Revise to ${suggested} if the word is best treated as a lexicalized/simplex base in current English.`,
+        `Flag for human review if a specialist wants to preserve an etymological or historical segmentation.`
+      ],
+      parse_mismatch: "wrong_base_or_root",
+      issues: [
+        packet.local_suspicious_segmentation_note
+      ],
+      explanation:
+        `The database appears to split the surface word into a prefix plus a very short base or contains an unusual suffix-column artifact. This should be checked rather than accepted automatically.`,
+      teaching_note:
+        `Do not split a word merely because a letter sequence resembles a prefix. The remaining base must be meaningful in the word.`,
+      recommended_action: "flag_for_human_review"
+    };
+  }
+
+  function tokenizeMorphWords(text) {
+    return String(text || "")
+      .toLowerCase()
+      .match(/[a-z][a-z'-]*/g) || [];
+  }
+
+  function getCommonMorphWordsToIgnore() {
+    return new Set([
+      "prefix",
+      "prefixes",
+      "suffix",
+      "suffixes",
+      "root",
+      "roots",
+      "base",
+      "bases",
+      "baseword",
+      "word",
+      "words",
+      "morpheme",
+      "morphemes",
+      "bound",
+      "free",
+      "compound",
+      "inflection",
+      "inflections",
+      "inflectional",
+      "derivation",
+      "derivational",
+      "parse",
+      "parsed",
+      "notation",
+      "current",
+      "database",
+      "surface",
+      "suggested",
+      "accurate",
+      "questionable",
+      "incorrect",
+      "uncertain",
+      "none",
+      "listed",
+      "shown",
+      "shows",
+      "does",
+      "not",
+      "and",
+      "or",
+      "but",
+      "with",
+      "without",
+      "from",
+      "into",
+      "itself",
+      "it",
+      "this",
+      "that",
+      "the",
+      "a",
+      "an",
+      "as",
+      "is",
+      "are",
+      "be",
+      "because",
+      "evidence",
+      "entry",
+      "row",
+      "review",
+      "likely",
+      "plausible",
+      "possible",
+      "meaning",
+      "means",
+      "marked",
+      "marks",
+      "material",
+      "form",
+      "forms"
+    ]);
+  }
+
+  function getCommonRealAffixes() {
+    return new Set([
+      "s",
+      "es",
+      "ed",
+      "ing",
+      "er",
+      "est",
+      "ly",
+      "ness",
+      "ment",
+      "tion",
+      "sion",
+      "ation",
+      "ition",
+      "able",
+      "ible",
+      "al",
+      "ial",
+      "ous",
+      "ious",
+      "eous",
+      "ful",
+      "less",
+      "ize",
+      "ise",
+      "ity",
+      "ty",
+      "ic",
+      "ical",
+      "ive",
+      "ative",
+      "itive",
+      "en",
+      "ish",
+      "hood",
+      "ship",
+      "dom",
+      "ward",
+      "wards",
+      "wise",
+      "y",
+      "un",
+      "re",
+      "pre",
+      "dis",
+      "mis",
+      "over",
+      "under",
+      "sub",
+      "super",
+      "anti",
+      "inter",
+      "intra",
+      "non",
+      "micro",
+      "macro",
+      "trans",
+      "de",
+      "in",
+      "im",
+      "il",
+      "ir"
+    ]);
+  }
+
+  function tokenizeMorphWords(text) {
+    return String(text || "")
+      .toLowerCase()
+      .match(/[a-z][a-z'-]*/g) || [];
+  }
+
+  function toReviewText(value) {
+    if (value === null || value === undefined) return "";
+
+    if (Array.isArray(value)) {
+      return value.map(item => toReviewText(item)).join(" ");
+    }
+
+    if (typeof value === "object") {
+      try {
+        return JSON.stringify(value);
+      } catch {
+        return String(value);
       }
     }
 
-    if (!allowedByOverlap) {
-      intruders.push(token);
-    }
+    return String(value);
   }
 
-  const uniqueIntruders = Array.from(new Set(intruders));
+  function detectLexicalIntrusionByAI(parsed, context) {
+    if (!parsed || !context || !context.parse_packet) return "";
 
-  if (!uniqueIntruders.length) return "";
+    const packet = context.parse_packet;
 
-  return `AI suggested parse contains word parts not found in the current row or surface word: ${uniqueIntruders.join(", ")}. This may be example leakage or hallucination.`;
-}
+    const notationParts =
+      packet.database_notation_parts_detected_locally ||
+      extractBAWFNotationParts(packet.database_parse_exact);
 
-function detectAIWrongSurfaceWordMention(parsed, context) {
-  if (!parsed || !context || !context.parse_packet) return "";
+    const allowedSourceValues = [
+      packet.surface_word,
+      packet.database_baseword,
+      packet.database_parse_exact,
+      packet.database_root_exact,
+      packet.database_greek_latin_root_exact,
+      ...(packet.database_prefixes_exact || []),
+      ...(packet.database_suffixes_exact || []),
+      ...(notationParts.prefixes || []),
+      ...(notationParts.suffixes || []),
+      ...(notationParts.bases || []),
+      ...(notationParts.roots || [])
+    ];
 
-  const packet = context.parse_packet;
-  const currentWord = normalizeMorphToken(packet.surface_word);
-  const currentBase = normalizeMorphToken(packet.database_baseword);
+    const allowedTokens = new Set(
+      tokenizeMorphWords(allowedSourceValues.join(" "))
+        .map(normalizeMorphToken)
+        .filter(Boolean)
+    );
 
-  if (!currentWord) return "";
+    const surface = normalizeMorphToken(packet.surface_word);
+    const baseword = normalizeMorphToken(packet.database_baseword);
+    const commonMorphWords = getCommonMorphWordsToIgnore();
+    const commonRealAffixes = getCommonRealAffixes();
 
-  const aiText = [
-    parsed.notation_interpretation,
-    parsed.explanation,
-    parsed.teaching_note,
-    Array.isArray(parsed.issues) ? parsed.issues.join(" ") : ""
-  ].join(" ");
+    const suggested = String(parsed.suggested_parse || "");
+    if (!suggested.trim()) return "";
 
-  const matches = Array.from(
-    aiText.matchAll(/\bword\s+['"“”‘’`]([a-z][a-z'-]*)['"“”‘’`]/gi)
-  );
+    const tokens = tokenizeMorphWords(suggested)
+      .map(normalizeMorphToken)
+      .filter(Boolean);
 
-  for (const match of matches) {
-    const mentioned = normalizeMorphToken(match[1]);
+    const intruders = [];
+
+    for (const token of tokens) {
+      if (token.length < 3) continue;
+      if (commonMorphWords.has(token)) continue;
+      if (commonRealAffixes.has(token)) continue;
+      if (allowedTokens.has(token)) continue;
+
+      if (surface && surface.includes(token)) continue;
+      if (baseword && baseword.includes(token)) continue;
+
+      let allowedByOverlap = false;
+
+      for (const allowed of allowedTokens) {
+        if (!allowed) continue;
+
+        if (allowed.includes(token) || token.includes(allowed)) {
+          allowedByOverlap = true;
+          break;
+        }
+      }
+
+      if (!allowedByOverlap) {
+        intruders.push(token);
+      }
+    }
+
+    const uniqueIntruders = Array.from(new Set(intruders));
+
+    if (!uniqueIntruders.length) return "";
+
+    return `AI suggested parse contains word parts not found in the current row or surface word: ${uniqueIntruders.join(", ")}. This may be example leakage or hallucination.`;
+  }
+
+  function detectAIWrongSurfaceWordMention(parsed, context) {
+    if (!parsed || !context || !context.parse_packet) return "";
+
+    const packet = context.parse_packet;
+    const currentWord = normalizeMorphToken(packet.surface_word);
+    const currentBase = normalizeMorphToken(packet.database_baseword);
+
+    if (!currentWord) return "";
+
+    const aiText = [
+      parsed.notation_interpretation,
+      parsed.surface_spelling_check,
+      parsed.critical_check,
+      parsed.explanation,
+      parsed.teaching_note,
+      Array.isArray(parsed.issues) ? parsed.issues.join(" ") : ""
+    ].join(" ");
+
+    const matches = Array.from(
+      aiText.matchAll(/\bword\s+['"“”‘’`]([a-z][a-z'-]*)['"“”‘’`]/gi)
+    );
+
+    for (const match of matches) {
+      const mentioned = normalizeMorphToken(match[1]);
+
+      if (
+        mentioned &&
+        mentioned !== currentWord &&
+        mentioned !== currentBase
+      ) {
+        return `AI appears to be discussing a different word "${match[1]}" instead of the current word "${packet.surface_word}".`;
+      }
+    }
+
+    return "";
+  }
+
+  function detectLikelyNotationMisreadByAI(parsed, context) {
+    if (!parsed || !context || !context.parse_packet) return "";
+
+    const packet = context.parse_packet;
+    const parse = packet.database_parse_exact || "";
+    const notationParts = extractBAWFNotationParts(parse);
+
+    const aiText = [
+      parsed.notation_interpretation,
+      parsed.surface_spelling_check,
+      parsed.critical_check,
+      parsed.suggested_parse,
+      parsed.parse_mismatch,
+      parsed.explanation,
+      parsed.teaching_note,
+      Array.isArray(parsed.issues) ? parsed.issues.join(" ") : ""
+    ].join(" ").toLowerCase();
+
+    const protectedBaseRootParts = uniqueCleanList([
+      ...(notationParts.roots || []),
+      ...(notationParts.bases || []),
+      packet.database_baseword,
+      packet.database_root_exact
+    ]).map(x => x.toLowerCase());
+
+    for (const part of protectedBaseRootParts) {
+      if (!part) continue;
+
+      const saysPartIsSuffix =
+        aiText.includes(`-${part} suffix`) ||
+        aiText.includes(`suffix -${part}`) ||
+        aiText.includes(`suffix (${part})`) ||
+        aiText.includes(`visible suffix -${part}`);
+
+      if (saysPartIsSuffix) {
+        return `AI appears to have misread "${part}" as a suffix, but in the database notation it is a base/root, not a suffix.`;
+      }
+    }
+
+    return "";
+  }
+
+  function detectInvalidSuggestedBAWFNotation(parsed, context) {
+    if (!parsed || !context || !context.parse_packet) return "";
+
+    const suggested = cleanMorphValue(parsed.suggested_parse || "");
+    if (!suggested) return "";
+
+    const packet = context.parse_packet;
+    const surface = cleanMorphValue(packet.surface_word || "");
+    const compactSuggested = suggested.replace(/\s+/g, "");
+    const hasBaseOrRootMarkers = /[\[\]\(\)]/.test(compactSuggested);
+
+    const singleAngleWrapped = compactSuggested.match(/^<([^<>]+)>$/);
+
+    if (singleAngleWrapped && !hasBaseOrRootMarkers) {
+      return `AI suggested "${suggested}", but in BAWF notation angle brackets mark affixes. A whole-word/base parse should include [] and/or (), for example ${surface ? makeSimpleBaseRootParse(surface) : "[(word)]"}.`;
+    }
+
+    return "";
+  }
+
+  function detectAIConfusedBaseWithSurface(parsed, context) {
+    if (!parsed || !context || !context.parse_packet) return "";
+
+    const packet = context.parse_packet;
+    const info = packet.local_surface_reconstruction;
+
+    if (!info) return "";
+
+    const status = String(parsed.status || "").toLowerCase();
+    const mismatch = String(parsed.parse_mismatch || "").toLowerCase();
+
+    const aiText = [
+      parsed.critical_check,
+      parsed.explanation,
+      parsed.teaching_note,
+      Array.isArray(parsed.issues) ? parsed.issues.join(" ") : ""
+    ].join(" ").toLowerCase();
+
+    const localSaysMostlyCovered =
+      info.surface_match_status === "exact_match" ||
+      info.surface_match_status === "known_suffix_s_variant" ||
+      info.surface_match_status === "possible_missing_final_s_after_suffix";
+
+    if (!localSaysMostlyCovered) return "";
 
     if (
-      mentioned &&
-      mentioned !== currentWord &&
-      mentioned !== currentBase
+      mismatch === "wrong_base_or_root" ||
+      (
+        status === "likely_incorrect" &&
+        aiText.includes("base") &&
+        aiText.includes("surface word")
+      )
     ) {
-      return `AI appears to be discussing a different word "${match[1]}" instead of the current word "${packet.surface_word}".`;
+      return `AI may be confusing base/root mismatch with surface-word length. Local reconstruction yields "${info.parse_yields}" for surface "${info.surface_word}", so the issue is not automatically wrong_base_or_root.`;
     }
+
+    return "";
   }
 
-  return "";
-}
+  function getMorphReviewReliability(parsed, context) {
+    const reasons = [];
 
-function detectLikelyNotationMisreadByAI(parsed, context) {
-  if (!parsed || !context || !context.parse_packet) return "";
-
-  const packet = context.parse_packet;
-  const parse = packet.database_parse_exact || "";
-  const notationParts = extractBAWFNotationParts(parse);
-
-  const aiText = [
-    parsed.notation_interpretation,
-    parsed.suggested_parse,
-    parsed.parse_mismatch,
-    parsed.explanation,
-    parsed.teaching_note,
-    Array.isArray(parsed.issues) ? parsed.issues.join(" ") : ""
-  ].join(" ").toLowerCase();
-
-  const protectedBaseRootParts = uniqueCleanList([
-    ...(notationParts.roots || []),
-    ...(notationParts.bases || []),
-    packet.database_baseword,
-    packet.database_root_exact
-  ]).map(x => x.toLowerCase());
-
-  for (const part of protectedBaseRootParts) {
-    if (!part) continue;
-
-    const saysPartIsSuffix =
-      aiText.includes(`-${part} suffix`) ||
-      aiText.includes(`suffix -${part}`) ||
-      aiText.includes(`suffix (${part})`) ||
-      aiText.includes(`visible suffix -${part}`);
-
-    if (saysPartIsSuffix) {
-      return `AI appears to have misread "${part}" as a suffix, but in the database notation it is a base/root, not a suffix.`;
-    }
-  }
-
-  return "";
-}
-
-function getDeterministicMorphReview(packet) {
-  if (!packet) return null;
-
-  const word = normalizeMorphToken(packet.surface_word);
-  const baseword = normalizeMorphToken(packet.database_baseword);
-
-  if (!word || !baseword) return null;
-  if (word !== baseword) return null;
-  if (packet.local_precheck_warning) return null;
-
-  const notationParts =
-    packet.database_notation_parts_detected_locally ||
-    extractBAWFNotationParts(packet.database_parse_exact);
-
-  const notationPrefixes = notationParts.prefixes || [];
-  const notationSuffixes = notationParts.suffixes || [];
-  const columnPrefixes = packet.database_prefixes_exact || [];
-  const columnSuffixes = packet.database_suffixes_exact || [];
-
-  const hasAffixes =
-    notationPrefixes.length > 0 ||
-    notationSuffixes.length > 0 ||
-    columnPrefixes.length > 0 ||
-    columnSuffixes.length > 0;
-
-  if (hasAffixes) return null;
-
-  const basesAndRoots = uniqueCleanList([
-    ...(notationParts.bases || []),
-    ...(notationParts.roots || [])
-  ]).map(normalizeMorphToken);
-
-  if (!basesAndRoots.length) return null;
-
-  const allPartsMatchWord = basesAndRoots.every(part => {
-    return part === word || part === baseword;
-  });
-
-  if (!allPartsMatchWord) return null;
-
-  return {
-    status: "accurate",
-    confidence: "high",
-    database_parse_exact_seen: packet.database_parse_exact,
-    notation_interpretation:
-      `The database parse marks "${packet.surface_word}" as the base/root itself. No prefixes or suffixes are shown in the notation or suffix columns.`,
-    suggested_parse: packet.database_parse_exact,
-    parse_mismatch: "none",
-    issues: [],
-    explanation:
-      `This appears to be a simplex entry. The surface word, baseword, and database-coded base/root all match. There is no evidence in this row of a missing prefix, suffix, or inflection.`,
-    teaching_note:
-      `For a high-frequency function word such as "${packet.surface_word}", do not force an affix analysis. The word can be treated as a simple base/root entry for database purposes.`
-  };
-}
-  
-function getMorphReviewReliability(parsed, context) {
-  const reasons = [];
-
-  const dbParse =
-    context &&
-    context.parse_packet &&
-    context.parse_packet.database_parse_exact
-      ? context.parse_packet.database_parse_exact
-      : "";
-
-  const aiEcho =
-    parsed.database_parse_exact_seen ||
-    parsed.current_parse ||
-    "";
-  
-  if (dbParse && !aiEcho) {
-    reasons.push("AI did not echo the exact database parse.");
-  } else if (
-    dbParse &&
-    aiEcho &&
-    normalizeParseForCompare(dbParse) !== normalizeParseForCompare(aiEcho)
-  ) {
-    reasons.push("AI echoed a different parse from the exact database parse.");
-  }
-  const localScopeNote =
-    context &&
-    context.parse_packet &&
-    context.parse_packet.local_scope_ambiguity_note
-      ? context.parse_packet.local_scope_ambiguity_note
-      : "";
-
-  const aiAllText = [
-    parsed.notation_interpretation,
-    parsed.critical_check,
-    parsed.suggested_parse,
-    Array.isArray(parsed.alternative_analyses) ? parsed.alternative_analyses.join(" ") : "",
-    parsed.parse_mismatch,
-    parsed.explanation,
-    parsed.teaching_note,
-    parsed.recommended_action,
-    Array.isArray(parsed.issues) ? parsed.issues.join(" ") : ""
-  ].join(" ").toLowerCase();
-
-  if (
-    localScopeNote &&
-    !aiAllText.includes("scope") &&
-    !aiAllText.includes("ambig") &&
-    !aiAllText.includes("alternative")
-  ) {
-    reasons.push("AI appears to have ignored the local affix-scope ambiguity note.");
-  }
-  const localWarning =
-    context &&
-    context.parse_packet &&
-    context.parse_packet.local_precheck_warning
-      ? context.parse_packet.local_precheck_warning
-      : "";
-
-  const status = String(parsed.status || "").toLowerCase();
-  const mismatch = String(parsed.parse_mismatch || "").toLowerCase();
-  const issuesText = Array.isArray(parsed.issues)
-    ? parsed.issues.join(" ").toLowerCase()
-    : "";
-
-  if (
-    localWarning &&
-    status === "accurate" &&
-    (!mismatch || mismatch === "none") &&
-    !issuesText.includes("inflection") &&
-    !issuesText.includes("suffix")
-  ) {
-    reasons.push("AI appears to have ignored the local pre-check warning about a possible omitted surface inflection.");
-  }
-
-  if (typeof detectLikelyNotationMisreadByAI === "function") {
-    const notationMisread = detectLikelyNotationMisreadByAI(parsed, context);
-    if (notationMisread) reasons.push(notationMisread);
-  }
-
-  if (typeof detectLexicalIntrusionByAI === "function") {
-    const lexicalIntrusion = detectLexicalIntrusionByAI(parsed, context);
-    if (lexicalIntrusion) reasons.push(lexicalIntrusion);
-  }
-
-  if (typeof detectAIWrongSurfaceWordMention === "function") {
-    const wrongWordMention = detectAIWrongSurfaceWordMention(parsed, context);
-    if (wrongWordMention) reasons.push(wrongWordMention);
-  }
-
-  return {
-    ok: reasons.length === 0,
-    reasons
-  };
-}
-
-function formatMorphCheckParsed(parsed, context = morphCheckContext) {
-  const status = parsed.status || "unknown";
-  const confidence = parsed.confidence || "unknown";
-
-  const dbParse =
-    context &&
-    context.parse_packet &&
-    context.parse_packet.database_parse_exact
-      ? context.parse_packet.database_parse_exact
-      : context && context.current_parse
-        ? context.current_parse
+    const dbParse =
+      context &&
+      context.parse_packet &&
+      context.parse_packet.database_parse_exact
+        ? context.parse_packet.database_parse_exact
         : "";
 
-  const aiEcho =
-    parsed.database_parse_exact_seen ||
-    parsed.current_parse ||
-    "";
+    const aiEcho =
+      parsed.database_parse_exact_seen ||
+      parsed.current_parse ||
+      "";
 
-  const notationInterpretation = parsed.notation_interpretation || "";
-  const criticalCheck = parsed.critical_check || "";
-  const suggestedParse = parsed.suggested_parse || "";
-  const parseMismatch = parsed.parse_mismatch || "not provided";
-  const issues = Array.isArray(parsed.issues) ? parsed.issues : [];
-  const explanation = parsed.explanation || "";
-  const teachingNote = parsed.teaching_note || "";
-  const recommendedAction = parsed.recommended_action || "not provided";
+    if (dbParse && !aiEcho) {
+      reasons.push("AI did not echo the exact database parse.");
+    } else if (
+      dbParse &&
+      aiEcho &&
+      normalizeParseForCompare(dbParse) !== normalizeParseForCompare(aiEcho)
+    ) {
+      reasons.push("AI echoed a different parse from the exact database parse.");
+    }
 
-  const alternativeAnalyses = Array.isArray(parsed.alternative_analyses)
-    ? parsed.alternative_analyses
-    : [];
+    const localWarning =
+      context &&
+      context.parse_packet &&
+      context.parse_packet.local_precheck_warning
+        ? context.parse_packet.local_precheck_warning
+        : "";
 
-  const alternativeText = alternativeAnalyses.length
-    ? alternativeAnalyses.map((item, index) => {
-        if (typeof item === "string") {
-          return `${index + 1}. ${item}`;
-        }
+    const localScopeNote =
+      context &&
+      context.parse_packet &&
+      context.parse_packet.local_scope_ambiguity_note
+        ? context.parse_packet.local_scope_ambiguity_note
+        : "";
 
-        return `${index + 1}. ${JSON.stringify(item)}`;
-      }).join("\n")
-    : "None provided.";
+    const localSuspiciousSegmentationNote =
+      context &&
+      context.parse_packet &&
+      context.parse_packet.local_suspicious_segmentation_note
+        ? context.parse_packet.local_suspicious_segmentation_note
+        : "";
 
-  const localWarning =
-    context &&
-    context.parse_packet &&
-    context.parse_packet.local_precheck_warning
-      ? context.parse_packet.local_precheck_warning
+    const status = String(parsed.status || "").toLowerCase();
+    const mismatch = String(parsed.parse_mismatch || "").toLowerCase();
+
+    const issuesText = Array.isArray(parsed.issues)
+      ? parsed.issues.join(" ").toLowerCase()
       : "";
 
-  const localScopeNote =
-    context &&
-    context.parse_packet &&
-    context.parse_packet.local_scope_ambiguity_note
-      ? context.parse_packet.local_scope_ambiguity_note
-      : "";
+    const aiAllText = [
+      parsed.notation_interpretation,
+      parsed.surface_spelling_check,
+      parsed.critical_check,
+      parsed.suggested_parse,
+      toReviewText(parsed.alternative_analyses),
+      parsed.parse_mismatch,
+      parsed.explanation,
+      parsed.teaching_note,
+      parsed.recommended_action,
+      toReviewText(parsed.issues)
+    ].join(" ").toLowerCase();
 
-  const localNotation =
-    context &&
-    context.parse_packet &&
-    context.parse_packet.local_notation_interpretation
-      ? context.parse_packet.local_notation_interpretation
-      : "";
+    if (
+      localWarning &&
+      status === "accurate" &&
+      (!mismatch || mismatch === "none") &&
+      !issuesText.includes("inflection") &&
+      !issuesText.includes("suffix")
+    ) {
+      reasons.push("AI appears to have ignored the local pre-check warning about a possible omitted surface inflection.");
+    }
 
-  const reliability = getMorphReviewReliability(parsed, context);
+    if (
+      localScopeNote &&
+      !aiAllText.includes("scope") &&
+      !aiAllText.includes("ambig") &&
+      !aiAllText.includes("alternative")
+    ) {
+      reasons.push("AI appears to have ignored the local affix-scope ambiguity note.");
+    }
 
-  const reliabilityText = reliability.ok
-    ? "No reliability warnings."
-    : reliability.reasons.map(reason => `- ${reason}`).join("\n");
+    if (
+      localSuspiciousSegmentationNote &&
+      !aiAllText.includes("false") &&
+      !aiAllText.includes("suspicious") &&
+      !aiAllText.includes("short") &&
+      !aiAllText.includes("leftover") &&
+      !aiAllText.includes("artifact") &&
+      !aiAllText.includes("lexicalized") &&
+      !aiAllText.includes("simplex") &&
+      !aiAllText.includes("revise") &&
+      !aiAllText.includes("incorrect")
+    ) {
+      reasons.push("AI appears to have ignored the local suspicious segmentation note.");
+    }
 
-  return `
+    const notationMisread = detectLikelyNotationMisreadByAI(parsed, context);
+    if (notationMisread) reasons.push(notationMisread);
+
+    const lexicalIntrusion = detectLexicalIntrusionByAI(parsed, context);
+    if (lexicalIntrusion) reasons.push(lexicalIntrusion);
+
+    const wrongWordMention = detectAIWrongSurfaceWordMention(parsed, context);
+    if (wrongWordMention) reasons.push(wrongWordMention);
+
+    const invalidSuggestedNotation = detectInvalidSuggestedBAWFNotation(parsed, context);
+    if (invalidSuggestedNotation) reasons.push(invalidSuggestedNotation);
+
+    const confusedBaseSurface = detectAIConfusedBaseWithSurface(parsed, context);
+    if (confusedBaseSurface) reasons.push(confusedBaseSurface);
+
+    return {
+      ok: reasons.length === 0,
+      reasons
+    };
+  }
+
+  function formatMorphCheckParsed(parsed, context = morphCheckContext) {
+    const status = parsed.status || "unknown";
+    const confidence = parsed.confidence || "unknown";
+
+    const dbParse =
+      context &&
+      context.parse_packet &&
+      context.parse_packet.database_parse_exact
+        ? context.parse_packet.database_parse_exact
+        : context && context.current_parse
+          ? context.current_parse
+          : "";
+
+    const aiEcho =
+      parsed.database_parse_exact_seen ||
+      parsed.current_parse ||
+      "";
+
+    const notationInterpretation = parsed.notation_interpretation || "";
+    const surfaceSpellingCheck = parsed.surface_spelling_check || "";
+    const criticalCheck = parsed.critical_check || "";
+    const suggestedParse = parsed.suggested_parse || "";
+    const parseMismatch = parsed.parse_mismatch || "not provided";
+    const issues = Array.isArray(parsed.issues) ? parsed.issues : [];
+    const explanation = parsed.explanation || "";
+    const teachingNote = parsed.teaching_note || "";
+    const recommendedAction = parsed.recommended_action || "not provided";
+
+    const alternativeAnalyses = Array.isArray(parsed.alternative_analyses)
+      ? parsed.alternative_analyses
+      : [];
+
+    const alternativeText = alternativeAnalyses.length
+      ? alternativeAnalyses.map((item, index) => {
+          if (typeof item === "string") return `${index + 1}. ${item}`;
+          return `${index + 1}. ${JSON.stringify(item)}`;
+        }).join("\n")
+      : "None provided.";
+
+    const localWarning =
+      context &&
+      context.parse_packet &&
+      context.parse_packet.local_precheck_warning
+        ? context.parse_packet.local_precheck_warning
+        : "";
+
+    const localScopeNote =
+      context &&
+      context.parse_packet &&
+      context.parse_packet.local_scope_ambiguity_note
+        ? context.parse_packet.local_scope_ambiguity_note
+        : "";
+
+    const localSuspiciousSegmentationNote =
+      context &&
+      context.parse_packet &&
+      context.parse_packet.local_suspicious_segmentation_note
+        ? context.parse_packet.local_suspicious_segmentation_note
+        : "";
+
+    const localPreferredParseSuggestion =
+      context &&
+      context.parse_packet &&
+      context.parse_packet.local_preferred_parse_suggestion
+        ? context.parse_packet.local_preferred_parse_suggestion
+        : "";
+
+    const localNotation =
+      context &&
+      context.parse_packet &&
+      context.parse_packet.local_notation_interpretation
+        ? context.parse_packet.local_notation_interpretation
+        : "";
+
+    const localSurfaceReconstruction =
+      context &&
+      context.parse_packet &&
+      context.parse_packet.local_surface_reconstruction
+        ? context.parse_packet.local_surface_reconstruction
+        : null;
+
+    const localSurfaceText = localSurfaceReconstruction
+      ? JSON.stringify(localSurfaceReconstruction, null, 2)
+      : "None.";
+
+    const reliability = getMorphReviewReliability(parsed, context);
+
+    const reliabilityText = reliability.ok
+      ? "No reliability warnings."
+      : reliability.reasons.map(reason => `- ${reason}`).join("\n");
+
+    return `
 Status: ${status}
 Confidence: ${confidence}
 
@@ -3490,11 +3630,17 @@ ${dbParse || "Not provided."}
 Local BAWF notation interpretation:
 ${localNotation || "Not available."}
 
+Local surface reconstruction:
+${localSurfaceText}
+
 AI echo of database parse:
 ${aiEcho || "Not provided."}
 
 AI notation interpretation:
 ${notationInterpretation || "Not provided."}
+
+Surface spelling check:
+${surfaceSpellingCheck || "Not provided."}
 
 Critical check:
 ${criticalCheck || "Not provided."}
@@ -3517,6 +3663,12 @@ ${localWarning || "None."}
 Local scope/ambiguity note:
 ${localScopeNote || "None."}
 
+Local suspicious segmentation note:
+${localSuspiciousSegmentationNote || "None."}
+
+Local preferred parse suggestion:
+${localPreferredParseSuggestion || "None."}
+
 Review reliability warnings:
 ${reliabilityText}
 
@@ -3529,7 +3681,38 @@ ${explanation || "No explanation provided."}
 Teaching note:
 ${teachingNote || "No teaching note provided."}
 `.trim();
-}
+  }
+
+  function cleanAIJSONContent(content) {
+    return String(content || "")
+      .replace(/^```json\s*/i, "")
+      .replace(/^```\s*/i, "")
+      .replace(/```$/i, "")
+      .trim();
+  }
+
+  function tryParseAIJSON(content) {
+    const cleaned = cleanAIJSONContent(content);
+
+    try {
+      return JSON.parse(cleaned);
+    } catch {
+      const firstBrace = cleaned.indexOf("{");
+      const lastBrace = cleaned.lastIndexOf("}");
+
+      if (firstBrace >= 0 && lastBrace > firstBrace) {
+        const maybeJSON = cleaned.slice(firstBrace, lastBrace + 1);
+
+        try {
+          return JSON.parse(maybeJSON);
+        } catch {
+          return null;
+        }
+      }
+
+      return null;
+    }
+  }
 
   async function checkMorphologyFromIndex(key, rowIndex) {
     const config = DATASETS[key];
@@ -3548,7 +3731,7 @@ ${teachingNote || "No teaching note provided."}
     const reportStatusEl = $("morphReportStatus");
     const submitBtn = $("submitMorphReportBtn");
 
-    statusEl.textContent = "Checking exact database parse with AI...";
+    statusEl.textContent = "Checking exact database parse...";
     statusEl.style.color = "#1d4ed8";
     resultEl.textContent = "";
     notesEl.value = "";
@@ -3566,53 +3749,65 @@ ${teachingNote || "No teaching note provided."}
     morphCheckContext = {
       dataset: key,
       rowIndex: Number(rowIndex),
-
       word: reviewPacket.surface_word,
       baseword: reviewPacket.database_baseword,
       current_parse: reviewPacket.database_parse_exact,
       root: reviewPacket.database_root_exact,
-
       prefix_1: reviewPacket.database_prefixes_exact[0] || "",
       suffix_1: reviewPacket.database_suffixes_exact[0] || "",
-
       row: row,
       parse_packet: reviewPacket,
       prompt: userPrompt,
-
       ai_review_text: "",
       ai_review_json: "",
       ai_status: "",
       ai_confidence: "",
       ai_suggested_parse: ""
     };
+
     const deterministicReview = getDeterministicMorphReview(reviewPacket);
 
-if (deterministicReview) {
-  const formatted = formatMorphCheckParsed(deterministicReview, morphCheckContext);
-  const badgeClass = getMorphBadgeClass(deterministicReview.status);
+    if (deterministicReview) {
+      const formatted = formatMorphCheckParsed(deterministicReview, morphCheckContext);
+      const badgeClass = getMorphBadgeClass(deterministicReview.status);
 
-  statusEl.innerHTML =
-    `Result: <span class="morph-badge ${badgeClass}">${escapeHTML(deterministicReview.status)}</span> &nbsp; Confidence: <strong>${escapeHTML(deterministicReview.confidence)}</strong>`;
+      statusEl.innerHTML =
+        `Result: <span class="morph-badge ${badgeClass}">${escapeHTML(deterministicReview.status)}</span> &nbsp; Confidence: <strong>${escapeHTML(deterministicReview.confidence)}</strong>`;
 
-  statusEl.style.color = "#111827";
-  resultEl.textContent = formatted;
+      statusEl.style.color = "#111827";
+      resultEl.textContent = formatted;
 
-  lastMorphCheckRawJSON = JSON.stringify(deterministicReview, null, 2);
-  lastMorphCheckText = formatted;
+      lastMorphCheckRawJSON = JSON.stringify(deterministicReview, null, 2);
+      lastMorphCheckText = formatted;
 
-  morphCheckContext.ai_review_text = formatted;
-  morphCheckContext.ai_review_json = lastMorphCheckRawJSON;
-  morphCheckContext.ai_status = deterministicReview.status;
-  morphCheckContext.ai_confidence = deterministicReview.confidence;
-  morphCheckContext.ai_suggested_parse = deterministicReview.suggested_parse;
+      morphCheckContext.ai_review_text = formatted;
+      morphCheckContext.ai_review_json = lastMorphCheckRawJSON;
+      morphCheckContext.ai_status = deterministicReview.status;
+      morphCheckContext.ai_confidence = deterministicReview.confidence;
+      morphCheckContext.ai_suggested_parse = deterministicReview.suggested_parse;
 
-  return;
-}
+      return;
+    }
+
+    const preliminaryNotes = [];
 
     if (reviewPacket.local_precheck_warning) {
-      resultEl.textContent =
-        `Local pre-check before AI review:\n${reviewPacket.local_precheck_warning}\n\nWaiting for AI review...`;
+      preliminaryNotes.push(`Local pre-check:\n${reviewPacket.local_precheck_warning}`);
     }
+
+    if (reviewPacket.local_scope_ambiguity_note) {
+      preliminaryNotes.push(`Local scope/ambiguity note:\n${reviewPacket.local_scope_ambiguity_note}`);
+    }
+
+    if (reviewPacket.local_suspicious_segmentation_note) {
+      preliminaryNotes.push(`Local suspicious segmentation note:\n${reviewPacket.local_suspicious_segmentation_note}`);
+    }
+
+    if (preliminaryNotes.length) {
+      resultEl.textContent = `${preliminaryNotes.join("\n\n")}\n\nWaiting for AI review...`;
+    }
+
+    statusEl.textContent = "Checking exact database parse with AI...";
 
     try {
       const response = await fetch(MORPH_CHECK_ENDPOINT, {
@@ -3638,7 +3833,7 @@ if (deterministicReview) {
 
       try {
         data = await response.json();
-      } catch (jsonErr) {
+      } catch {
         data = { error: { message: "Endpoint did not return valid JSON." } };
       }
 
@@ -3672,21 +3867,10 @@ if (deterministicReview) {
         content = JSON.stringify(data, null, 2);
       }
 
-      content = content
-        .replace(/^```json\s*/i, "")
-        .replace(/^```\s*/i, "")
-        .replace(/```$/i, "")
-        .trim();
-
+      content = cleanAIJSONContent(content);
       lastMorphCheckRawJSON = content;
 
-      let parsed = null;
-
-      try {
-        parsed = JSON.parse(content);
-      } catch (e) {
-        parsed = null;
-      }
+      const parsed = tryParseAIJSON(content);
 
       if (parsed) {
         const status = parsed.status || "unknown";
@@ -3725,29 +3909,27 @@ if (deterministicReview) {
           morphCheckContext.ai_review_json = content;
         }
       }
-} catch (error) {
-  console.error(error);
+    } catch (error) {
+      console.error(error);
 
-  const looksLikeNetworkError =
-    error instanceof TypeError &&
-    /fetch|network|failed to fetch|load/i.test(String(error.message || ""));
+      const looksLikeNetworkError =
+        error instanceof TypeError &&
+        /fetch|network|failed to fetch|load/i.test(String(error.message || ""));
 
-  statusEl.textContent = looksLikeNetworkError
-    ? "Network error."
-    : "Review processing error.";
+      statusEl.textContent = looksLikeNetworkError
+        ? "Network error."
+        : "Review processing error.";
 
-  statusEl.style.color = "#dc2626";
+      statusEl.style.color = "#dc2626";
+      resultEl.textContent = `${error.name || "Error"}: ${error.message || error}`;
+      lastMorphCheckText = resultEl.textContent;
 
-  resultEl.textContent = `${error.name || "Error"}: ${error.message || error}`;
-  lastMorphCheckText = resultEl.textContent;
-
-  if (morphCheckContext) {
-    morphCheckContext.ai_review_text = resultEl.textContent;
+      if (morphCheckContext) {
+        morphCheckContext.ai_review_text = resultEl.textContent;
+      }
+    }
   }
-}
-  }
-
-  async function submitMorphDisagreement() {
+    async function submitMorphDisagreement() {
     const notesEl = $("morphDisagreementNotes");
     const btn = $("submitMorphReportBtn");
     const status = $("morphReportStatus");
@@ -3880,187 +4062,6 @@ if (deterministicReview) {
       user_correction: notes,
       full_row_json: reportContext ? JSON.stringify(reportContext.row || {}) : ""
     };
-    const COMMON_MORPH_WORDS_TO_IGNORE = new Set([
-  "prefix",
-  "suffix",
-  "root",
-  "base",
-  "bases",
-  "baseword",
-  "word",
-  "words",
-  "morpheme",
-  "morphemes",
-  "bound",
-  "free",
-  "compound",
-  "inflection",
-  "inflectional",
-  "derivation",
-  "derivational",
-  "parse",
-  "notation",
-  "current",
-  "database",
-  "surface",
-  "suggested",
-  "accurate",
-  "questionable",
-  "incorrect",
-  "uncertain",
-  "none",
-  "listed",
-  "shown",
-  "shows",
-  "does",
-  "not",
-  "the",
-  "and",
-  "or",
-  "but",
-  "with",
-  "without",
-  "from",
-  "into",
-  "itself"
-]);
-
-function tokenizeMorphWords(text) {
-  return String(text || "")
-    .toLowerCase()
-    .match(/[a-z][a-z'-]*/g) || [];
-}
-
-function detectLexicalIntrusionByAI(parsed, context) {
-  if (!parsed || !context || !context.parse_packet) return "";
-
-  const packet = context.parse_packet;
-  const notationParts =
-    packet.database_notation_parts_detected_locally ||
-    extractBAWFNotationParts(packet.database_parse_exact);
-
-  const allowedSourceValues = [
-    packet.surface_word,
-    packet.database_baseword,
-    packet.database_parse_exact,
-    packet.database_root_exact,
-    packet.database_greek_latin_root_exact,
-    ...(packet.database_prefixes_exact || []),
-    ...(packet.database_suffixes_exact || []),
-    ...(notationParts.prefixes || []),
-    ...(notationParts.suffixes || []),
-    ...(notationParts.bases || []),
-    ...(notationParts.roots || [])
-  ];
-
-  const allowedTokens = new Set(
-    tokenizeMorphWords(allowedSourceValues.join(" "))
-      .map(normalizeMorphToken)
-      .filter(Boolean)
-  );
-
-  const surface = normalizeMorphToken(packet.surface_word);
-  const baseword = normalizeMorphToken(packet.database_baseword);
-
-  const commonRealAffixes = new Set([
-    "s",
-    "es",
-    "ed",
-    "ing",
-    "er",
-    "est",
-    "ly",
-    "ness",
-    "ment",
-    "tion",
-    "sion",
-    "able",
-    "ible",
-    "al",
-    "ous",
-    "ful",
-    "less",
-    "un",
-    "re",
-    "pre",
-    "dis",
-    "mis",
-    "over",
-    "under"
-  ]);
-
-  const suggested = String(parsed.suggested_parse || "");
-  if (!suggested.trim()) return "";
-
-  const tokens = tokenizeMorphWords(suggested)
-    .map(normalizeMorphToken)
-    .filter(Boolean);
-
-  const intruders = [];
-
-  for (const token of tokens) {
-    if (token.length < 3) continue;
-    if (COMMON_MORPH_WORDS_TO_IGNORE.has(token)) continue;
-    if (commonRealAffixes.has(token)) continue;
-    if (allowedTokens.has(token)) continue;
-
-    if (surface && surface.includes(token)) continue;
-    if (baseword && baseword.includes(token)) continue;
-
-    let allowedByOverlap = false;
-
-    for (const allowed of allowedTokens) {
-      if (!allowed) continue;
-      if (allowed.includes(token) || token.includes(allowed)) {
-        allowedByOverlap = true;
-        break;
-      }
-    }
-
-    if (!allowedByOverlap) {
-      intruders.push(token);
-    }
-  }
-
-  const uniqueIntruders = Array.from(new Set(intruders));
-
-  if (!uniqueIntruders.length) return "";
-
-  return `AI suggested parse contains word parts not found in the current row or surface word: ${uniqueIntruders.join(", ")}. This may be example leakage or hallucination.`;
-}
-
-function detectAIWrongSurfaceWordMention(parsed, context) {
-  if (!parsed || !context || !context.parse_packet) return "";
-
-  const packet = context.parse_packet;
-  const currentWord = normalizeMorphToken(packet.surface_word);
-  const currentBase = normalizeMorphToken(packet.database_baseword);
-
-  if (!currentWord) return "";
-
-  const aiText = [
-    parsed.notation_interpretation,
-    parsed.explanation,
-    parsed.teaching_note,
-    Array.isArray(parsed.issues) ? parsed.issues.join(" ") : ""
-  ].join(" ");
-
-  const matches = Array.from(aiText.matchAll(/\bword\s+['"“”‘’`]([a-z][a-z'-]*)['"“”‘’`]/gi));
-
-  for (const match of matches) {
-    const mentioned = normalizeMorphToken(match[1]);
-
-    if (
-      mentioned &&
-      mentioned !== currentWord &&
-      mentioned !== currentBase
-    ) {
-      return `AI appears to be discussing a different word ("${match[1]}") instead of the current word ("${packet.surface_word}").`;
-    }
-  }
-
-  return "";
-}
 
     btn.disabled = true;
     btn.textContent = "Sending...";
@@ -4153,8 +4154,9 @@ function detectAIWrongSurfaceWordMention(parsed, context) {
       if (!passesRange(row[morphCol], mMin, mMax)) continue;
 
       const val = String(row[target] || "").trim();
-      if (!val) continue
-            if (target === "Word") {
+      if (!val) continue;
+
+      if (target === "Word") {
         results.add(val);
       } else {
         const word = String(row["Word"] || "").trim();
@@ -4245,7 +4247,6 @@ function detectAIWrongSurfaceWordMention(parsed, context) {
 
     for (const line of lines) {
       const parts = line.split(/\s+/);
-
       if (parts.length < 2) continue;
 
       const value = Number(parts[parts.length - 1]);
@@ -4370,7 +4371,6 @@ Please include:
 
     const cell = event.target.closest("td.db-cell");
     if (!cell) return;
-
     if (isEditableTarget(event.target)) return;
 
     event.preventDefault();
@@ -4398,7 +4398,6 @@ Please include:
 
     const info = getCellInfo(cell);
     if (!info) return;
-
     if (cellSelection.key !== info.key) return;
 
     cellSelection.focus = info;
@@ -4485,7 +4484,6 @@ Please include:
       for (let colIndex = minCol; colIndex <= maxCol; colIndex++) {
         const col = config.visible[colIndex];
         const value = col ? formatCellValue(col, row[col] ?? "") : "";
-
         cells.push(cleanClipboardCell(value));
       }
 
@@ -4517,7 +4515,6 @@ Please include:
 
   async function copyText(text) {
     const value = String(text ?? "");
-
     if (!value) return;
 
     if (navigator.clipboard && window.isSecureContext) {
@@ -4599,6 +4596,4 @@ Please include:
 
 
 
-
-
-    
+  
