@@ -1066,31 +1066,64 @@
   const PREFIX_COLS = ["Prefix_1", "Prefix_2", "Prefix_3"];
   const SUFFIX_COLS = ["Suffix_1", "Suffix_2", "Suffix_3", "Suffix_4", "Suffix_5", "Suffix_6"];
 
-  const MORPH_CHECK_PROMPT = `You are an expert in English morphology, etymology, structured word inquiry, and vocabulary instruction.
+const MORPH_CHECK_PROMPT = `You are an expert in English morphology, etymology, structured word inquiry, and vocabulary instruction.
 
-You are auditing an EXACT database parse. You are not allowed to silently repair or normalize the database parse before judging it.
+You are auditing an EXACT database parse from the BAWF morphological database.
 
-The user will send a JSON object. The most important field is:
+You must understand the BAWF notation before judging the parse.
 
-- database_parse_exact
+BAWF notation guide:
+1. Roots are written inside parentheses:
+   - (book) means the root is book.
+   - (struct) means the root is struct.
+2. Basewords/bases are written inside square brackets:
+   - [(book)] means the baseword/base is book and the root is book.
+   - [play] or [(play)] means the base/base is play.
+3. Affixes are written with angle brackets:
+   - Prefixes usually appear before the base/root, for example:
+     <over<[(book)] = over + book.
+     Here over is the prefix and book is the base/root.
+   - Suffixes appear after the base/root and are marked with angle brackets.
+4. Do NOT treat a word part inside [] or () as a suffix.
+   - In <over<[(book)], book is NOT a suffix.
+   - It is the base/root.
+5. Use the database columns too:
+   - Prefix_1, Prefix_2, Prefix_3 list prefixes.
+   - Suffix_1 through Suffix_6 list suffixes.
+   - GPT_Root lists the root.
+   - Baseword lists the baseword.
+6. Do not infer that the final part of a surface word is a suffix simply because it comes at the end.
+   - overbook does NOT contain a suffix -book.
+   - book is a free base/root.
+7. Only call something an omitted suffix/inflection if it is a real suffix or inflection, such as -s, -es, -ed, -ing, -er, -est, -ly, -ness, -ment, -tion, etc., and the database parse/columns fail to show it.
+8. The most important field is database_parse_exact. This is the exact current parse stored in the database.
+9. You are not allowed to silently repair or normalize database_parse_exact before judging it.
+10. Copy database_parse_exact into database_parse_exact_seen exactly, or as close as possible.
+11. Do NOT put inferred, corrected, or improved morphology into database_parse_exact_seen.
+12. Put corrections only in suggested_parse.
+13. A morpheme count including inflections does not mean the written parse actually shows those inflections.
+14. If the database parse gives only the baseword, for example "(succeed)", and the word is "succeeding", do not describe the current parse as "succeed + -ing". The current parse is still exactly "(succeed)".
+15. If the base/root analysis is plausible but a real surface inflection is omitted, use "mostly_accurate" or "questionable", depending on the database purpose.
+16. Do not over-segment words into pieces that are not meaningful in current English.
+17. Distinguish prefixes, suffixes, bases, bound bases, roots, combining forms, and inflectional endings.
+18. Treat Greek/Latin roots carefully. If uncertain, say so.
+19. Consider spelling changes such as final-e deletion, y-to-i changes, consonant doubling, assimilation, and combining vowels.
+20. If multiple analyses are possible, explain the alternatives briefly.
+21. Do not claim certainty when the evidence is uncertain.
 
-This is the current parse stored in the database. You must treat it as the parse being reviewed.
-
-Critical rules:
-1. Copy database_parse_exact into database_parse_exact_seen exactly, or as close as possible.
-2. Do NOT put inferred, corrected, or improved morphology into database_parse_exact_seen.
-3. Put corrections only in suggested_parse.
-4. If the surface word has a visible suffix or inflection such as -s, -es, -ed, -ing, -er, or -est, but database_parse_exact and the suffix columns do not show it, mention that as a possible mismatch.
-5. A morpheme count including inflections does not mean the written parse actually shows those inflections.
-6. If the database parse gives only the baseword, for example "(succeed)", and the word is "succeeding", do not describe the current parse as "succeed + -ing". The current parse is still exactly "(succeed)".
-7. If the base/root analysis is plausible but the surface inflection is omitted, do not mark the entry simply "accurate" without qualification. Use "mostly_accurate" or "questionable", depending on the database purpose.
-8. Do not over-segment words into pieces that are not meaningful in current English.
-9. Distinguish prefixes, suffixes, bases, bound bases, roots, combining forms, and inflectional endings.
-10. Treat Greek/Latin roots carefully. If uncertain, say so.
-11. Consider spelling changes such as final-e deletion, y-to-i changes, consonant doubling, assimilation, and combining vowels.
-12. If multiple analyses are possible, explain the alternatives briefly.
-13. Do not claim certainty when the evidence is uncertain.
-14. Keep the output useful for teachers, researchers, and database editors.
+Examples:
+- Word: overbook
+  database_parse_exact: <over<[(book)]
+  Correct interpretation: prefix over + base/root book.
+  Incorrect interpretation: over + suffix -book.
+- Word: succeeding
+  database_parse_exact: (succeed)
+  Correct interpretation: database shows only root/base succeed.
+  If the full surface parse is expected, suggested_parse may be succeed + -ing.
+- Word: books
+  database_parse_exact: [(book)]
+  If the full surface parse is expected, suggested_parse may be book + -s.
+  But book itself is not a suffix.
 
 Return ONLY a raw JSON object. Do not use markdown code blocks. Do not include commentary outside the JSON.
 
@@ -1099,8 +1132,9 @@ The JSON object must have exactly these keys:
   "status": "accurate | mostly_accurate | questionable | likely_incorrect | uncertain",
   "confidence": "high | medium | low",
   "database_parse_exact_seen": "",
+  "notation_interpretation": "",
   "suggested_parse": "",
-  "parse_mismatch": "none | omitted_surface_inflection | omitted_derivational_affix | wrong_base_or_root | unclear_notation | other | uncertain",
+  "parse_mismatch": "none | omitted_surface_inflection | omitted_derivational_affix | wrong_base_or_root | unclear_notation | notation_misread | other | uncertain",
   "issues": [],
   "explanation": "",
   "teaching_note": ""
@@ -2471,40 +2505,206 @@ Please:
   function escapeRegExp(str) {
     return String(str).replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
   }
+function extractBAWFNotationParts(parse) {
+  const text = cleanMorphValue(parse);
 
-  function parseContainsEnding(endingLabel, parse, suffixes) {
-    const endings = String(endingLabel)
-      .split("/")
-      .map(v => v.trim().replace(/^-/, "").toLowerCase())
-      .filter(Boolean);
+  const roots = [];
+  const bases = [];
+  const prefixes = [];
+  const suffixes = [];
 
-    const text = cleanMorphValue(parse).toLowerCase();
-    const compact = text.replace(/\s+/g, "");
+  // Roots inside parentheses, e.g. (book)
+  const rootRegex = /\(([^()]+)\)/g;
+  let rootMatch;
 
-    const suffixNorms = suffixes.map(s =>
-      cleanMorphValue(s).toLowerCase().replace(/^-/, "")
-    );
-
-    return endings.some(bare => {
-      if (suffixNorms.includes(bare)) return true;
-
-  const compactPatterns = [
-  `+-${bare}`,
-  `+${bare}`,
-  `<-${bare}>`,
-  `<${bare}>`,
-  `(-${bare})`,
-  `(${bare})`
-];
-
-      if (compactPatterns.some(pattern => compact.includes(pattern))) {
-        return true;
-      }
-
-      const re = new RegExp(`(^|[^a-z])[-]?${escapeRegExp(bare)}($|[^a-z])`, "i");
-      return re.test(text);
-    });
+  while ((rootMatch = rootRegex.exec(text)) !== null) {
+    const value = cleanMorphValue(rootMatch[1]);
+    if (value) roots.push(value);
   }
+
+  // Bases inside square brackets, e.g. [(book)] or [play]
+  const baseRegex = /\[([^\]]+)\]/g;
+  let baseMatch;
+
+  while ((baseMatch = baseRegex.exec(text)) !== null) {
+    const value = cleanMorphValue(baseMatch[1])
+      .replace(/[()]/g, "")
+      .trim();
+
+    if (value) bases.push(value);
+  }
+
+  // Prefixes like <over< before a base/root.
+  const prefixRegex = /<([^<>]+)</g;
+  let prefixMatch;
+
+  while ((prefixMatch = prefixRegex.exec(text)) !== null) {
+    const value = cleanMorphValue(prefixMatch[1]);
+    if (value) prefixes.push(value);
+  }
+
+  // Suffixes like >ing> or >ed> after a base/root.
+  const suffixRegex = />([^<>]+)>/g;
+  let suffixMatch;
+
+  while ((suffixMatch = suffixRegex.exec(text)) !== null) {
+    const value = cleanMorphValue(suffixMatch[1]);
+    if (value) suffixes.push(value);
+  }
+
+  return {
+    roots: uniqueCleanList(roots),
+    bases: uniqueCleanList(bases),
+    prefixes: uniqueCleanList(prefixes),
+    suffixes: uniqueCleanList(suffixes)
+  };
+}
+
+function uniqueCleanList(items) {
+  return Array.from(
+    new Set(
+      items
+        .map(x => cleanMorphValue(x))
+        .filter(Boolean)
+    )
+  );
+}
+
+function buildLocalNotationInterpretation(row) {
+  const parse = getExactDatabaseParse(row);
+  const notationParts = extractBAWFNotationParts(parse);
+
+  const columnPrefixes = getAffixValues(row, PREFIX_COLS);
+  const columnSuffixes = getAffixValues(row, SUFFIX_COLS);
+
+  const root = cleanMorphValue(getFirstNonEmpty(row, [
+    "GPT_Root",
+    "Root_1",
+    "Greek_Latin_Root_1",
+    "Greek_Latin_Root"
+  ]));
+
+  const baseword = cleanMorphValue(getFirstNonEmpty(row, [
+    "Baseword",
+    "Baseword_1"
+  ]));
+
+  const pieces = [];
+
+  pieces.push(`Exact parse: ${parse || "[blank]"}`);
+
+  if (notationParts.prefixes.length) {
+    pieces.push(`Prefixes from notation: ${notationParts.prefixes.join(", ")}`);
+  }
+
+  if (notationParts.bases.length) {
+    pieces.push(`Bases from notation: ${notationParts.bases.join(", ")}`);
+  }
+
+  if (notationParts.roots.length) {
+    pieces.push(`Roots from notation: ${notationParts.roots.join(", ")}`);
+  }
+
+  if (notationParts.suffixes.length) {
+    pieces.push(`Suffixes from notation: ${notationParts.suffixes.join(", ")}`);
+  } else {
+    pieces.push("Suffixes from notation: none");
+  }
+
+  if (columnPrefixes.length) {
+    pieces.push(`Prefixes from columns: ${columnPrefixes.join(", ")}`);
+  }
+
+  if (columnSuffixes.length) {
+    pieces.push(`Suffixes from columns: ${columnSuffixes.join(", ")}`);
+  } else {
+    pieces.push("Suffixes from columns: none");
+  }
+
+  if (baseword) {
+    pieces.push(`Database baseword column: ${baseword}`);
+  }
+
+  if (root) {
+    pieces.push(`Database root column: ${root}`);
+  }
+
+  return pieces.join("\n");
+}
+
+function detectLikelyNotationMisreadByAI(parsed, context) {
+  if (!parsed || !context || !context.parse_packet) return "";
+
+  const packet = context.parse_packet;
+  const parse = packet.database_parse_exact || "";
+  const notationParts = extractBAWFNotationParts(parse);
+
+  const aiText = [
+    parsed.notation_interpretation,
+    parsed.suggested_parse,
+    parsed.parse_mismatch,
+    parsed.explanation,
+    parsed.teaching_note,
+    Array.isArray(parsed.issues) ? parsed.issues.join(" ") : ""
+  ].join(" ").toLowerCase();
+
+  const protectedBaseRootParts = uniqueCleanList([
+    ...(notationParts.roots || []),
+    ...(notationParts.bases || []),
+    packet.database_baseword,
+    packet.database_root_exact
+  ]).map(x => x.toLowerCase());
+
+  for (const part of protectedBaseRootParts) {
+    if (!part) continue;
+
+    const saysPartIsSuffix =
+      aiText.includes(`-${part} suffix`) ||
+      aiText.includes(`suffix -${part}`) ||
+      aiText.includes(`suffix (${part})`) ||
+      aiText.includes(`visible suffix -${part}`);
+
+    if (saysPartIsSuffix) {
+      return `AI appears to have misread "${part}" as a suffix, but in the database notation it is a base/root, not a suffix.`;
+    }
+  }
+
+  return "";
+}
+function parseContainsEnding(endingLabel, parse, suffixes) {
+  const endings = String(endingLabel)
+    .split("/")
+    .map(v => v.trim().replace(/^-/, "").toLowerCase())
+    .filter(Boolean);
+
+  const text = cleanMorphValue(parse).toLowerCase();
+  const compact = text.replace(/\s+/g, "");
+
+  const suffixNorms = suffixes.map(s =>
+    cleanMorphValue(s).toLowerCase().replace(/^-/, "")
+  );
+
+  return endings.some(bare => {
+    if (!bare) return false;
+
+    if (suffixNorms.includes(bare)) return true;
+
+    const compactPatterns = [
+      `+-${bare}`,
+      `+${bare}`,
+      `>-${bare}>`,
+      `>${bare}>`,
+      `(-${bare})`
+    ];
+
+    if (compactPatterns.some(pattern => compact.includes(pattern))) {
+      return true;
+    }
+
+    const re = new RegExp(`(^|[^a-z])[-]?${escapeRegExp(bare)}($|[^a-z])`, "i");
+    return re.test(text);
+  });
+}
 
   function detectLikelySurfaceInflectionOmission(row) {
     const word = cleanMorphValue(getFirstNonEmpty(row, [
@@ -2589,79 +2789,102 @@ Please:
   }
 
   function buildMorphReviewPacket(row, key) {
-    const compactRow = {};
+  const compactRow = {};
 
-    Object.keys(row || {}).forEach(col => {
-      const val = row[col];
+  Object.keys(row || {}).forEach(col => {
+    const val = row[col];
 
-      if (val !== null && val !== undefined && String(val).trim()) {
-        compactRow[col] = String(val).trim();
-      }
-    });
+    if (val !== null && val !== undefined && String(val).trim()) {
+      compactRow[col] = String(val).trim();
+    }
+  });
 
-    return {
-      dataset_key: key,
-      dataset_name: getDatasetLabel(key),
+  const databaseParseExact = getExactDatabaseParse(row);
+  const notationParts = extractBAWFNotationParts(databaseParseExact);
 
-      surface_word: cleanMorphValue(getFirstNonEmpty(row, [
-        "Word",
-        "FLemma",
-        "Compound",
-        "Compound_Word"
-      ])),
+  return {
+    dataset_key: key,
+    dataset_name: getDatasetLabel(key),
 
-      database_baseword: cleanMorphValue(getFirstNonEmpty(row, [
-        "Baseword",
-        "Baseword_1"
-      ])),
+    bawf_notation_guide: {
+      roots: "Roots are inside parentheses, e.g. (book).",
+      bases: "Bases/basewords are inside square brackets, e.g. [(book)].",
+      prefixes: "Prefixes appear with angle brackets before the base/root, e.g. <over<[(book)] means over + book.",
+      suffixes: "Suffixes appear with angle brackets after the base/root.",
+      warning: "Do not treat material inside [] or () as a suffix. In <over<[(book)], book is a base/root, not a suffix."
+    },
 
-      database_parse_exact: getExactDatabaseParse(row),
+    surface_word: cleanMorphValue(getFirstNonEmpty(row, [
+      "Word",
+      "FLemma",
+      "Compound",
+      "Compound_Word"
+    ])),
 
-      database_root_exact: cleanMorphValue(getFirstNonEmpty(row, [
-        "GPT_Root",
-        "Root_1"
-      ])),
+    database_baseword: cleanMorphValue(getFirstNonEmpty(row, [
+      "Baseword",
+      "Baseword_1"
+    ])),
 
-      database_greek_latin_root_exact: cleanMorphValue(getFirstNonEmpty(row, [
-        "Greek_Latin_Root_1",
-        "Greek_Latin_Root"
-      ])),
+    database_parse_exact: databaseParseExact,
 
-      database_prefixes_exact: getAffixValues(row, PREFIX_COLS),
-      database_suffixes_exact: getAffixValues(row, SUFFIX_COLS),
+    database_notation_parts_detected_locally: notationParts,
 
-      morpheme_count_excluding_inflections: cleanMorphValue(row[MORPHEME_COL_WITHOUT_INFLECTIONS]),
-      morpheme_count_including_inflections: cleanMorphValue(row[MORPHEME_COL_PLUS_INFLECTIONS]),
+    local_notation_interpretation: buildLocalNotationInterpretation(row),
 
-      word_zipf: cleanMorphValue(getFirstNonEmpty(row, [
-        "Word_frq_Zipf_Recomputed",
-        "Word_frq_Zipf"
-      ])),
+    database_root_exact: cleanMorphValue(getFirstNonEmpty(row, [
+      "GPT_Root",
+      "Root_1"
+    ])),
 
-      family_zipf: cleanMorphValue(row["Baseword_frq_Zipf"]),
-      familiarity: cleanMorphValue(row["GPT_Familiarity Brysbaert et al._ 2024"]),
-      grade_estimate: cleanMorphValue(row["Vocabulary eXpected Grade Level Flor et al._ 2024"]),
-      reading_aoa: cleanMorphValue(row["Reading AoA Green et al._ 2025"]),
+    database_greek_latin_root_exact: cleanMorphValue(getFirstNonEmpty(row, [
+      "Greek_Latin_Root_1",
+      "Greek_Latin_Root"
+    ])),
 
-      local_precheck_warning: detectLikelySurfaceInflectionOmission(row),
-      full_non_empty_row_json: compactRow
-    };
-  }
+    database_prefixes_exact: getAffixValues(row, PREFIX_COLS),
+    database_suffixes_exact: getAffixValues(row, SUFFIX_COLS),
 
-  function buildMorphCheckUserPromptFromPacket(packet) {
-    return `Audit the exact BAWF database parse below.
+    morpheme_count_excluding_inflections: cleanMorphValue(row[MORPHEME_COL_WITHOUT_INFLECTIONS]),
+    morpheme_count_including_inflections: cleanMorphValue(row[MORPHEME_COL_PLUS_INFLECTIONS]),
+
+    word_zipf: cleanMorphValue(getFirstNonEmpty(row, [
+      "Word_frq_Zipf_Recomputed",
+      "Word_frq_Zipf"
+    ])),
+
+    family_zipf: cleanMorphValue(row["Baseword_frq_Zipf"]),
+    familiarity: cleanMorphValue(row["GPT_Familiarity Brysbaert et al._ 2024"]),
+    grade_estimate: cleanMorphValue(row["Vocabulary eXpected Grade Level Flor et al._ 2024"]),
+    reading_aoa: cleanMorphValue(row["Reading AoA Green et al._ 2025"]),
+
+    local_precheck_warning: detectLikelySurfaceInflectionOmission(row),
+    full_non_empty_row_json: compactRow
+  };
+}
+
+function buildMorphCheckUserPromptFromPacket(packet) {
+  return `Audit the exact BAWF database parse below.
 
 Important:
 - The current database parse is database_parse_exact.
 - Do not rewrite database_parse_exact before judging it.
+- First interpret the BAWF notation.
+- Roots are inside parentheses.
+- Basewords/bases are inside square brackets.
+- Affixes are marked with angle brackets.
+- Prefixes appear before the base/root.
+- Suffixes appear after the base/root.
+- Do not treat a root/base inside [] or () as a suffix.
 - If you think the parse should include something else, put that in suggested_parse.
 - If local_precheck_warning is not empty, explicitly address it.
+- If local_notation_interpretation says there are no suffixes, do not invent a suffix unless there is strong morphological evidence.
 
 BAWF parse review packet:
 ${JSON.stringify(packet, null, 2)}
 
 Return only the required JSON object.`;
-  }
+}
 
   function normalizeParseForCompare(value) {
     return cleanMorphValue(value)
@@ -2677,104 +2900,124 @@ Return only the required JSON object.`;
     return "unknown";
   }
 
-  function getMorphReviewReliability(parsed, context) {
-    const reasons = [];
+function getMorphReviewReliability(parsed, context) {
+  const reasons = [];
 
-    const dbParse =
-      context &&
-      context.parse_packet &&
-      context.parse_packet.database_parse_exact
-        ? context.parse_packet.database_parse_exact
-        : "";
+  const dbParse =
+    context &&
+    context.parse_packet &&
+    context.parse_packet.database_parse_exact
+      ? context.parse_packet.database_parse_exact
+      : "";
 
-    const aiEcho =
-      parsed.database_parse_exact_seen ||
-      parsed.current_parse ||
-      "";
+  const aiEcho =
+    parsed.database_parse_exact_seen ||
+    parsed.current_parse ||
+    "";
 
-    if (dbParse && !aiEcho) {
-      reasons.push("AI did not echo the exact database parse.");
-    } else if (
-      dbParse &&
-      aiEcho &&
-      normalizeParseForCompare(dbParse) !== normalizeParseForCompare(aiEcho)
-    ) {
-      reasons.push("AI echoed a different parse from the exact database parse.");
-    }
-
-    const localWarning =
-      context &&
-      context.parse_packet &&
-      context.parse_packet.local_precheck_warning
-        ? context.parse_packet.local_precheck_warning
-        : "";
-
-    const status = String(parsed.status || "").toLowerCase();
-    const mismatch = String(parsed.parse_mismatch || "").toLowerCase();
-    const issuesText = Array.isArray(parsed.issues) ? parsed.issues.join(" ").toLowerCase() : "";
-
-    if (
-      localWarning &&
-      status === "accurate" &&
-      (!mismatch || mismatch === "none") &&
-      !issuesText.includes("inflection") &&
-      !issuesText.includes("suffix")
-    ) {
-      reasons.push("AI appears to have ignored the local pre-check warning about a possible omitted surface inflection.");
-    }
-
-    return {
-      ok: reasons.length === 0,
-      reasons
-    };
+  if (dbParse && !aiEcho) {
+    reasons.push("AI did not echo the exact database parse.");
+  } else if (
+    dbParse &&
+    aiEcho &&
+    normalizeParseForCompare(dbParse) !== normalizeParseForCompare(aiEcho)
+  ) {
+    reasons.push("AI echoed a different parse from the exact database parse.");
   }
 
-  function formatMorphCheckParsed(parsed, context = morphCheckContext) {
-    const status = parsed.status || "unknown";
-    const confidence = parsed.confidence || "unknown";
+  const localWarning =
+    context &&
+    context.parse_packet &&
+    context.parse_packet.local_precheck_warning
+      ? context.parse_packet.local_precheck_warning
+      : "";
 
-    const dbParse =
-      context &&
-      context.parse_packet &&
-      context.parse_packet.database_parse_exact
-        ? context.parse_packet.database_parse_exact
-        : context && context.current_parse
-          ? context.current_parse
-          : "";
+  const status = String(parsed.status || "").toLowerCase();
+  const mismatch = String(parsed.parse_mismatch || "").toLowerCase();
+  const issuesText = Array.isArray(parsed.issues) ? parsed.issues.join(" ").toLowerCase() : "";
 
-    const aiEcho =
-      parsed.database_parse_exact_seen ||
-      parsed.current_parse ||
-      "";
+  if (
+    localWarning &&
+    status === "accurate" &&
+    (!mismatch || mismatch === "none") &&
+    !issuesText.includes("inflection") &&
+    !issuesText.includes("suffix")
+  ) {
+    reasons.push("AI appears to have ignored the local pre-check warning about a possible omitted surface inflection.");
+  }
 
-    const suggestedParse = parsed.suggested_parse || "";
-    const parseMismatch = parsed.parse_mismatch || "not provided";
-    const issues = Array.isArray(parsed.issues) ? parsed.issues : [];
-    const explanation = parsed.explanation || "";
-    const teachingNote = parsed.teaching_note || "";
+  const notationMisread = detectLikelyNotationMisreadByAI(parsed, context);
 
-    const localWarning =
-      context &&
-      context.parse_packet &&
-      context.parse_packet.local_precheck_warning
-        ? context.parse_packet.local_precheck_warning
+  if (notationMisread) {
+    reasons.push(notationMisread);
+  }
+
+  return {
+    ok: reasons.length === 0,
+    reasons
+  };
+}
+
+function formatMorphCheckParsed(parsed, context = morphCheckContext) {
+  const status = parsed.status || "unknown";
+  const confidence = parsed.confidence || "unknown";
+
+  const dbParse =
+    context &&
+    context.parse_packet &&
+    context.parse_packet.database_parse_exact
+      ? context.parse_packet.database_parse_exact
+      : context && context.current_parse
+        ? context.current_parse
         : "";
 
-    const reliability = getMorphReviewReliability(parsed, context);
+  const aiEcho =
+    parsed.database_parse_exact_seen ||
+    parsed.current_parse ||
+    "";
 
-    const reliabilityText = reliability.ok
-      ? "No reliability warnings."
-      : reliability.reasons.map(reason => `- ${reason}`).join("\n");
+  const notationInterpretation = parsed.notation_interpretation || "";
+  const suggestedParse = parsed.suggested_parse || "";
+  const parseMismatch = parsed.parse_mismatch || "not provided";
+  const issues = Array.isArray(parsed.issues) ? parsed.issues : [];
+  const explanation = parsed.explanation || "";
+  const teachingNote = parsed.teaching_note || "";
 
-    return `
+  const localWarning =
+    context &&
+    context.parse_packet &&
+    context.parse_packet.local_precheck_warning
+      ? context.parse_packet.local_precheck_warning
+      : "";
+
+  const localNotation =
+    context &&
+    context.parse_packet &&
+    context.parse_packet.local_notation_interpretation
+      ? context.parse_packet.local_notation_interpretation
+      : "";
+
+  const reliability = getMorphReviewReliability(parsed, context);
+
+  const reliabilityText = reliability.ok
+    ? "No reliability warnings."
+    : reliability.reasons.map(reason => `- ${reason}`).join("\n");
+
+  return `
 Status: ${status}
 Confidence: ${confidence}
 
 Database parse reviewed, exact from row:
 ${dbParse || "Not provided."}
 
+Local BAWF notation interpretation:
+${localNotation || "Not available."}
+
 AI echo of database parse:
 ${aiEcho || "Not provided."}
+
+AI notation interpretation:
+${notationInterpretation || "Not provided."}
 
 Suggested parse:
 ${suggestedParse || "No alternative suggested."}
@@ -2797,7 +3040,7 @@ ${explanation || "No explanation provided."}
 Teaching note:
 ${teachingNote || "No teaching note provided."}
 `.trim();
-  }
+}
 
   async function checkMorphologyFromIndex(key, rowIndex) {
     const config = DATASETS[key];
