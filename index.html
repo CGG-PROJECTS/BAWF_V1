@@ -1069,6 +1069,11 @@ BAWF notation guide:
 23. Be skeptical of parses that split a word into a long prefix plus a very short unrelated base simply because the letters match.
 24. If a suffix column contains an unusual letter sequence that is not a recognized suffix, flag it.
 25. For un- + base + -able/-ible words, consider affix scope ambiguity: un-[base-able] versus [un-base]-able.
+26. If local_omitted_inflection_after_reconstruction is present, treat the row as a plausible base/derivational parse with an omitted surface inflection. Do not classify this as wrong_base_or_root unless the base/root itself is independently implausible.
+27. For ordinary missing -ed, -ing, -s, or -es after an otherwise plausible parse, use parse_mismatch "omitted_surface_inflection".
+28. Do not use "suffix_spelling_variant_or_final_s" for ordinary -ed or -ing. That category is mainly for cases such as -ward versus -wards.
+29. In BAWF notation, a suffix must be written as >suffix>. For example, use >ed>, not ed>.
+30. For a word like disliked with database parse <dis<[(like)], the likely full-surface parse is <dis<[(like)]>ed>, while the stored parse may still be acceptable if the database intentionally excludes inflections.
 
 Return ONLY a raw JSON object. Do not use markdown code blocks. Do not include commentary outside the JSON.
 
@@ -2662,7 +2667,102 @@ Please:
       possible_corrected_surface_parse: possibleCorrectedSurfaceParse
     };
   }
+  function detectOmittedInflectionAfterReconstruction(surfaceInfo) {
+    if (!surfaceInfo) return null;
 
+    const surface = normalizeSurfaceForCompare(surfaceInfo.surface_word);
+    const stem = normalizeSurfaceForCompare(surfaceInfo.parse_yields);
+
+    if (!surface || !stem) return null;
+    if (surface === stem) return null;
+
+    const prefixes = surfaceInfo.prefixes_used || [];
+    const base = surfaceInfo.base_used || "";
+    const suffixes = surfaceInfo.suffixes_used || [];
+
+    function makeResult(ending, reason, spellingNote = "") {
+      const suggestedParse = buildBAWFParseFromParts(prefixes, base, [...suffixes, ending]);
+
+      return {
+        ending,
+        reason,
+        spelling_note: spellingNote,
+        suggested_parse: suggestedParse
+      };
+    }
+
+    if (surface === `${stem}s`) {
+      return makeResult(
+        "s",
+        `The database parse reconstructs "${surfaceInfo.parse_yields}", but the surface word is "${surfaceInfo.surface_word}", which appears to add final -s.`
+      );
+    }
+
+    if (surface === `${stem}es`) {
+      return makeResult(
+        "es",
+        `The database parse reconstructs "${surfaceInfo.parse_yields}", but the surface word is "${surfaceInfo.surface_word}", which appears to add -es.`
+      );
+    }
+
+    if (surface === `${stem}ed`) {
+      return makeResult(
+        "ed",
+        `The database parse reconstructs "${surfaceInfo.parse_yields}", but the surface word is "${surfaceInfo.surface_word}", which appears to add regular -ed.`
+      );
+    }
+
+    if (stem.endsWith("e") && surface === `${stem}d`) {
+      return makeResult(
+        "ed",
+        `The database parse reconstructs "${surfaceInfo.parse_yields}", but the surface word is "${surfaceInfo.surface_word}", which appears to add regular past-tense -ed, spelled as final -d after silent e.`,
+        "The morphological suffix is -ed, but the spelling after a final e is usually just -d."
+      );
+    }
+
+    if (surface === `${stem}ing`) {
+      return makeResult(
+        "ing",
+        `The database parse reconstructs "${surfaceInfo.parse_yields}", but the surface word is "${surfaceInfo.surface_word}", which appears to add -ing.`
+      );
+    }
+
+    if (stem.endsWith("e") && surface === `${stem.slice(0, -1)}ing`) {
+      return makeResult(
+        "ing",
+        `The database parse reconstructs "${surfaceInfo.parse_yields}", but the surface word is "${surfaceInfo.surface_word}", which appears to add -ing with final-e deletion.`,
+        "Final silent e is usually dropped before -ing."
+      );
+    }
+
+    if (stem.endsWith("y") && surface === `${stem.slice(0, -1)}ied`) {
+      return makeResult(
+        "ed",
+        `The database parse reconstructs "${surfaceInfo.parse_yields}", but the surface word is "${surfaceInfo.surface_word}", which appears to add -ed with y-to-i spelling change.`,
+        "Final y often changes to i before -ed."
+      );
+    }
+
+    const last = stem.slice(-1);
+
+    if (last && surface === `${stem}${last}ed`) {
+      return makeResult(
+        "ed",
+        `The database parse reconstructs "${surfaceInfo.parse_yields}", but the surface word is "${surfaceInfo.surface_word}", which appears to add -ed with consonant doubling.`,
+        "Some words double the final consonant before -ed."
+      );
+    }
+
+    if (last && surface === `${stem}${last}ing`) {
+      return makeResult(
+        "ing",
+        `The database parse reconstructs "${surfaceInfo.parse_yields}", but the surface word is "${surfaceInfo.surface_word}", which appears to add -ing with consonant doubling.`,
+        "Some words double the final consonant before -ing."
+      );
+    }
+
+    return null;
+  }
   function getShortFunctionBasesForSegmentation() {
     return new Set(["a","i","am","an","as","at","be","by","do","go","he","if","in","is","it","me","my","no","of","on","or","so","to","up","us","we"]);
   }
@@ -2778,12 +2878,17 @@ Please:
     const notationParts = extractBAWFNotationParts(databaseParseExact);
     const surfaceWord = getSurfaceWordForReview(row);
     const localSurfaceReconstruction = getSurfaceReconstructionInfo(row);
+    const localOmittedInflection = detectOmittedInflectionAfterReconstruction(localSurfaceReconstruction);
     const localSuspiciousSegmentationNote = detectSuspiciousDatabaseSegmentation(row);
 
     const localPreferredParseSuggestion =
-      localSuspiciousSegmentationNote
-        ? makeSimpleBaseRootParse(surfaceWord)
-        : (localSurfaceReconstruction.possible_corrected_surface_parse || "");
+  localSuspiciousSegmentationNote
+    ? makeSimpleBaseRootParse(surfaceWord)
+    : (
+        (localOmittedInflection && localOmittedInflection.suggested_parse) ||
+        localSurfaceReconstruction.possible_corrected_surface_parse ||
+        ""
+      );
 
     return {
       dataset_key: key,
@@ -2837,17 +2942,18 @@ Please:
       reading_aoa: cleanMorphValue(row["Reading AoA Green et al._ 2025"]),
 
       local_precheck_warning: detectLikelySurfaceInflectionOmission(row),
-      local_scope_ambiguity_note: detectPotentialAffixScopeAmbiguity(row),
-      local_suspicious_segmentation_note: localSuspiciousSegmentationNote,
-      local_surface_reconstruction: localSurfaceReconstruction,
-      local_preferred_parse_suggestion: localPreferredParseSuggestion,
+local_scope_ambiguity_note: detectPotentialAffixScopeAmbiguity(row),
+local_suspicious_segmentation_note: localSuspiciousSegmentationNote,
+local_surface_reconstruction: localSurfaceReconstruction,
+local_omitted_inflection_after_reconstruction: localOmittedInflection,
+local_preferred_parse_suggestion: localPreferredParseSuggestion,
 
       full_non_empty_row_json: compactRow
     };
   }
 
-  function buildMorphCheckUserPromptFromPacket(packet) {
-    return `Audit the exact BAWF database parse below.
+function buildMorphCheckUserPromptFromPacket(packet) {
+  return `Audit the exact BAWF database parse below.
 
 Important:
 - The current database parse is database_parse_exact.
@@ -2864,6 +2970,8 @@ Important:
 - Use local_surface_reconstruction to decide whether the parse accounts for the surface spelling.
 - If local_surface_reconstruction says exact_match, do not call the base/root wrong unless there is a separate morphological reason.
 - If local_surface_reconstruction says known_suffix_s_variant, discuss it as a suffix spelling variant or final -s issue, not as wrong_base_or_root.
+- If local_omitted_inflection_after_reconstruction is not empty, explicitly address it.
+- Missing regular inflections after an otherwise plausible parse should be called omitted_surface_inflection, not wrong_base_or_root.
 - If local_precheck_warning is not empty, explicitly address it.
 - If local_scope_ambiguity_note is not empty, explicitly address it.
 - If local_suspicious_segmentation_note is not empty, explicitly address it.
@@ -2875,7 +2983,7 @@ BAWF parse review packet:
 ${JSON.stringify(packet, null, 2)}
 
 Return only the required JSON object.`;
-  }
+}
 
   function normalizeParseForCompare(value) {
     return cleanMorphValue(value)
@@ -2895,6 +3003,7 @@ Return only the required JSON object.`;
     return (
       getDeterministicSimpleMorphReview(packet) ||
       getDeterministicKnownSuffixVariantReview(packet) ||
+      getDeterministicOmittedInflectionReview(packet) ||
       getDeterministicSuspiciousSegmentationReview(packet)
     );
   }
@@ -2987,7 +3096,43 @@ Return only the required JSON object.`;
       recommended_action: "keep_but_note_ambiguity"
     };
   }
+  function getDeterministicOmittedInflectionReview(packet) {
+    if (!packet || !packet.local_omitted_inflection_after_reconstruction) return null;
 
+    const info = packet.local_surface_reconstruction;
+    const omitted = packet.local_omitted_inflection_after_reconstruction;
+
+    if (!info || !omitted) return null;
+
+    return {
+      status: "mostly_accurate",
+      confidence: "medium",
+      database_parse_exact_seen: packet.database_parse_exact,
+      notation_interpretation:
+        packet.local_notation_interpretation ||
+        `The parse marks "${info.base_used}" as the base/root with prefixes ${info.prefixes_used.join(", ") || "none"} and suffixes ${info.suffixes_used.join(", ") || "none"}.`,
+      surface_spelling_check:
+        omitted.reason,
+      critical_check:
+        `The base/root and derivational parse are plausible. The main issue is that the exact coded parse reconstructs "${info.parse_yields}", while the surface word is "${info.surface_word}". This is best classified as an omitted surface inflection, not as a wrong base/root.`,
+      suggested_parse:
+        omitted.suggested_parse || packet.local_preferred_parse_suggestion || packet.database_parse_exact,
+      alternative_analyses: [
+        `Keep ${packet.database_parse_exact} if this database field intentionally excludes inflectional endings.`,
+        `Use ${omitted.suggested_parse} if this field is intended to encode the full surface-word parse.`
+      ],
+      parse_mismatch: "omitted_surface_inflection",
+      issues: [
+        omitted.reason,
+        omitted.spelling_note || "The database parse appears to omit an inflectional ending."
+      ].filter(Boolean),
+      explanation:
+        `The stored parse is not necessarily morphologically wrong. It captures the base/derivational structure, but it does not fully represent the surface form. The appropriate correction depends on whether BAWF stores inflections in this parse field.`,
+      teaching_note:
+        `This is a useful distinction for instruction: "${info.surface_word}" can be analyzed as the parsed stem/base plus an inflectional suffix ${omitted.ending}.`,
+      recommended_action: "keep_but_note_ambiguity"
+    };
+  }
   function getDeterministicSuspiciousSegmentationReview(packet) {
     if (!packet || !packet.local_suspicious_segmentation_note) return null;
 
@@ -3453,7 +3598,16 @@ Return only the required JSON object.`;
       context.parse_packet.local_suspicious_segmentation_note
         ? context.parse_packet.local_suspicious_segmentation_note
         : "";
+    const localOmittedInflection =
+      context &&
+      context.parse_packet &&
+      context.parse_packet.local_omitted_inflection_after_reconstruction
+        ? context.parse_packet.local_omitted_inflection_after_reconstruction
+        : null;
 
+    const localOmittedInflectionText = localOmittedInflection
+      ? JSON.stringify(localOmittedInflection, null, 2)
+      : "None.";
     const status = String(parsed.status || "").toLowerCase();
     const mismatch = String(parsed.parse_mismatch || "").toLowerCase();
 
@@ -3633,6 +3787,9 @@ ${localNotation || "Not available."}
 Local surface reconstruction:
 ${localSurfaceText}
 
+Local omitted inflection after reconstruction:
+${localOmittedInflectionText}
+
 AI echo of database parse:
 ${aiEcho || "Not provided."}
 
@@ -3682,7 +3839,23 @@ Teaching note:
 ${teachingNote || "No teaching note provided."}
 `.trim();
   }
+  function detectAIOverstatesOmittedInflection(parsed, context) {
+    if (!parsed || !context || !context.parse_packet) return "";
 
+    const omitted =
+      context.parse_packet.local_omitted_inflection_after_reconstruction;
+
+    if (!omitted) return "";
+
+    const status = String(parsed.status || "").toLowerCase();
+    const mismatch = String(parsed.parse_mismatch || "").toLowerCase();
+
+    if (status === "likely_incorrect" || mismatch === "wrong_base_or_root") {
+      return `AI may be overstating the problem. Local reconstruction suggests the base/derivational parse is plausible and mainly omits the surface inflection ${omitted.ending}.`;
+    }
+
+    return "";
+  }
   function cleanAIJSONContent(content) {
     return String(content || "")
       .replace(/^```json\s*/i, "")
