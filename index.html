@@ -1018,13 +1018,18 @@ Important guidance:
 1. Explain the exact database parse given.
 2. Say whether the parse is probably OK, probably incomplete, or questionable.
 3. If the parse omits a normal inflection such as -s, -ed, or -ing, say that simply. Do not call the whole parse wrong if the base/root is reasonable.
-4. If there are alternative parses, give one or two.
-5. If the parse is good enough for teaching, say so.
-6. If the parse should be checked by a human, say so.
-7. Keep the response short and teacher-friendly.
-8. Avoid technical overkill.
-9. Do not return JSON.
-10. Do not use markdown tables.
+4. Do not infer a suffix just because a word could take that suffix in another form.
+5. Do not suggest -ing, -ed, -s, or any other ending unless that ending is actually present in the surface word.
+6. The final s in words like this, is, as, was, his, us, and yes is not automatically a suffix.
+7. For function words such as this, the, that, these, those, a, an, and, or, but, if, of, to, in, on, for, with, as, is, was, be, he, she, it, we, you, and they, a simple parse like [(this)] is usually acceptable.
+8. If the local hint says the parse reconstructs the surface word exactly, do not invent missing suffixes.
+9. If there are alternative parses, give one or two.
+10. If the parse is good enough for teaching, say so.
+11. If the parse should be checked by a human, say so.
+12. Keep the response short and teacher-friendly.
+13. Avoid technical overkill.
+14. Do not return JSON.
+15. Do not use markdown tables.
 
 Use this format:
 
@@ -2477,7 +2482,231 @@ Please:
 
     return packet;
   }
+function simpleNorm(value) {
+  return cleanMorphValue(value)
+    .toLowerCase()
+    .replace(/[^a-z0-9]/g, "");
+}
 
+function isCommonFunctionWord(word) {
+  const w = simpleNorm(word);
+
+  return new Set([
+    "the",
+    "this",
+    "that",
+    "these",
+    "those",
+    "a",
+    "an",
+    "and",
+    "or",
+    "but",
+    "if",
+    "of",
+    "to",
+    "in",
+    "on",
+    "for",
+    "with",
+    "as",
+    "is",
+    "was",
+    "were",
+    "be",
+    "been",
+    "being",
+    "am",
+    "are",
+    "he",
+    "she",
+    "it",
+    "we",
+    "you",
+    "they",
+    "them",
+    "him",
+    "her",
+    "his",
+    "its",
+    "our",
+    "your",
+    "their",
+    "us",
+    "yes",
+    "no",
+    "not"
+  ]).has(w);
+}
+
+function getReconstructedStemFromTeacherPacket(packet) {
+  if (!packet) return null;
+
+  const notation = packet.notation_parts || {
+    prefixes: [],
+    bases: [],
+    roots: [],
+    suffixes: []
+  };
+
+  const prefixesRaw = notation.prefixes && notation.prefixes.length
+    ? notation.prefixes
+    : packet.prefixes || [];
+
+  const suffixesRaw = notation.suffixes && notation.suffixes.length
+    ? notation.suffixes
+    : packet.suffixes || [];
+
+  const baseRaw =
+    (notation.bases && notation.bases[0]) ||
+    (notation.roots && notation.roots[0]) ||
+    packet.baseword ||
+    packet.word ||
+    "";
+
+  const prefixes = uniqueSimpleList(prefixesRaw)
+    .map(cleanBareMorphPart)
+    .filter(Boolean);
+
+  const suffixes = uniqueSimpleList(suffixesRaw)
+    .map(cleanBareMorphPart)
+    .filter(Boolean);
+
+  const base = cleanBareMorphPart(baseRaw);
+
+  const reconstructed = `${prefixes.join("")}${base}${suffixes.join("")}`;
+
+  return {
+    reconstructed,
+    prefixes,
+    base,
+    suffixes
+  };
+}
+
+function isObviousSimpleBasePacket(packet) {
+  if (!packet) return false;
+
+  const word = simpleNorm(packet.word);
+  const baseword = simpleNorm(packet.baseword);
+
+  if (!word || !baseword) return false;
+  if (word !== baseword) return false;
+
+  const notation = packet.notation_parts || {
+    prefixes: [],
+    suffixes: [],
+    bases: [],
+    roots: []
+  };
+
+  const hasAffixes =
+    (packet.prefixes || []).length > 0 ||
+    (packet.suffixes || []).length > 0 ||
+    (notation.prefixes || []).length > 0 ||
+    (notation.suffixes || []).length > 0;
+
+  if (hasAffixes) return false;
+
+  const basesAndRoots = [
+    ...(notation.bases || []),
+    ...(notation.roots || [])
+  ].map(simpleNorm).filter(Boolean);
+
+  if (!basesAndRoots.length) return false;
+
+  return basesAndRoots.every(part => part === word || part === baseword);
+}
+
+function getLocalTeacherReviewIfObvious(packet) {
+  if (!packet) return "";
+
+  const word = cleanMorphValue(packet.word);
+  const parse = cleanMorphValue(packet.exact_database_parse);
+
+  if (!word || !parse) return "";
+
+  /*
+    Case 1: simple function words like this, the, is, as, etc.
+    Do not ask AI, because it may hallucinate final -s.
+  */
+  if (isCommonFunctionWord(word) && isObviousSimpleBasePacket(packet)) {
+    return `Quick judgment:
+Probably OK.
+
+Current parse means:
+The database is treating "${word}" as a simple base/root: ${parse}.
+
+Possible issue:
+No obvious issue. The final letters in "${word}" should not be treated as suffixes just because they look like one.
+
+Possible alternative(s):
+None needed for normal classroom use.
+
+Teacher note:
+"${word}" is a high-frequency function word. A simple parse like ${parse} is reasonable; do not force an affix analysis.`;
+  }
+
+  /*
+    Case 2: any parse where prefix + base + suffixes reconstructs the surface word exactly.
+    Example: outdo = out- + do.
+    Do not ask AI, because it may invent possible inflections like -ing or -ed.
+  */
+  const reconstruction = getReconstructedStemFromTeacherPacket(packet);
+
+  if (reconstruction && simpleNorm(reconstruction.reconstructed) === simpleNorm(word)) {
+    const prefixesText = reconstruction.prefixes.length
+      ? reconstruction.prefixes.map(p => `${p}-`).join(" + ")
+      : "";
+
+    const suffixesText = reconstruction.suffixes.length
+      ? " + " + reconstruction.suffixes.map(s => `-${s}`).join(" + ")
+      : "";
+
+    const baseText = reconstruction.base || packet.baseword || word;
+
+    const meaningLine = prefixesText
+      ? `${prefixesText} + ${baseText}${suffixesText}`
+      : `${baseText}${suffixesText}`;
+
+    return `Quick judgment:
+Probably OK.
+
+Current parse means:
+${meaningLine}. The database parse reconstructs the surface word "${word}".
+
+Possible issue:
+No obvious issue from the spelling or listed parts.
+
+Possible alternative(s):
+None needed for normal classroom use.
+
+Teacher note:
+This looks good enough for teaching. Do not add endings such as -ing, -ed, or -s unless they are actually present in the word being reviewed.`;
+  }
+
+  /*
+    Case 3: simple content word with no affixes.
+  */
+  if (isObviousSimpleBasePacket(packet)) {
+    return `Quick judgment:
+Probably OK.
+
+Current parse means:
+The database is treating "${word}" as a simple base/root: ${parse}.
+
+Possible issue:
+No obvious issue from the parse alone.
+
+Possible alternative(s):
+None needed unless you have a specific etymological reason to analyze it differently.
+
+Teacher note:
+For teaching purposes, this can be treated as an unsegmented base word.`;
+  }
+
+  return "";
+}
   function buildTeacherMorphReviewPrompt(packet) {
     return `Please review this BAWF morphological parse for a teacher.
 
@@ -2606,6 +2835,7 @@ ${reviewText || "No response returned."}
 
     const packet = buildTeacherMorphReviewPacket(row, key);
     const userPrompt = buildTeacherMorphReviewPrompt(packet);
+    const localTeacherReview = getLocalTeacherReviewIfObvious(packet);
 
     lastMorphCheckPrompt = userPrompt;
     lastMorphCheckText = "";
@@ -2654,7 +2884,27 @@ ${reviewText || "No response returned."}
           ]
         })
       });
+if (localTeacherReview) {
+  const finalText = formatTeacherReviewDisplay(packet, localTeacherReview);
 
+  statusEl.innerHTML =
+    `Result: <span class="morph-badge good">local teacher review</span>`;
+
+  statusEl.style.color = "#111827";
+  resultEl.textContent = finalText;
+
+  lastMorphCheckText = finalText;
+  lastMorphCheckRawJSON = "";
+  lastMorphCheckPrompt = userPrompt;
+
+  morphCheckContext.ai_review_text = finalText;
+  morphCheckContext.ai_review_json = "";
+  morphCheckContext.ai_status = "local_teacher_review";
+  morphCheckContext.ai_confidence = "high";
+  morphCheckContext.ai_suggested_parse = "";
+
+  return;
+}
       let data = null;
 
       try {
