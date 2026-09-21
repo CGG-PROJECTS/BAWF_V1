@@ -594,7 +594,6 @@
 
   <div class="visual-banner">
     <img src="https://upload.wikimedia.org/wikipedia/commons/5/59/Word_Cloud_of_Various_Prefixes.png" alt="Word cloud" class="visual-aid">
-    <img src="https://www.shichida.com.au/wp-content/uploads/2023/05/teaching-vocab-feature-1024x683.png" alt="Children" class="visual-aid">
     <img src="https://upload.wikimedia.org/wikipedia/commons/3/3b/Sign_word_matrix.png" alt="Word matrix" class="visual-aid">
     <img src="https://www.the74million.org/wp-content/uploads/2019/05/Classroom-library.jpg" alt="Children reading" class="visual-aid">
     <img src="https://as1.ftcdn.net/jpg/03/08/88/54/1000_F_308885463_Y68hiTN0ZpcqBOLPARkMawFvhFut3N7S.jpg" alt="Teacher reading" class="visual-aid">
@@ -603,14 +602,15 @@
   <div class="info-card">
     <h3>About this Database</h3>
     <ul>
-      <li>Explore English word families, compound words, basewords, roots, prefixes, suffixes, and frequency measures.</li>
-      <li>The BAWF database is designed to support vocabulary, morphology, and word-family instruction.</li>
+     <li>The BAWF Project is about developing an AI-informed resource designed to support vocabulary, morphology, and word-family instruction.</li>
+      <li>Use it to explore English word families, compound words, basewords, roots, prefixes, suffixes, and frequency measures.</li>
       <li>Morphology is the study of how words are built from meaningful units, including bases, roots, prefixes, and suffixes.</li>
-      <li>Use the curated tab to focus on familiar and high-utility word families for teaching.</li>
-      <li>Use the full database tabs to explore the broader lexicon attested in large English corpora.</li>
+      <li>Use the curated tab to focus on familiar (widely known) word families for teaching.</li>
+      <li>Use the full database tabs to explore the broader lexicon, drawn from Wiktionary and large English corpora.</li>
       <li>Use sorting, filtering, AI explanation prompts, dictionary links, etymology links, and AI parse review.</li>
-      <li>Report possible database errors or disagreements back to the project using the report tools.</li>
+      <li>AI can make mistakes!! You can check the suggested morphology using the Action buttons and report errors or disagreements.</li>
       <li>Download the raw compressed CSV files for offline use and advanced analysis.</li>
+      <li> This is an open project for the community, creative commons, you can use it, change it and do what you want with it!</li>
     </ul>
     <p style="margin-top:16px; font-style:italic;">Be inspired by joyful word learning and reading — dive in and explore!</p>
   </div>
@@ -851,7 +851,13 @@
       <h3>Core Word Information</h3>
       <ul>
         <li><strong>Word:</strong> The surface wordform.</li>
-        <li><strong>Word_frq_Zipf / Word_frq_Zipf_Recomputed:</strong> Zipf frequency score of the wordform.</li>
+        <li>
+  <strong>Word_frq_Zipf / Word_frq_Zipf_Recomputed:</strong>
+  Zipf frequency score of the wordform. This is a log10 frequency scale based on
+  frequency per billion words, not a direct per-1,000 or per-million count.
+  A Zipf score of 3 is about 1 per million, 4 is about 10 per million,
+  5 is about 100 per million, and 6 is about 1,000 per million.
+</li>
         <li><strong>FLemma:</strong> Lemma or dictionary-style headword when available.</li>
         <li><strong>GPT_Coded_Word_Parts:</strong> GPT-assisted morphological breakdown of the word.</li>
       </ul>
@@ -867,17 +873,17 @@
       <ul>
         <li><strong>GPT_Root:</strong> Main root identified by GPT-assisted morphological analysis.</li>
         <li><strong>Greek_Latin_Root_1:</strong> First identified classical root when available.</li>
-        <li><strong>Prefix_1 to Prefix_3:</strong> Prefixes identified in the word.</li>
-        <li><strong>Suffix_1 to Suffix_6:</strong> Suffixes identified in the word.</li>
+        <li><strong>Prefix_1 to Prefix_3:</strong> LLM-estimated Prefixes identified in the word.</li>
+        <li><strong>Suffix_1 to Suffix_6:</strong> LLM-edtimated Suffixes identified in the word.</li>
       </ul>
 
       <h3>Educational Measures</h3>
       <ul>
-        <li><strong>N_Morphemes_from_GPT_parse_without_inflections:</strong> Morpheme count excluding inflectional morphemes.</li>
-        <li><strong>N_Morphemes_from_GPT_parse_plus_inflections:</strong> Morpheme count including inflectional morphemes.</li>
+        <li><strong>N_Morphemes_from_GPT_parse_without_inflections:</strong> Morpheme count estimate excluding inflectional morphemes.</li>
+        <li><strong>N_Morphemes_from_GPT_parse_plus_inflections:</strong> Morpheme count estimate including inflectional morphemes.</li>
         <li><strong>Reading AoA Green et al._ 2025:</strong> Estimated reading age of acquisition.</li>
         <li><strong>Vocabulary eXpected Grade Level Flor et al._ 2024:</strong> Estimated vocabulary grade level.</li>
-        <li><strong>GPT_Familiarity Brysbaert et al._ 2024:</strong> GPT-estimated familiarity rating when available.</li>
+        <li><strong>GPT_Familiarity Brysbaert et al._ 2024:</strong> GPT-estimated familiarity rating when available (>3.5 are commonly known).</li>
       </ul>
     </div>
   </div>
