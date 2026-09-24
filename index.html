@@ -81,7 +81,13 @@
       width: 96%;
       box-shadow: 0 4px 12px rgba(0,0,0,0.05);
     }
-
+.chips {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 8px;
+  margin: 12px 0;
+}
     .info-card h3 {
       margin-top: 0;
       font-size: 1.55rem;
@@ -623,14 +629,15 @@
     <button type="button" class="key-btn" onclick="showColumnKey()">📋 Column Information Key</button>
   </div>
 
-  <div class="tabs">
-    <button type="button" class="tab-btn active" onclick="openTab('curated', this)">Curated Frequent & Familiar Word Families</button>
-    <button type="button" class="tab-btn" onclick="openTab('word-families', this)">Full Database: Word Families</button>
-    <button type="button" class="tab-btn" onclick="openTab('compounds', this)">Full Database: Compound Words</button>
-    <button type="button" class="tab-btn" onclick="openTab('adv-queries', this)">Advanced Query Builder</button>
-    <button type="button" class="tab-btn" onclick="openTab('wordcloud', this)">Word Cloud Generator</button>
-    <button type="button" class="tab-btn" onclick="openTab('llm-generator', this)">🪄 Generate AI Stories & Worksheets</button>
-  </div>
+<div class="tabs">
+  <button type="button" class="tab-btn active" onclick="openTab('curated', this)">Curated Frequent & Familiar Word Families</button>
+  <button type="button" class="tab-btn" onclick="openTab('word-families', this)">Full Database: Word Families</button>
+  <button type="button" class="tab-btn" onclick="openTab('compounds', this)">Full Database: Compound Words</button>
+  <button type="button" class="tab-btn" onclick="openTab('adv-queries', this)">Advanced Query Builder</button>
+  <button type="button" class="tab-btn" onclick="openTab('wordcloud', this)">Word Cloud Generator</button>
+  <button type="button" class="tab-btn" onclick="openTab('ai-studio', this)">✨ AI Morphology Studio</button>
+  <button type="button" class="tab-btn" onclick="openTab('llm-generator', this)">🪄 Generate AI Stories & Worksheets</button>
+</div>
 
   <div id="curated" class="tab-content active">
     <div class="info-card">
@@ -764,7 +771,185 @@
     </div>
     <canvas id="wordCanvas" width="1100" height="700"></canvas>
   </div>
+<div id="ai-studio" class="tab-content">
+  <div class="info-card" style="max-width:1400px;">
+    <h3>✨ AI Morphology Studio</h3>
+    <p>
+      Use this guided workspace to search the BAWF database in plain English, create teaching word sets,
+      save words, and send them into your prompt generator.
+    </p>
+    <p>
+      The actual AI parse review still happens through the existing <strong>🧪 Review Parse</strong>
+      button in the database tables, using your Cloudflare Worker endpoint.
+    </p>
+  </div>
 
+  <div class="db-wrap" style="max-width:1500px; margin:0 auto 20px;">
+    <h3 style="text-align:center;">Ask BAWF</h3>
+    <p style="text-align:center; color:#4b5563;">
+      Type a classroom or research request. This local helper translates common requests into database filters.
+    </p>
+
+    <div class="db-controls">
+      <input
+        id="studioAskInput"
+        class="db-input"
+        style="min-width:520px;"
+        placeholder='Try: "Find familiar Grade 4 words with suffix tion"'
+      >
+      <button type="button" class="db-btn" onclick="studioAskBAWF()">✨ Search</button>
+      <button type="button" class="db-btn secondary" onclick="studioClear()">Clear</button>
+    </div>
+
+    <div class="chips" style="display:flex; flex-wrap:wrap; justify-content:center; gap:8px; margin:12px 0;">
+      <button type="button" class="subtab-btn" onclick="studioUseExample('Find familiar words with prefix un')">prefix un-</button>
+      <button type="button" class="subtab-btn" onclick="studioUseExample('Find familiar words with prefix re')">prefix re-</button>
+      <button type="button" class="subtab-btn" onclick="studioUseExample('Find Grade 4 to 6 words with suffix tion')">suffix -tion</button>
+      <button type="button" class="subtab-btn" onclick="studioUseExample('Show common words with root spect')">root spect</button>
+      <button type="button" class="subtab-btn" onclick="studioUseExample('Find high frequency words with 3 morphemes')">3 morphemes</button>
+      <button type="button" class="subtab-btn" onclick="studioUseExample('Find compound words about animals')">animal compounds</button>
+    </div>
+
+    <div id="studioPlanBox" class="loading-note" style="display:none; text-align:left;"></div>
+  </div>
+
+  <div class="db-wrap" style="max-width:1500px; margin:0 auto 20px;">
+    <h3 style="text-align:center;">Teaching Word Set Builder</h3>
+
+    <div class="adv-grid">
+      <div class="adv-box">
+        <label>Source Database</label>
+        <select id="studioSource" class="db-select" style="width:100%;">
+          <option value="cf" selected>Curated Frequent & Familiar Families</option>
+          <option value="wf">Full Word Families</option>
+          <option value="cm">Compound Words</option>
+        </select>
+      </div>
+
+      <div class="adv-box">
+        <label>Teaching Focus</label>
+        <select id="studioFocus" class="db-select" style="width:100%;">
+          <option value="prefix">Prefix</option>
+          <option value="suffix">Suffix</option>
+          <option value="root">Greek/Latin Root</option>
+          <option value="baseword">Baseword</option>
+          <option value="topic">Topic / Keyword</option>
+          <option value="compound">Compound Words</option>
+        </select>
+      </div>
+
+      <div class="adv-box">
+        <label>Target</label>
+        <input id="studioTarget" class="db-input" style="min-width:0; width:100%;" placeholder="e.g., un, tion, spect, weather">
+      </div>
+
+      <div class="adv-box">
+        <label>Grade Range</label>
+        <select id="studioGrade" class="db-select" style="width:100%;">
+          <option value="">Any</option>
+          <option value="0-2">K–2</option>
+          <option value="3-5">3–5</option>
+          <option value="6-8">6–8</option>
+          <option value="9-12">9–12</option>
+        </select>
+      </div>
+
+      <div class="adv-box">
+        <label>Familiarity</label>
+        <select id="studioFamiliarity" class="db-select" style="width:100%;">
+          <option value="">Any</option>
+          <option value="familiar">Familiar / common</option>
+          <option value="challenge">More challenging</option>
+        </select>
+      </div>
+
+      <div class="adv-box">
+        <label>Number of Words</label>
+        <input id="studioLimit" class="db-input" style="min-width:0; width:100%;" type="number" value="30" min="5" max="500">
+      </div>
+    </div>
+
+    <div style="text-align:center;">
+      <button type="button" class="db-btn" onclick="studioBuildWordSet()">Generate Word Set</button>
+      <button type="button" class="db-btn secondary" onclick="studioCopyWordSet()">Copy Word Set</button>
+      <button type="button" class="db-btn secondary" onclick="studioSendToPromptGenerator()">Send to Prompt Generator</button>
+      <button type="button" class="db-btn secondary" onclick="studioVisualizeWordSet()">Make Word Cloud</button>
+    </div>
+
+    <p class="db-meta">
+      Found <strong id="studioCount" style="color:#1d4ed8;">0</strong> words
+    </p>
+
+    <textarea
+      id="studioOutput"
+      style="width:100%; height:330px; padding:16px; font-family:ui-monospace, monospace; font-size:1rem; border:2px solid #d1d5db; border-radius:8px; resize:vertical; background:#f9fafb;"
+      placeholder="Your AI Studio word set will appear here..."
+    ></textarea>
+  </div>
+
+  <div class="db-wrap" style="max-width:1500px; margin:0 auto 20px;">
+    <h3 style="text-align:center;">Quick Prompt Builder</h3>
+    <p style="text-align:center; color:#4b5563;">
+      Generate a classroom-ready prompt from your word set.
+    </p>
+
+    <div class="adv-grid">
+      <div class="adv-box">
+        <label>Prompt Type</label>
+        <select id="studioPromptType" class="db-select" style="width:100%;">
+          <option value="morphology mini-lesson">Morphology mini-lesson</option>
+          <option value="worksheet">Worksheet</option>
+          <option value="word sort activity">Word sort activity</option>
+          <option value="informational reading passage">Informational reading passage</option>
+          <option value="fiction story">Fiction story</option>
+          <option value="quiz with answer key">Quiz with answer key</option>
+          <option value="5-day morphology teaching sequence">5-day morphology teaching sequence</option>
+        </select>
+      </div>
+
+      <div class="adv-box">
+        <label>Grade Level</label>
+        <select id="studioPromptGrade" class="db-select" style="width:100%;">
+          <option>K–1</option>
+          <option>2–3</option>
+          <option selected>4–6</option>
+          <option>7–8</option>
+          <option>9–10</option>
+          <option>11–12</option>
+          <option>Adult / Teacher Education</option>
+        </select>
+      </div>
+
+      <div class="adv-box">
+        <label>Provider</label>
+        <select id="studioPromptProvider" class="db-select" style="width:100%;">
+          <option value="chatgpt">ChatGPT</option>
+          <option value="gemini">Gemini</option>
+          <option value="claude">Claude</option>
+        </select>
+      </div>
+    </div>
+
+    <label style="font-weight:700;">Teacher Focus / Constraints</label>
+    <textarea
+      id="studioPromptFocus"
+      style="width:100%; min-height:90px; padding:12px; border-radius:10px; border:1px solid #d1d5db;"
+      placeholder="e.g., include word sums, make it dyslexia-friendly, bold target words, include answer key"
+    ></textarea>
+
+    <div style="text-align:center; margin-top:14px;">
+      <button type="button" class="db-btn" onclick="studioGeneratePrompt()">Generate Prompt</button>
+      <button type="button" class="db-btn secondary" onclick="studioCopyPrompt()">Copy Prompt</button>
+      <button type="button" class="db-btn" onclick="studioOpenPrompt()">Open in AI</button>
+    </div>
+
+    <textarea
+      id="studioFinalPrompt"
+      style="width:100%; height:340px; margin-top:14px; padding:16px; font-family:ui-monospace, monospace; font-size:1rem; border:2px solid #d1d5db; border-radius:8px; resize:vertical; background:#f9fafb;"
+      placeholder="Your generated classroom prompt will appear here..."
+    ></textarea>
+  </div>
+</div>
   <div id="llm-generator" class="tab-content">
     <div style="max-width:1100px; margin:0 auto;">
       <h2 style="text-align:center;">🪄 AI Prompt Generator</h2>
@@ -3651,6 +3836,647 @@ Please include:
       .replace(/\n/g, "\\n")
       .replace(/\r/g, "");
   }
+
+let studioLastRows = [];
+
+function studioNorm(value) {
+  return String(value ?? "")
+    .toLowerCase()
+    .replace(/�+/g, "")
+    .replace(/\xa0/g, " ")
+    .trim();
+}
+
+function studioClean(value) {
+  return String(value ?? "")
+    .replace(/�+/g, "")
+    .replace(/\xa0/g, " ")
+    .trim();
+}
+
+function studioGetWord(row) {
+  return studioClean(
+    row.Word ||
+    row.FLemma ||
+    row.Baseword ||
+    row.Compound ||
+    row.Compound_Word ||
+    ""
+  );
+}
+
+function studioGetBase(row) {
+  return studioClean(row.Baseword || row.Baseword_1 || "");
+}
+
+function studioGetZipf(row) {
+  const n = Number(
+    row.Word_frq_Zipf_Recomputed ||
+    row.Word_frq_Zipf ||
+    row.Baseword_frq_Zipf ||
+    0
+  );
+  return Number.isFinite(n) ? n : 0;
+}
+
+function studioFindColumn(headers, hint) {
+  const h = studioNorm(hint);
+  return headers.find(c => studioNorm(c).includes(h));
+}
+
+function studioUseExample(text) {
+  $("studioAskInput").value = text;
+  studioAskBAWF();
+}
+
+function studioInterpretQuery(query) {
+  const q = studioNorm(query);
+
+  const plan = {
+    dataset: q.includes("compound") ? "cm" : "cf",
+    filters: [],
+    global: "",
+    sort: null,
+    explanation: ""
+  };
+
+  if (q.includes("full database") || q.includes("rare") || q.includes("all words")) {
+    plan.dataset = "wf";
+  }
+
+  if (q.includes("compound")) {
+    plan.dataset = "cm";
+  }
+
+  const prefix =
+    q.match(/prefix\s+[-]?([a-z]+)/) ||
+    q.match(/\b([a-z]+)-\s*prefix/);
+
+  if (prefix) {
+    plan.filters.push({
+      type: "affixAny",
+      columns: ["Prefix_1", "Prefix_2", "Prefix_3"],
+      value: prefix[1]
+    });
+  }
+
+  const suffix =
+    q.match(/suffix\s+[-]?([a-z]+)/) ||
+    q.match(/ending\s+[-]?([a-z]+)/) ||
+    q.match(/-([a-z]+)\b/);
+
+  if (suffix && !q.includes("prefix")) {
+    plan.filters.push({
+      type: "affixAny",
+      columns: ["Suffix_1", "Suffix_2", "Suffix_3", "Suffix_4", "Suffix_5", "Suffix_6"],
+      value: suffix[1]
+    });
+  }
+
+  const root = q.match(/root\s+([a-z]+)/);
+  if (root) {
+    plan.filters.push({
+      type: "anyColumn",
+      columns: ["GPT_Root", "Greek_Latin_Root_1", "Greek_Latin_Root"],
+      value: root[1]
+    });
+  }
+
+  const base =
+    q.match(/baseword\s+([a-z]+)/) ||
+    q.match(/base\s+([a-z]+)/);
+
+  if (base) {
+    plan.filters.push({
+      type: "contains",
+      column: "Baseword",
+      value: base[1]
+    });
+  }
+
+  const morphemes = q.match(/(\d+)\s+morpheme/);
+  if (morphemes) {
+    plan.filters.push({
+      type: "numberEquals",
+      column: MORPHEME_COL_PLUS_INFLECTIONS,
+      value: Number(morphemes[1])
+    });
+  }
+
+  const gradeRange = q.match(/grade\s*(\d+)\s*(?:to|-|–)\s*(\d+)/);
+  const singleGrade = q.match(/grade\s*(\d+)/);
+
+  if (gradeRange) {
+    plan.filters.push({
+      type: "range",
+      column: "Vocabulary eXpected Grade Level Flor et al._ 2024",
+      min: Number(gradeRange[1]),
+      max: Number(gradeRange[2])
+    });
+  } else if (singleGrade) {
+    const g = Number(singleGrade[1]);
+    plan.filters.push({
+      type: "range",
+      column: "Vocabulary eXpected Grade Level Flor et al._ 2024",
+      min: Math.max(0, g - 1),
+      max: g + 1
+    });
+  }
+
+  if (q.includes("familiar") || q.includes("common")) {
+    plan.filters.push({
+      type: "min",
+      column: "GPT_Familiarity Brysbaert et al._ 2024",
+      value: 3.5
+    });
+  }
+
+  if (q.includes("high frequency") || q.includes("frequent")) {
+    plan.filters.push({
+      type: "min",
+      column: "Word_frq_Zipf_Recomputed",
+      value: 3.5
+    });
+    plan.sort = {
+      column: "Word_frq_Zipf_Recomputed",
+      direction: "desc"
+    };
+  }
+
+  const topics = [
+    "science",
+    "weather",
+    "animal",
+    "animals",
+    "school",
+    "ecosystem",
+    "ecosystems",
+    "space",
+    "math",
+    "history",
+    "reading"
+  ];
+
+  const topic = topics.find(t => q.includes(t));
+  if (topic) {
+    plan.global = topic
+      .replace("animals", "animal")
+      .replace("ecosystems", "ecosystem");
+  }
+
+  plan.explanation = `Dataset: ${DATASETS[plan.dataset].name}. Filters: ${plan.filters.length || "none"}.`;
+
+  return plan;
+}
+
+async function studioAskBAWF() {
+  const query = studioClean($("studioAskInput").value);
+
+  if (!query) {
+    alert("Please type a search request first.");
+    return;
+  }
+
+  const plan = studioInterpretQuery(query);
+
+  $("studioPlanBox").style.display = "block";
+  $("studioPlanBox").innerHTML = `
+    <strong>I interpreted your request as:</strong><br>
+    Dataset: <strong>${escapeHTML(DATASETS[plan.dataset].name)}</strong><br>
+    Text search: <strong>${escapeHTML(plan.global || "none")}</strong><br>
+    Filters:<br>
+    <pre style="white-space:pre-wrap; margin:8px 0 0;">${escapeHTML(JSON.stringify(plan.filters, null, 2))}</pre>
+  `;
+
+  await studioApplyPlanToMainTable(plan);
+}
+
+async function studioApplyPlanToMainTable(plan) {
+  activeKey = plan.dataset;
+  await initDataset(activeKey);
+
+  const config = DATASETS[activeKey];
+  if (!config.loaded) {
+    alert("Dataset did not load yet. Try again in a moment.");
+    return;
+  }
+
+  const searchEl = $(`${activeKey}GlobalSearch`);
+  if (searchEl) searchEl.value = plan.global || "";
+
+  columnFilters[activeKey] = {};
+
+  config.filtered = config.data.filter(row => studioRowMatchesPlan(row, plan, config.all));
+
+  if (plan.sort) {
+    const sortCol = config.all.includes(plan.sort.column)
+      ? plan.sort.column
+      : studioFindColumn(config.all, "Zipf");
+
+    if (sortCol) {
+      config.filtered.sort((a, b) => {
+        const an = Number(a[sortCol]);
+        const bn = Number(b[sortCol]);
+        return plan.sort.direction === "desc" ? bn - an : an - bn;
+      });
+    }
+  }
+
+  config.page = 1;
+
+  const teachingCols = [
+    "Word",
+    "Baseword",
+    "Word_frq_Zipf_Recomputed",
+    "Word_frq_Zipf",
+    "Baseword_frq_Zipf",
+    "Baseword_Family_Size",
+    "GPT_Coded_Word_Parts",
+    "GPT_Root",
+    "Greek_Latin_Root_1",
+    "Prefix_1",
+    "Prefix_2",
+    "Prefix_3",
+    "Suffix_1",
+    "Suffix_2",
+    "Suffix_3",
+    MORPHEME_COL_PLUS_INFLECTIONS,
+    "GPT_Familiarity Brysbaert et al._ 2024",
+    "Vocabulary eXpected Grade Level Flor et al._ 2024"
+  ];
+
+  const visible = teachingCols.filter(c => config.all.includes(c));
+  if (visible.length) {
+    config.visible = visible;
+    buildDropdowns(activeKey);
+  }
+
+  studioLastRows = config.filtered.slice(0, 100);
+
+  renderTable(activeKey);
+  studioOpenDatasetTab(activeKey);
+
+  showCopyToast(`Found ${config.filtered.length.toLocaleString()} rows`);
+}
+
+function studioOpenDatasetTab(key) {
+  let tabName = "curated";
+  if (key === "wf") tabName = "word-families";
+  if (key === "cm" || key === "cs") tabName = "compounds";
+
+  $$(".tab-content").forEach(el => el.classList.remove("active"));
+  $$(".tab-btn").forEach(el => el.classList.remove("active"));
+
+  const tab = $(tabName);
+  if (tab) tab.classList.add("active");
+
+  const buttons = $$(".tab-btn");
+  for (const btn of buttons) {
+    if (
+      btn.textContent.includes("Curated") && tabName === "curated" ||
+      btn.textContent.includes("Word Families") && tabName === "word-families" ||
+      btn.textContent.includes("Compound") && tabName === "compounds"
+    ) {
+      btn.classList.add("active");
+      break;
+    }
+  }
+
+  if (key === "cs") {
+    const csBtn = document.querySelector("[onclick*='comp-stats']");
+    if (csBtn) openCompoundSubTab("comp-stats", csBtn);
+  }
+
+  if (key === "cm") {
+    const cmBtn = document.querySelector("[onclick*='comp-main']");
+    if (cmBtn) openCompoundSubTab("comp-main", cmBtn);
+  }
+}
+
+function studioRowMatchesPlan(row, plan, headers) {
+  if (plan.global) {
+    const joined = Object.values(row).join(" ").toLowerCase();
+    if (!joined.includes(studioNorm(plan.global))) return false;
+  }
+
+  for (const filter of plan.filters) {
+    if (!studioFilterPasses(row, filter, headers)) return false;
+  }
+
+  return true;
+}
+
+function studioFilterPasses(row, filter, headers) {
+  if (filter.type === "affixAny" || filter.type === "anyColumn") {
+    return filter.columns.some(col => {
+      if (!headers.includes(col)) return false;
+      return studioNorm(row[col]).includes(studioNorm(filter.value));
+    });
+  }
+
+  let col = filter.column;
+
+  if (!headers.includes(col)) {
+    if (col.includes("Zipf")) col = studioFindColumn(headers, "Zipf");
+    else if (col.includes("Grade")) col = studioFindColumn(headers, "grade");
+    else if (col.includes("Familiarity")) col = studioFindColumn(headers, "familiarity");
+    else if (col.includes("Morphemes")) col = studioFindColumn(headers, "morpheme");
+  }
+
+  if (!col) return true;
+
+  const raw = studioClean(row[col]);
+
+  if (filter.type === "contains") {
+    return studioNorm(raw).includes(studioNorm(filter.value));
+  }
+
+  if (filter.type === "numberEquals") {
+    return Number(raw) === Number(filter.value);
+  }
+
+  if (filter.type === "min") {
+    return Number(raw) >= Number(filter.value);
+  }
+
+  if (filter.type === "max") {
+    return Number(raw) <= Number(filter.value);
+  }
+
+  if (filter.type === "range") {
+    const n = Number(raw);
+    if (!Number.isFinite(n)) return false;
+    if (filter.min !== null && filter.min !== undefined && n < filter.min) return false;
+    if (filter.max !== null && filter.max !== undefined && n > filter.max) return false;
+    return true;
+  }
+
+  return true;
+}
+
+async function studioBuildWordSet() {
+  const source = $("studioSource").value;
+  const focus = $("studioFocus").value;
+  const target = studioClean($("studioTarget").value);
+  const grade = $("studioGrade").value;
+  const familiarity = $("studioFamiliarity").value;
+  const limit = Number($("studioLimit").value) || 30;
+
+  let plan = {
+    dataset: source,
+    filters: [],
+    global: "",
+    sort: {
+      column: "Word_frq_Zipf_Recomputed",
+      direction: "desc"
+    }
+  };
+
+  if (focus === "compound") {
+    plan.dataset = "cm";
+  }
+
+  if (focus === "prefix" && target) {
+    plan.filters.push({
+      type: "affixAny",
+      columns: ["Prefix_1", "Prefix_2", "Prefix_3"],
+      value: target
+    });
+  }
+
+  if (focus === "suffix" && target) {
+    plan.filters.push({
+      type: "affixAny",
+      columns: ["Suffix_1", "Suffix_2", "Suffix_3", "Suffix_4", "Suffix_5", "Suffix_6"],
+      value: target
+    });
+  }
+
+  if (focus === "root" && target) {
+    plan.filters.push({
+      type: "anyColumn",
+      columns: ["GPT_Root", "Greek_Latin_Root_1", "Greek_Latin_Root"],
+      value: target
+    });
+  }
+
+  if (focus === "baseword" && target) {
+    plan.filters.push({
+      type: "contains",
+      column: "Baseword",
+      value: target
+    });
+  }
+
+  if (focus === "topic" && target) {
+    plan.global = target;
+  }
+
+  if (grade) {
+    const parts = grade.split("-").map(Number);
+    plan.filters.push({
+      type: "range",
+      column: "Vocabulary eXpected Grade Level Flor et al._ 2024",
+      min: parts[0],
+      max: parts[1]
+    });
+  }
+
+  if (familiarity === "familiar") {
+    plan.filters.push({
+      type: "min",
+      column: "GPT_Familiarity Brysbaert et al._ 2024",
+      value: 3.5
+    });
+  }
+
+  if (familiarity === "challenge") {
+    plan.filters.push({
+      type: "max",
+      column: "GPT_Familiarity Brysbaert et al._ 2024",
+      value: 3.49
+    });
+  }
+
+  await initDataset(plan.dataset);
+
+  const config = DATASETS[plan.dataset];
+
+  let rows = config.data.filter(row => studioRowMatchesPlan(row, plan, config.all));
+
+  rows.sort((a, b) => studioGetZipf(b) - studioGetZipf(a));
+  rows = rows.slice(0, limit);
+
+  studioLastRows = rows;
+
+  const lines = rows.map(row => {
+    const word = studioGetWord(row);
+    const base = studioGetBase(row);
+    const parts = studioClean(row.GPT_Coded_Word_Parts || row.GPT_CODES);
+    return [word, base, parts].filter(Boolean).join("\t");
+  });
+
+  $("studioCount").textContent = rows.length.toLocaleString();
+  $("studioOutput").value = lines.join("\n");
+
+  showCopyToast(`Generated ${rows.length} words`);
+}
+
+function studioCopyWordSet() {
+  const text = $("studioOutput").value.trim();
+
+  if (!text) {
+    alert("No word set to copy.");
+    return;
+  }
+
+  copyText(text).then(() => showCopyToast("Word set copied"));
+}
+
+function studioSendToPromptGenerator() {
+  const text = $("studioOutput").value.trim();
+
+  if (!text) {
+    alert("Generate a word set first.");
+    return;
+  }
+
+  const wordsOnly = text
+    .split(/\r?\n/)
+    .map(line => line.split(/\t/)[0])
+    .filter(Boolean)
+    .join("\n");
+
+  const llmInput = $("llmInput");
+  if (llmInput) {
+    llmInput.value = wordsOnly;
+  }
+
+  showCopyToast("Sent words to AI story/worksheet generator");
+
+  openTab("llm-generator", document.querySelector("[onclick*='llm-generator']"));
+}
+
+function studioGeneratePrompt() {
+  const wordText = $("studioOutput").value.trim();
+
+  if (!wordText) {
+    alert("Generate a word set first.");
+    return;
+  }
+
+  const wordsOnly = wordText
+    .split(/\r?\n/)
+    .map(line => line.split(/\t/)[0])
+    .filter(Boolean)
+    .join("\n");
+
+  const type = $("studioPromptType").value;
+  const grade = $("studioPromptGrade").value;
+  const focus = $("studioPromptFocus").value.trim();
+
+  const prompt = `You are an expert reading specialist, morphology educator, and curriculum designer.
+
+Create a classroom-ready ${type} for grade level: ${grade}.
+
+Target words:
+${wordsOnly}
+
+Teacher focus and constraints:
+${focus || "Focus on morphology, word families, meanings, and student-friendly explanations."}
+
+Requirements:
+1. Use the target words accurately.
+2. Explain important bases, roots, prefixes, suffixes, or compound structures.
+3. Include student-friendly definitions.
+4. Include word sums or word-part explanations when appropriate.
+5. Include a short teacher-facing note explaining why these words work well together.
+6. Include student practice.
+7. Include an answer key when relevant.
+8. Avoid overclaiming etymology if uncertain.
+9. Mark uncertain morphology as worth checking.
+
+Make the output polished, useful, and ready to paste into a lesson document.`;
+
+  $("studioFinalPrompt").value = prompt;
+  showCopyToast("Prompt generated");
+}
+
+function studioCopyPrompt() {
+  const text = $("studioFinalPrompt").value.trim();
+
+  if (!text) {
+    alert("Generate a prompt first.");
+    return;
+  }
+
+  copyText(text).then(() => showCopyToast("Prompt copied"));
+}
+
+function studioOpenPrompt() {
+  const text = $("studioFinalPrompt").value.trim();
+
+  if (!text) {
+    alert("Generate a prompt first.");
+    return;
+  }
+
+  copyText(text).catch(() => {});
+
+  const provider = $("studioPromptProvider").value;
+  const encoded = encodeURIComponent(text);
+
+  let url = `https://chatgpt.com/?q=${encoded}`;
+
+  if (provider === "gemini") {
+    url = `https://gemini.google.com/app?prompt=${encoded}`;
+  }
+
+  if (provider === "claude") {
+    url = "https://claude.ai/new";
+  }
+
+  window.open(url, "_blank", "noopener");
+}
+
+function studioVisualizeWordSet() {
+  const text = $("studioOutput").value.trim();
+
+  if (!text) {
+    alert("Generate a word set first.");
+    return;
+  }
+
+  const pairs = text
+    .split(/\r?\n/)
+    .map(line => line.split(/\t/)[0])
+    .filter(Boolean)
+    .map((word, i) => [word, Math.max(10, 80 - i)]);
+
+  const wordInput = $("wordInput");
+  if (wordInput) {
+    wordInput.value = pairs.map(x => `${x[0]} ${x[1]}`).join("\n");
+  }
+
+  openTab("wordcloud", document.querySelector("[onclick*='wordcloud']"));
+
+  setTimeout(() => {
+    if (typeof generateWordCloud === "function") {
+      generateWordCloud();
+    }
+  }, 150);
+}
+
+function studioClear() {
+  $("studioAskInput").value = "";
+  $("studioPlanBox").style.display = "none";
+  $("studioOutput").value = "";
+  $("studioCount").textContent = "0";
+  $("studioFinalPrompt").value = "";
+  studioLastRows = [];
+}
+
+    
 </script>
 </body>
 </html>
