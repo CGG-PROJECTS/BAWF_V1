@@ -17,7 +17,44 @@
       background: linear-gradient(to bottom, #fdfdfd, #f8f8f8);
       color: #111827;
     }
+.studio-plan-card {
+  background: #eff6ff;
+  border: 1px solid #bfdbfe;
+  border-radius: 14px;
+  padding: 18px 20px;
+  color: #1e3a8a;
+  max-width: 1100px;
+  margin: 14px auto;
+  font-size: 1.05rem;
+  line-height: 1.5;
+}
 
+.studio-plan-card h3 {
+  margin-top: 0;
+  color: #1d4ed8;
+}
+
+.studio-plan-card ul {
+  margin-top: 8px;
+  padding-left: 24px;
+}
+
+.studio-plan-card li {
+  margin-bottom: 6px;
+}
+
+.studio-plan-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-top: 14px;
+}
+
+.studio-small-note {
+  color: #4b5563;
+  font-size: 0.95rem;
+  margin-top: 10px;
+}
     .container {
       max-width: 2800px;
       margin: 30px auto;
@@ -778,10 +815,7 @@
       Use this guided workspace to search the BAWF database in plain English, create teaching word sets,
       save words, and send them into your prompt generator.
     </p>
-    <p>
-      The actual AI parse review still happens through the existing <strong>🧪 Review Parse</strong>
-      button in the database tables, using your Cloudflare Worker endpoint.
-    </p>
+
   </div>
 
   <div class="db-wrap" style="max-width:1500px; margin:0 auto 20px;">
@@ -4041,24 +4075,83 @@ async function studioAskBAWF() {
 
   $("studioPlanBox").style.display = "block";
   $("studioPlanBox").innerHTML = `
-    <strong>I interpreted your request as:</strong><br>
-    Dataset: <strong>${escapeHTML(DATASETS[plan.dataset].name)}</strong><br>
-    Text search: <strong>${escapeHTML(plan.global || "none")}</strong><br>
-    Filters:<br>
-    <pre style="white-space:pre-wrap; margin:8px 0 0;">${escapeHTML(JSON.stringify(plan.filters, null, 2))}</pre>
+    <div class="studio-plan-card">
+      <h3>Thinking...</h3>
+      <p>I am translating your request into database filters.</p>
+    </div>
   `;
 
-  await studioApplyPlanToMainTable(plan);
+  const resultCount = await studioApplyPlanToMainTable(plan, { openResults: false });
+
+  const friendlyFilters = studioDescribePlan(plan);
+
+  $("studioPlanBox").innerHTML = `
+    <div class="studio-plan-card">
+      <h3>✨ I understood your request</h3>
+
+      <p>
+        You asked:
+        <strong>${escapeHTML(query)}</strong>
+      </p>
+
+      <p>
+        I searched in:
+        <strong>${escapeHTML(DATASETS[plan.dataset].name)}</strong>
+      </p>
+
+      <p>
+        I looked for:
+      </p>
+
+      <ul>
+        ${friendlyFilters.map(item => `<li>${item}</li>`).join("")}
+      </ul>
+
+      <p>
+        I found:
+        <strong>${Number(resultCount || 0).toLocaleString()}</strong>
+        matching rows.
+      </p>
+
+      <div class="studio-plan-actions">
+        <button type="button" class="db-btn" onclick="studioOpenDatasetTab(activeKey)">
+          Open Results Table
+        </button>
+
+        <button type="button" class="db-btn secondary" onclick="studioPutTopResultsInWordSet()">
+          Put Top Results in Word Set
+        </button>
+
+        <button type="button" class="db-btn secondary" onclick="studioCopyCurrentResultWords()">
+          Copy Top Words
+        </button>
+
+        <button type="button" class="db-btn secondary" onclick="studioShowTechnicalPlan()">
+          Show Technical Filters
+        </button>
+      </div>
+
+      <div class="studio-small-note">
+        Tip: the results table still has the full action buttons, including
+        <strong>🧪 Review Parse</strong>, which uses your Cloudflare AI endpoint.
+      </div>
+    </div>
+  `;
+
+  window.studioLastPlan = plan;
 }
 
-async function studioApplyPlanToMainTable(plan) {
+async function studioApplyPlanToMainTable(plan, options = {}) {
+  const openResults = options.openResults !== false;
+
   activeKey = plan.dataset;
   await initDataset(activeKey);
 
   const config = DATASETS[activeKey];
+
   if (!config.loaded) {
     alert("Dataset did not load yet. Try again in a moment.");
-    return;
+    return 0;
   }
 
   const searchEl = $(`${activeKey}GlobalSearch`);
@@ -4106,6 +4199,7 @@ async function studioApplyPlanToMainTable(plan) {
   ];
 
   const visible = teachingCols.filter(c => config.all.includes(c));
+
   if (visible.length) {
     config.visible = visible;
     buildDropdowns(activeKey);
@@ -4114,12 +4208,169 @@ async function studioApplyPlanToMainTable(plan) {
   studioLastRows = config.filtered.slice(0, 100);
 
   renderTable(activeKey);
-  studioOpenDatasetTab(activeKey);
 
-  showCopyToast(`Found ${config.filtered.length.toLocaleString()} rows`);
+  if (openResults) {
+    studioOpenDatasetTab(activeKey);
+  }
+
+  return config.filtered.length;
 }
 
-function studioOpenDatasetTab(key) {
+    function studioDescribePlan(plan) {
+  const items = [];
+
+  if (plan.global) {
+    items.push(`words or rows containing the topic/keyword <strong>${escapeHTML(plan.global)}</strong>`);
+  }
+
+  for (const filter of plan.filters) {
+    items.push(studioDescribeFilter(filter));
+  }
+
+  if (plan.sort) {
+    items.push(`results sorted by <strong>${escapeHTML(plan.sort.column)}</strong>, highest first`);
+  }
+
+  if (!items.length) {
+    items.push("a broad search with no special filters");
+  }
+
+  return items;
+}
+
+function studioDescribeFilter(filter) {
+  if (filter.type === "affixAny") {
+    const cols = filter.columns.join(" ");
+    const value = escapeHTML(filter.value);
+
+    if (cols.includes("Prefix")) {
+      return `words with the prefix <strong>${value}-</strong>`;
+    }
+
+    if (cols.includes("Suffix")) {
+      return `words with the suffix <strong>-${value}</strong>`;
+    }
+
+    return `words with <strong>${value}</strong> in one of several affix columns`;
+  }
+
+  if (filter.type === "anyColumn") {
+    return `words connected to the root <strong>${escapeHTML(filter.value)}</strong>`;
+  }
+
+  if (filter.type === "contains") {
+    if (filter.column === "Baseword") {
+      return `words whose baseword contains <strong>${escapeHTML(filter.value)}</strong>`;
+    }
+
+    return `rows where <strong>${escapeHTML(filter.column)}</strong> contains <strong>${escapeHTML(filter.value)}</strong>`;
+  }
+
+  if (filter.type === "numberEquals") {
+    if (String(filter.column).includes("Morpheme")) {
+      return `words with exactly <strong>${escapeHTML(filter.value)}</strong> morphemes`;
+    }
+
+    return `rows where <strong>${escapeHTML(filter.column)}</strong> equals <strong>${escapeHTML(filter.value)}</strong>`;
+  }
+
+  if (filter.type === "min") {
+    if (String(filter.column).includes("Familiarity")) {
+      return `familiar/common words, with familiarity at least <strong>${escapeHTML(filter.value)}</strong>`;
+    }
+
+    if (String(filter.column).includes("Zipf")) {
+      return `higher-frequency words, with Zipf frequency at least <strong>${escapeHTML(filter.value)}</strong>`;
+    }
+
+    return `<strong>${escapeHTML(filter.column)}</strong> at least <strong>${escapeHTML(filter.value)}</strong>`;
+  }
+
+  if (filter.type === "max") {
+    if (String(filter.column).includes("Familiarity")) {
+      return `more challenging or less familiar words`;
+    }
+
+    return `<strong>${escapeHTML(filter.column)}</strong> no more than <strong>${escapeHTML(filter.value)}</strong>`;
+  }
+
+  if (filter.type === "range") {
+    if (String(filter.column).includes("Grade")) {
+      return `estimated grade level from <strong>${escapeHTML(filter.min)}</strong> to <strong>${escapeHTML(filter.max)}</strong>`;
+    }
+
+    return `<strong>${escapeHTML(filter.column)}</strong> between <strong>${escapeHTML(filter.min)}</strong> and <strong>${escapeHTML(filter.max)}</strong>`;
+  }
+
+  return `a database filter on <strong>${escapeHTML(filter.column || "unknown column")}</strong>`;
+}
+
+function studioPutTopResultsInWordSet() {
+  const config = DATASETS[activeKey];
+
+  if (!config || !config.filtered.length) {
+    alert("No current results to use.");
+    return;
+  }
+
+  const limit = Number($("studioLimit")?.value) || 30;
+  const rows = config.filtered.slice(0, limit);
+
+  studioLastRows = rows;
+
+  const lines = rows.map(row => {
+    const word = studioGetWord(row);
+    const base = studioGetBase(row);
+    const parts = studioClean(row.GPT_Coded_Word_Parts || row.GPT_CODES);
+    return [word, base, parts].filter(Boolean).join("\t");
+  });
+
+  $("studioCount").textContent = rows.length.toLocaleString();
+  $("studioOutput").value = lines.join("\n");
+
+  showCopyToast(`Put top ${rows.length} results into the word set`);
+}
+
+function studioCopyCurrentResultWords() {
+  const config = DATASETS[activeKey];
+
+  if (!config || !config.filtered.length) {
+    alert("No current results to copy.");
+    return;
+  }
+
+  const words = config.filtered
+    .slice(0, 50)
+    .map(row => studioGetWord(row))
+    .filter(Boolean)
+    .join("\n");
+
+  if (!words) {
+    alert("No words found in the current results.");
+    return;
+  }
+
+  copyText(words).then(() => showCopyToast("Top words copied"));
+}
+
+function studioShowTechnicalPlan() {
+  const plan = window.studioLastPlan;
+
+  if (!plan) {
+    alert("No technical plan available.");
+    return;
+  }
+
+  $("studioPlanBox").innerHTML += `
+    <div class="studio-plan-card" style="background:#f8fafc; border-color:#e5e7eb; color:#111827;">
+      <h3>Technical filter plan</h3>
+      <p>This is mainly for debugging or advanced users.</p>
+      <pre style="white-space:pre-wrap; background:#111827; color:#f9fafb; padding:12px; border-radius:10px; overflow:auto;">${escapeHTML(JSON.stringify(plan, null, 2))}</pre>
+    </div>
+  `;
+}
+    
+    function studioOpenDatasetTab(key) {
   let tabName = "curated";
   if (key === "wf") tabName = "word-families";
   if (key === "cm" || key === "cs") tabName = "compounds";
