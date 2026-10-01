@@ -1297,11 +1297,12 @@
       <ul>
         <li><strong>Word:</strong> The surface wordform.</li>
         <li>
-  <strong>Word_frq_Zipf / Word_frq_Zipf_Recomputed:</strong>
-  Zipf frequency score of the wordform. This is a log10 frequency scale based on
-  frequency per billion words, not a direct per-1,000 or per-million count.
-  A Zipf score of 3 is about 1 per million, 4 is about 10 per million,
-  5 is about 100 per million, and 6 is about 1,000 per million.
+<strong>Word_frq_Zipf / Word_frq_Zipf_Recomputed:</strong>
+Zipf frequency score of the wordform. This is a log10 frequency scale based on
+frequency per billion words. In this app, estimated frequency per million words
+is computed as 10^(Zipf - 3). A Zipf score of 3 is about 1 per million,
+4 is about 10 per million, 5 is about 100 per million, 6 is about 1,000 per million,
+and 7 is about 10,000 per million.
 </li>
         <li><strong>FLemma:</strong> Lemma or dictionary-style headword when available.</li>
         <li><strong>GPT_Coded_Word_Parts:</strong> GPT-assisted morphological breakdown of the word.</li>
@@ -3821,21 +3822,24 @@ function getFrequencyRawColumn(config) {
   return "";
 }
 
-function estimateFrequencyFromRow(row, config) {
-  const rawCol = getFrequencyRawColumn(config);
+function estimateFrequencyPerMillionFromRow(row, config) {
+  const zipfCol = getWordZipfColumn(config);
+  const zipf = Number(row[zipfCol]);
 
-  if (rawCol) {
-    const raw = Number(row[rawCol]);
-    if (Number.isFinite(raw) && raw > 0) {
-      return Math.round(raw);
-    }
+  if (Number.isFinite(zipf) && zipf > 0) {
+    // Zipf = log10(frequency per billion words)
+    // Therefore frequency per million words = 10^(Zipf - 3)
+    return Math.round(Math.pow(10, zipf - 3));
   }
+
+  return 1;
+}
 
   const zipfCol = getWordZipfColumn(config);
   const zipf = Number(row[zipfCol]);
 
   if (Number.isFinite(zipf) && zipf > 0) {
-    return Math.round(Math.pow(10, zipf));
+    return Math.round(Math.pow(10, zipf -3));
   }
 
   return 1;
@@ -3924,7 +3928,7 @@ async function generateFrequencyFamilyList() {
     const word = getWordForFamilyList(row);
     if (!word) continue;
 
-    const freq = estimateFrequencyFromRow(row, config);
+    const freq = estimateFrequencyPerMillionFromRow(row, config);
 
     if (!groups.has(headword)) {
       groups.set(headword, {
@@ -3967,12 +3971,12 @@ async function generateFrequencyFamilyList() {
       ? `, ... +${formsArray.length - 40} more`
       : "";
 
-    return {
-      Headword: group.headword,
-      "Related forms": relatedForms + extraForms,
-      "Total frequency estimate": totalFrequency,
-      "Family size": formsArray.length
-    };
+return {
+  Headword: group.headword,
+  "Related forms": relatedForms + extraForms,
+  "Estimated frequency per million words": totalFrequency,
+  "Family size": formsArray.length
+};
   });
 
   if (!includeSingletons) {
@@ -3980,9 +3984,9 @@ async function generateFrequencyFamilyList() {
   }
 
   rows.sort((a, b) => {
-    if (b["Total frequency estimate"] !== a["Total frequency estimate"]) {
-      return b["Total frequency estimate"] - a["Total frequency estimate"];
-    }
+if (b["Estimated frequency per million words"] !== a["Estimated frequency per million words"]) {
+  return b["Estimated frequency per million words"] - a["Estimated frequency per million words"];
+}
     return a.Headword.localeCompare(b.Headword);
   });
 
@@ -3993,7 +3997,7 @@ async function generateFrequencyFamilyList() {
       Rank: rank,
       Headword: row.Headword,
       "Related forms": row["Related forms"],
-      "Total frequency estimate": row["Total frequency estimate"],
+      "Estimated frequency per million words": row["Estimated frequency per million words"],
       "Family size": row["Family size"]
     };
   });
@@ -4002,21 +4006,21 @@ async function generateFrequencyFamilyList() {
 
   $("familyListCount").textContent = rows.length.toLocaleString();
 
-  const tsvHeader = [
-    "List",
-    "Rank",
-    "Headword",
-    "Related forms",
-    "Total frequency estimate",
-    "Family size"
-  ].join("\t");
+const tsvHeader = [
+  "List",
+  "Rank",
+  "Headword",
+  "Related forms",
+  "Estimated frequency per million words",
+  "Family size"
+].join("\t");
 
   const tsvRows = rows.map(row => [
     row.List,
     row.Rank,
     row.Headword,
     row["Related forms"],
-    row["Total frequency estimate"],
+    rrow["Estimated frequency per million words"],
     row["Family size"]
   ].join("\t"));
 
@@ -4049,7 +4053,7 @@ function renderFrequencyFamilyPreview(rows) {
             <th>Rank</th>
             <th>Headword</th>
             <th>Related forms</th>
-            <th>Total frequency estimate</th>
+            <th>Estimated frequency per million words</th>
             <th>Family size</th>
           </tr>
         </thead>
@@ -4063,7 +4067,7 @@ function renderFrequencyFamilyPreview(rows) {
         <td>${escapeHTML(row.Rank)}</td>
         <td>${escapeHTML(row.Headword)}</td>
         <td class="long-text">${escapeHTML(row["Related forms"])}</td>
-        <td>${escapeHTML(row["Total frequency estimate"])}</td>
+        <td>${escapeHTML(row["Estimated frequency per million words"])}</td>
         <td>${escapeHTML(row["Family size"])}</td>
       </tr>
     `;
