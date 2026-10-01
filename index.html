@@ -3825,8 +3825,6 @@ function estimateFrequencyPerMillionFromRow(row, config) {
   const zipf = Number(row[zipfCol]);
 
   if (Number.isFinite(zipf) && zipf > 0) {
-    // Zipf = log10(frequency per billion words)
-    // Frequency per million words = 10^(Zipf - 3)
     return Math.round(Math.pow(10, zipf - 3));
   }
 
@@ -4013,14 +4011,14 @@ const tsvHeader = [
   "Family size"
 ].join("\t");
 
-  const tsvRows = rows.map(row => [
-    row.List,
-    row.Rank,
-    row.Headword,
-    row["Related forms"],
-    row["Estimated frequency per million words"],
-    row["Family size"]
-  ].join("\t"));
+const tsvRows = rows.map(row => [
+  row.List,
+  row.Rank,
+  row.Headword,
+  row["Related forms"],
+  row["Estimated frequency per million words"],
+  row["Family size"]
+].join("\t"));
 
   $("familyListOutput").value = [tsvHeader, ...tsvRows].join("\n");
 
