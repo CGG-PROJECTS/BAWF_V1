@@ -1899,7 +1899,9 @@ if (key === "wf") {
         }
 
         const response = await fetch(config.file);
-        if (!response.ok) throw new Error(`HTTP ${response.status}: ${config.file}`);
+       if (!response.ok) {
+  throw new Error(`HTTP ${response.status}: ${config.file}`);
+}
 
         if (loadingEl) loadingEl.textContent = "Decompressing data...";
 
@@ -2737,17 +2739,15 @@ Please:
     });
   }
 
-  function openMorphReviewPromptInAI() {
-    if (!lastMorphCheckPrompt) {
-      alert("No prompt available yet.");
-      return;
-    }
-
-    copyText(lastMorphCheckPrompt).catch(() => {});
-
-    const encoded = encodeURIComponent(lastMorphCheckPrompt);
-    window.open(`https://chatgpt.com/?q=${encoded}`, "_blank", "noopener");
+function openMorphReviewPromptInAI() {
+  if (!lastMorphCheckPrompt) {
+    alert("No prompt available yet.");
+    return;
   }
+  copyText(lastMorphCheckPrompt).catch(() => {});
+  const encoded = encodeURIComponent(lastMorphCheckPrompt);
+  window.open(`https://chatgpt.com/?q=${encoded}`, "_blank", "noopener");
+}
 
   function cleanMorphValue(value) {
     return String(value ?? "")
@@ -2869,20 +2869,18 @@ function makeSimpleBAWFParseSuggestion(packet, extraSuffix = "") {
     .filter(Boolean);
 
   const cleanBase = cleanBareMorphPart(base);
-
   if (!cleanBase) return "";
 
   if (extraSuffix) {
     cleanSuffixes.push(cleanBareMorphPart(extraSuffix));
   }
 
-  const prefixText = cleanPrefixes.map(p => `<${p}<`).join(" ");
+  const prefixText = cleanPrefixes.map(p => `<${p}<`).join("");
   const baseText = `[${cleanBase}]`;
-  const suffixText = cleanSuffixes.map(s => ` >${s}>`).join("");
+  const suffixText = cleanSuffixes.map(s => `>${s}>`).join("");
 
-  return `${prefixText ? prefixText + " " : ""}${baseText}${suffixText}`;
+  return `${prefixText}${baseText}${suffixText}`;
 }
-
   function normalizeSimpleWord(value) {
     return cleanMorphValue(value)
       .toLowerCase()
@@ -3657,7 +3655,7 @@ if (localTeacherReview) {
     const target = $("advTarget").value;
 
     if (!config.all.includes(target)) {
-      alert(`Column "${target}" was not found in the selected database.`);
+     alert(`Column "${target}" was not found in the selected database.`);
       return;
     }
 
@@ -3828,7 +3826,7 @@ function estimateFrequencyPerMillionFromRow(row, config) {
 
   if (Number.isFinite(zipf) && zipf > 0) {
     // Zipf = log10(frequency per billion words)
-    // Therefore frequency per million words = 10^(Zipf - 3)
+    // Frequency per million words = 10^(Zipf - 3)
     return Math.round(Math.pow(10, zipf - 3));
   }
 
@@ -4020,7 +4018,7 @@ const tsvHeader = [
     row.Rank,
     row.Headword,
     row["Related forms"],
-    rrow["Estimated frequency per million words"],
+    row["Estimated frequency per million words"],
     row["Family size"]
   ].join("\t"));
 
