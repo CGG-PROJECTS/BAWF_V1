@@ -812,7 +812,6 @@
 </div>
 
 <div class="tabs">
-<div class="tabs">
   <button type="button" class="tab-btn active" onclick="openTab('curated', this)">Curated Frequent & Familiar Word Families</button>
   <button type="button" class="tab-btn" onclick="openTab('word-families', this)">Full Database: Word Families</button>
   <button type="button" class="tab-btn" onclick="openTab('compounds', this)">Full Database: Compound Words</button>
@@ -1358,7 +1357,16 @@
 </div>
 
   <script>
-  const $ = id => document.getElementById(id);
+  function $(idOrStrings, ...values) {
+  if (Array.isArray(idOrStrings) && idOrStrings.raw) {
+    let id = "";
+    idOrStrings.forEach((part, i) => {
+      id += part + (values[i] ?? "");
+    });
+    return document.getElementById(id);
+  }
+  return document.getElementById(idOrStrings);
+}
   const $$ = (selector, root = document) => Array.from(root.querySelectorAll(selector));
 
   const EMPTY_HEADER_PREFIX = "__EMPTY_COL_";
@@ -1409,15 +1417,15 @@ Current parse means:
 Possible issue:
 Possible alternative(s):
 Teacher note:`;
-  const DISPLAY_LABELS = {
-    "Word_frq_Zipf_Recomputed": "Word Zipf",
-    "Word_frq_Zipf": "Word Zipf",
-    "Baseword_frq_Zipf": "Family Zipf",
-    "Baseword_Family_Size": "Family Size",
-    [MORPHEME_COL_PLUS_INFLECTIONS]: "N morphemes incl. inflections",
-    [MORPHEME_COL_WITHOUT_INFLECTIONS]: "N morphemes excl. inflections"
-    "Greek_Latin_Root_1": "Greek/Latin Root",
-  };
+const DISPLAY_LABELS = {
+  "Word_frq_Zipf_Recomputed": "Word Zipf",
+  "Word_frq_Zipf": "Word Zipf",
+  "Baseword_frq_Zipf": "Family Zipf",
+  "Baseword_Family_Size": "Family Size",
+  "Greek_Latin_Root_1": "Greek/Latin Root",
+  [MORPHEME_COL_PLUS_INFLECTIONS]: "N morphemes incl. inflections",
+  [MORPHEME_COL_WITHOUT_INFLECTIONS]: "N morphemes excl. inflections"
+};
 
   const DATASETS = {
     cf: {
@@ -2755,43 +2763,43 @@ Please:
     };
   }
 
-  function makeSimpleBAWFParseSuggestion(packet, extraSuffix = "") {
-    const prefixes = packet.prefixes.length
-      ? packet.prefixes
-      : packet.notation_parts.prefixes;
+function makeSimpleBAWFParseSuggestion(packet, extraSuffix = "") {
+  const prefixes = packet.prefixes.length
+    ? packet.prefixes
+    : packet.notation_parts.prefixes;
 
-    const suffixes = packet.suffixes.length
-      ? packet.suffixes
-      : packet.notation_parts.suffixes;
+  const suffixes = packet.suffixes.length
+    ? packet.suffixes
+    : packet.notation_parts.suffixes;
 
-    const base =
-      packet.baseword ||
-      packet.notation_parts.bases[0] ||
-      packet.notation_parts.roots[0] ||
-      packet.word;
+  const base =
+    packet.baseword ||
+    packet.notation_parts.bases[0] ||
+    packet.notation_parts.roots[0] ||
+    packet.word;
 
-    const cleanPrefixes = uniqueSimpleList(prefixes)
-      .map(cleanBareMorphPart)
-      .filter(Boolean);
+  const cleanPrefixes = uniqueSimpleList(prefixes)
+    .map(cleanBareMorphPart)
+    .filter(Boolean);
 
-    const cleanSuffixes = uniqueSimpleList(suffixes)
-      .map(cleanBareMorphPart)
-      .filter(Boolean);
+  const cleanSuffixes = uniqueSimpleList(suffixes)
+    .map(cleanBareMorphPart)
+    .filter(Boolean);
 
-    const cleanBase = cleanBareMorphPart(base);
+  const cleanBase = cleanBareMorphPart(base);
 
-    if (!cleanBase) return "";
+  if (!cleanBase) return "";
 
-    if (extraSuffix) {
-      cleanSuffixes.push(cleanBareMorphPart(extraSuffix));
-    }
-
-    const prefixText = cleanPrefixes.map(p => `<${p}<`).join("");
-    const baseText = `[(${cleanBase})]`;
-    const suffixText = cleanSuffixes.map(s => `>${s}>`).join("");
-
-    return `${prefixText}${baseText}${suffixText}`;
+  if (extraSuffix) {
+    cleanSuffixes.push(cleanBareMorphPart(extraSuffix));
   }
+
+  const prefixText = cleanPrefixes.map(p => `<${p}<`).join(" ");
+  const baseText = `[${cleanBase}]`;
+  const suffixText = cleanSuffixes.map(s => ` >${s}>`).join("");
+
+  return `${prefixText ? prefixText + " " : ""}${baseText}${suffixText}`;
+}
 
   function normalizeSimpleWord(value) {
     return cleanMorphValue(value)
@@ -4389,16 +4397,16 @@ const teachingCols = [
     function studioDescribePlan(plan) {
   const items = [];
 
-  if (plan.global) {
-    items.push(`words or rows containing the topic/keyword <strong>${escapeHTML(plan.global)}</strong>`);
-  }
+if (plan.global) {
+  items.push(`words or rows containing the topic/keyword <strong>${escapeHTML(plan.global)}</strong>`);
+}
 
   for (const filter of plan.filters) {
     items.push(studioDescribeFilter(filter));
   }
 
   if (plan.sort) {
-    items.push(`results sorted by <strong>${escapeHTML(plan.sort.column)}</strong>, highest first`);
+   items.push(`results sorted by <strong>${escapeHTML(plan.sort.column)}</strong>, highest first`);
   }
 
   if (!items.length) {
