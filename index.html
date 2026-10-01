@@ -928,6 +928,71 @@
         <button type="button" class="key-btn" onclick="runAdvancedQuery()">Generate Custom Wordlist</button>
         <button type="button" class="db-btn secondary" onclick="clearAdvancedQuery()">Clear Filters</button>
       </div>
+<hr style="margin:28px 0; border:none; border-top:1px solid #d1d5db;">
+
+<h3 style="text-align:center;">📚 Frequency-Banded Family List Builder</h3>
+
+<p style="text-align:center; color:#4b5563; max-width:900px; margin:0 auto 18px;">
+  Generate BNC/COCA-style lists such as the most frequent 1k word families,
+  baseword families, or Greek/Latin root families. The filters above still apply.
+</p>
+
+<div class="adv-grid">
+  <div class="adv-box">
+    <label>Group Families By:</label>
+    <select id="familyGroupBy" class="db-select" style="width:100%;">
+      <option value="Baseword" selected>Baseword Families</option>
+      <option value="Greek_Latin_Root_1">Greek/Latin Root Families</option>
+      <option value="GPT_Root">GPT Root Families</option>
+    </select>
+  </div>
+
+  <div class="adv-box">
+    <label>List Size:</label>
+    <select id="familyTopN" class="db-select" style="width:100%;">
+      <option value="100">Top 100 families</option>
+      <option value="500">Top 500 families</option>
+      <option value="1000" selected>Top 1000 families / 1k</option>
+      <option value="2000">Top 2000 families / 1k–2k</option>
+      <option value="3000">Top 3000 families / 1k–3k</option>
+      <option value="5000">Top 5000 families / 1k–5k</option>
+    </select>
+  </div>
+
+  <div class="adv-box">
+    <label>Band Size:</label>
+    <input id="familyBandSize" class="db-input" style="min-width:0; width:100%;" type="number" value="1000" min="100" step="100">
+  </div>
+
+  <div class="adv-box">
+    <label>Options:</label>
+    <label style="font-weight:400;">
+      <input type="checkbox" id="familyIncludeSingletons" checked>
+      Include one-word families
+    </label>
+    <br>
+    <label style="font-weight:400;">
+      <input type="checkbox" id="familyLimitRelatedForms" checked>
+      Limit related forms display to top 40
+    </label>
+  </div>
+</div>
+
+<div style="text-align:center;">
+  <button type="button" class="key-btn" onclick="generateFrequencyFamilyList()">
+    Generate Frequency Family List
+  </button>
+  <button type="button" class="db-btn secondary" onclick="copyFrequencyFamilyList()">
+    📋 Copy Family List
+  </button>
+  <button type="button" class="db-btn secondary" onclick="downloadFrequencyFamilyCSV()">
+    ↓ Download Family List CSV
+  </button>
+  <button type="button" class="db-btn secondary" onclick="sendFamilyHeadwordsToStudio()">
+    Send Headwords to AI Studio
+  </button>
+</div>
+      
     </div>
 
     <div class="db-wrap" style="max-width:1200px; margin:20px auto 0;">
@@ -941,6 +1006,22 @@
         </div>
       </div>
       <textarea id="advResultsText" style="width:100%; height:350px; padding:16px; font-family:ui-monospace, monospace; font-size:1.05rem; border:2px solid #d1d5db; border-radius:8px; resize:vertical; background:#f9fafb;" placeholder="Your custom wordlist will appear here..." readonly></textarea>
+      <div class="db-wrap" style="max-width:1200px; margin:20px auto 0;">
+  <div class="db-meta" style="font-size:1.05rem;">
+    Frequency family list results:
+    <strong id="familyListCount" style="color:#1d4ed8;">0</strong>
+    families
+  </div>
+
+  <textarea
+    id="familyListOutput"
+    style="width:100%; height:360px; padding:16px; font-family:ui-monospace, monospace; font-size:0.95rem; border:2px solid #d1d5db; border-radius:8px; resize:vertical; background:#f9fafb;"
+    placeholder="Your frequency-banded family list will appear here..."
+    readonly
+  ></textarea>
+
+  <div id="familyListPreview" style="margin-top:16px; overflow:auto;"></div>
+</div>
     </div>
   </div>
 
@@ -3686,7 +3767,383 @@ if (localTeacherReview) {
 
     setTimeout(() => URL.revokeObjectURL(url), 0);
   }
+let frequencyFamilyRows = [];
 
+function getAdvNumericValue(id) {
+  const el = $(id);
+  if (!el) return null;
+  const n = parseFloat(el.value);
+  return Number.isFinite(n) ? n : null;
+}
+
+function getWordZipfColumn(config) {
+  if (config.all.includes("Word_frq_Zipf_Recomputed")) return "Word_frq_Zipf_Recomputed";
+  if (config.all.includes("Word_frq_Zipf")) return "Word_frq_Zipf";
+  return "";
+}
+
+function getBaseZipfColumn(config) {
+  if (config.all.includes("Baseword_frq_Zipf")) return "Baseword_frq_Zipf";
+  return "";
+}
+
+function getGradeColumn(config) {
+  return (
+    config.all.find(c => String(c).toLowerCase().includes("vocabulary expected grade")) ||
+    config.all.find(c => String(c).toLowerCase().includes("grade")) ||
+    ""
+  );
+}
+
+function getMorphemeColumn(config) {
+  if (config.all.includes(MORPHEME_COL_PLUS_INFLECTIONS)) return MORPHEME_COL_PLUS_INFLECTIONS;
+  if (config.all.includes(MORPHEME_COL_WITHOUT_INFLECTIONS)) return MORPHEME_COL_WITHOUT_INFLECTIONS;
+  return "";
+}
+
+function getFrequencyRawColumn(config) {
+  const candidates = [
+    "Word_frequency",
+    "Word_Frequency",
+    "word_frequency",
+    "Frequency",
+    "frequency",
+    "Freq",
+    "freq",
+    "Raw_Frequency",
+    "raw_frequency"
+  ];
+
+  for (const c of candidates) {
+    if (config.all.includes(c)) return c;
+  }
+
+  return "";
+}
+
+function estimateFrequencyFromRow(row, config) {
+  const rawCol = getFrequencyRawColumn(config);
+
+  if (rawCol) {
+    const raw = Number(row[rawCol]);
+    if (Number.isFinite(raw) && raw > 0) {
+      return Math.round(raw);
+    }
+  }
+
+  const zipfCol = getWordZipfColumn(config);
+  const zipf = Number(row[zipfCol]);
+
+  if (Number.isFinite(zipf) && zipf > 0) {
+    return Math.round(Math.pow(10, zipf));
+  }
+
+  return 1;
+}
+
+function getWordForFamilyList(row) {
+  return String(
+    row.Word ||
+    row.FLemma ||
+    row.Baseword ||
+    row.Compound ||
+    row.Compound_Word ||
+    ""
+  ).trim();
+}
+
+function getBandLabel(rank, bandSize) {
+  const bandNumber = Math.floor((rank - 1) / bandSize) + 1;
+
+  if (bandSize === 1000) {
+    return `${bandNumber}k`;
+  }
+
+  const start = (bandNumber - 1) * bandSize + 1;
+  const end = bandNumber * bandSize;
+  return `${start}-${end}`;
+}
+
+function passesAdvancedNumericFilters(row, config) {
+  const wMin = getAdvNumericValue("advWordZipfMin");
+  const wMax = getAdvNumericValue("advWordZipfMax");
+  const bMin = getAdvNumericValue("advBaseZipfMin");
+  const bMax = getAdvNumericValue("advBaseZipfMax");
+  const gMin = getAdvNumericValue("advGradeMin");
+  const gMax = getAdvNumericValue("advGradeMax");
+  const mMin = getAdvNumericValue("advMorphMin");
+  const mMax = getAdvNumericValue("advMorphMax");
+
+  const wordZipfCol = getWordZipfColumn(config);
+  const baseZipfCol = getBaseZipfColumn(config);
+  const gradeCol = getGradeColumn(config);
+  const morphCol = getMorphemeColumn(config);
+
+  if (wordZipfCol && !passesRange(row[wordZipfCol], wMin, wMax)) return false;
+  if (baseZipfCol && !passesRange(row[baseZipfCol], bMin, bMax)) return false;
+  if (gradeCol && !passesRange(row[gradeCol], gMin, gMax)) return false;
+  if (morphCol && !passesRange(row[morphCol], mMin, mMax)) return false;
+
+  return true;
+}
+
+async function generateFrequencyFamilyList() {
+  const sourceKey = $("advSource").value;
+  const config = DATASETS[sourceKey];
+
+  if (!config.loaded) {
+    $("familyListCount").textContent = "loading";
+    await initDataset(sourceKey);
+  }
+
+  if (!config.loaded || !config.data.length) {
+    alert("The selected database is not loaded yet. Please try again in a moment.");
+    $("familyListCount").textContent = "0";
+    return;
+  }
+
+  const groupBy = $("familyGroupBy").value;
+  const topN = parseInt($("familyTopN").value, 10) || 1000;
+  const bandSize = parseInt($("familyBandSize").value, 10) || 1000;
+  const includeSingletons = $("familyIncludeSingletons").checked;
+  const limitRelatedForms = $("familyLimitRelatedForms").checked;
+
+  if (!config.all.includes(groupBy)) {
+    alert(`Column "${groupBy}" was not found in the selected database.`);
+    return;
+  }
+
+  const groups = new Map();
+
+  for (const row of config.data) {
+    if (!passesAdvancedNumericFilters(row, config)) continue;
+
+    const headword = String(row[groupBy] || "").trim();
+    if (!headword || headword.toLowerCase() === "nan") continue;
+
+    const word = getWordForFamilyList(row);
+    if (!word) continue;
+
+    const freq = estimateFrequencyFromRow(row, config);
+
+    if (!groups.has(headword)) {
+      groups.set(headword, {
+        headword,
+        forms: new Map()
+      });
+    }
+
+    const group = groups.get(headword);
+
+    /*
+      If the same word appears more than once, keep the highest frequency estimate.
+      This avoids accidentally multiplying frequency because of duplicate rows.
+    */
+    const previousFreq = group.forms.get(word) || 0;
+    if (freq > previousFreq) {
+      group.forms.set(word, freq);
+    }
+  }
+
+  let rows = Array.from(groups.values()).map(group => {
+    const formsArray = Array.from(group.forms.entries())
+      .map(([word, freq]) => ({ word, freq }))
+      .sort((a, b) => {
+        if (b.freq !== a.freq) return b.freq - a.freq;
+        return a.word.localeCompare(b.word);
+      });
+
+    const totalFrequency = formsArray.reduce((sum, item) => sum + item.freq, 0);
+
+    const displayedForms = limitRelatedForms
+      ? formsArray.slice(0, 40)
+      : formsArray;
+
+    const relatedForms = displayedForms
+      .map(item => `${item.word} (${item.freq})`)
+      .join(", ");
+
+    const extraForms = limitRelatedForms && formsArray.length > 40
+      ? `, ... +${formsArray.length - 40} more`
+      : "";
+
+    return {
+      Headword: group.headword,
+      "Related forms": relatedForms + extraForms,
+      "Total frequency estimate": totalFrequency,
+      "Family size": formsArray.length
+    };
+  });
+
+  if (!includeSingletons) {
+    rows = rows.filter(row => row["Family size"] > 1);
+  }
+
+  rows.sort((a, b) => {
+    if (b["Total frequency estimate"] !== a["Total frequency estimate"]) {
+      return b["Total frequency estimate"] - a["Total frequency estimate"];
+    }
+    return a.Headword.localeCompare(b.Headword);
+  });
+
+  rows = rows.slice(0, topN).map((row, index) => {
+    const rank = index + 1;
+    return {
+      List: getBandLabel(rank, bandSize),
+      Rank: rank,
+      Headword: row.Headword,
+      "Related forms": row["Related forms"],
+      "Total frequency estimate": row["Total frequency estimate"],
+      "Family size": row["Family size"]
+    };
+  });
+
+  frequencyFamilyRows = rows;
+
+  $("familyListCount").textContent = rows.length.toLocaleString();
+
+  const tsvHeader = [
+    "List",
+    "Rank",
+    "Headword",
+    "Related forms",
+    "Total frequency estimate",
+    "Family size"
+  ].join("\t");
+
+  const tsvRows = rows.map(row => [
+    row.List,
+    row.Rank,
+    row.Headword,
+    row["Related forms"],
+    row["Total frequency estimate"],
+    row["Family size"]
+  ].join("\t"));
+
+  $("familyListOutput").value = [tsvHeader, ...tsvRows].join("\n");
+
+  renderFrequencyFamilyPreview(rows);
+}
+
+function renderFrequencyFamilyPreview(rows) {
+  const preview = $("familyListPreview");
+
+  if (!preview) return;
+
+  if (!rows.length) {
+    preview.innerHTML = "";
+    return;
+  }
+
+  const previewRows = rows.slice(0, 50);
+
+  let html = `
+    <p class="db-meta">
+      Previewing first ${previewRows.length.toLocaleString()} families.
+    </p>
+    <div class="db-table-wrap" style="max-height:420px;">
+      <table class="db-table">
+        <thead>
+          <tr>
+            <th>List</th>
+            <th>Rank</th>
+            <th>Headword</th>
+            <th>Related forms</th>
+            <th>Total frequency estimate</th>
+            <th>Family size</th>
+          </tr>
+        </thead>
+        <tbody>
+  `;
+
+  for (const row of previewRows) {
+    html += `
+      <tr>
+        <td>${escapeHTML(row.List)}</td>
+        <td>${escapeHTML(row.Rank)}</td>
+        <td>${escapeHTML(row.Headword)}</td>
+        <td class="long-text">${escapeHTML(row["Related forms"])}</td>
+        <td>${escapeHTML(row["Total frequency estimate"])}</td>
+        <td>${escapeHTML(row["Family size"])}</td>
+      </tr>
+    `;
+  }
+
+  html += `
+        </tbody>
+      </table>
+    </div>
+  `;
+
+  preview.innerHTML = html;
+}
+
+function copyFrequencyFamilyList() {
+  const text = $("familyListOutput").value.trim();
+
+  if (!text) {
+    alert("Generate a frequency family list first.");
+    return;
+  }
+
+  copyText(text).then(() => {
+    showCopyToast("Frequency family list copied");
+  });
+}
+
+function downloadFrequencyFamilyCSV() {
+  if (!frequencyFamilyRows.length) {
+    alert("Generate a frequency family list first.");
+    return;
+  }
+
+  const csv = Papa.unparse(frequencyFamilyRows);
+
+  const groupBy = $("familyGroupBy").value || "Family";
+  const sourceKey = $("advSource").value || "BAWF";
+
+  const filename = `BAWF_${sourceKey}_${groupBy}_Frequency_Family_List.csv`;
+
+  const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
+  const url = URL.createObjectURL(blob);
+
+  const link = document.createElement("a");
+  link.href = url;
+  link.download = filename;
+  link.click();
+
+  setTimeout(() => URL.revokeObjectURL(url), 0);
+}
+
+function sendFamilyHeadwordsToStudio() {
+  if (!frequencyFamilyRows.length) {
+    alert("Generate a frequency family list first.");
+    return;
+  }
+
+  const headwords = frequencyFamilyRows
+    .map(row => row.Headword)
+    .filter(Boolean)
+    .join("\n");
+
+  const studioOutput = $("studioOutput");
+
+  if (studioOutput) {
+    studioOutput.value = headwords;
+  }
+
+  const studioCount = $("studioCount");
+  if (studioCount) {
+    studioCount.textContent = frequencyFamilyRows.length.toLocaleString();
+  }
+
+  showCopyToast("Headwords sent to AI Studio");
+
+  const aiBtn = $("aiStudioTabBtn");
+  if (typeof openTab === "function") {
+    openTab("ai-studio", aiBtn);
+  }
+}
   function generateWordCloud() {
     const input = $("wordInput").value;
     const status = $("cloudStatus");
