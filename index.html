@@ -17,6 +17,115 @@
       background: linear-gradient(to bottom, #fdfdfd, #f8f8f8);
       color: #111827;
     }
+
+    .ai-studio-hero {
+  max-width: 1350px;
+  margin: 24px auto 20px;
+  padding: 26px 30px;
+  border-radius: 18px;
+  background: linear-gradient(135deg, #eff6ff, #eef2ff, #faf5ff);
+  border: 2px solid #bfdbfe;
+  box-shadow: 0 10px 26px rgba(29, 78, 216, 0.13);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 22px;
+  flex-wrap: wrap;
+}
+
+.ai-studio-hero-text {
+  flex: 1 1 620px;
+}
+
+.ai-studio-hero h2 {
+  margin: 0 0 8px;
+  font-size: 2rem;
+  color: #1d4ed8;
+}
+
+.ai-studio-hero p {
+  margin: 0;
+  font-size: 1.2rem;
+  line-height: 1.45;
+  color: #374151;
+}
+
+.ai-studio-hero-actions {
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+  justify-content: center;
+}
+
+.ai-studio-main-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  padding: 16px 26px;
+  border-radius: 999px;
+  border: none;
+  background: #7c3aed;
+  color: white;
+  font-size: 1.15rem;
+  font-weight: 800;
+  cursor: pointer;
+  box-shadow: 0 8px 22px rgba(124, 58, 237, 0.28);
+}
+
+.ai-studio-main-btn:hover {
+  background: #6d28d9;
+  transform: translateY(-1px);
+}
+
+.ai-studio-secondary-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 14px 20px;
+  border-radius: 999px;
+  border: 1px solid #c7d2fe;
+  background: white;
+  color: #1d4ed8;
+  font-size: 1rem;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.ai-studio-secondary-btn:hover {
+  background: #eef2ff;
+}
+
+.tab-btn.ai-tab {
+  background: #7c3aed;
+  color: #fff;
+  box-shadow: 0 5px 14px rgba(124, 58, 237, 0.22);
+}
+
+.tab-btn.ai-tab.active {
+  background: #5b21b6;
+  color: #fff;
+}
+
+@media (max-width: 800px) {
+  .ai-studio-hero {
+    text-align: center;
+    padding: 22px 18px;
+  }
+
+  .ai-studio-hero h2 {
+    font-size: 1.6rem;
+  }
+
+  .ai-studio-hero p {
+    font-size: 1.05rem;
+  }
+
+  .ai-studio-main-btn,
+  .ai-studio-secondary-btn {
+    width: 100%;
+  }
+}
 .studio-plan-card {
   background: #eff6ff;
   border: 1px solid #bfdbfe;
@@ -662,17 +771,54 @@
     <strong>Note:</strong> Large datasets may need 30–60 seconds to load.
   </div>
 
-  <div style="text-align:center; margin:25px 0;">
-    <button type="button" class="key-btn" onclick="showColumnKey()">📋 Column Information Key</button>
+<div style="text-align:center; margin:25px 0;">
+  <button type="button" class="key-btn" onclick="showColumnKey()">📋 Column Information Key</button>
+</div>
+
+<div class="ai-studio-hero">
+  <div class="ai-studio-hero-text">
+    <h2>✨ Start with AI Morphology Studio</h2>
+    <p>
+      Not sure which database tab to use? Start here. Ask in plain English, build teaching word sets,
+      generate classroom prompts, and send words to activities or word clouds.
+    </p>
   </div>
 
+  <div class="ai-studio-hero-actions">
+    <button
+      type="button"
+      class="ai-studio-main-btn"
+      onclick="openTab('ai-studio', document.getElementById('aiStudioTabBtn'))"
+    >
+      ✨ Open AI Morphology Studio
+    </button>
+
+    <button
+      type="button"
+      class="ai-studio-secondary-btn"
+      onclick="studioUseExample('Find familiar words with prefix un')"
+    >
+      Try: prefix un-
+    </button>
+
+    <button
+      type="button"
+      class="ai-studio-secondary-btn"
+      onclick="studioUseExample('Find Grade 4 to 6 words with suffix tion')"
+    >
+      Try: suffix -tion
+    </button>
+  </div>
+</div>
+
+<div class="tabs">
 <div class="tabs">
   <button type="button" class="tab-btn active" onclick="openTab('curated', this)">Curated Frequent & Familiar Word Families</button>
   <button type="button" class="tab-btn" onclick="openTab('word-families', this)">Full Database: Word Families</button>
   <button type="button" class="tab-btn" onclick="openTab('compounds', this)">Full Database: Compound Words</button>
   <button type="button" class="tab-btn" onclick="openTab('adv-queries', this)">Advanced Query Builder</button>
   <button type="button" class="tab-btn" onclick="openTab('wordcloud', this)">Word Cloud Generator</button>
-  <button type="button" class="tab-btn" onclick="openTab('ai-studio', this)">✨ AI Morphology Studio</button>
+ <button type="button" id="aiStudioTabBtn" class="tab-btn ai-tab" onclick="openTab('ai-studio', this)">✨ AI Morphology Studio</button>
 
 </div>
 
@@ -1270,6 +1416,7 @@ Teacher note:`;
     "Baseword_Family_Size": "Family Size",
     [MORPHEME_COL_PLUS_INFLECTIONS]: "N morphemes incl. inflections",
     [MORPHEME_COL_WITHOUT_INFLECTIONS]: "N morphemes excl. inflections"
+    "Greek_Latin_Root_1": "Greek/Latin Root",
   };
 
   const DATASETS = {
@@ -1465,12 +1612,27 @@ Teacher note:`;
       cellSelection.mouseDown = false;
     });
 
-    document.addEventListener("keydown", event => {
-      if (event.key === "Escape") {
-        if (hasOpenModal()) closeAllModals();
-        else clearCellSelection();
-        return;
-      }
+document.addEventListener("keydown", event => {
+  const searchBox = event.target.closest("[data-global-search], [data-filter-ds]");
+
+  if (searchBox && event.key === "Enter") {
+    const key =
+      searchBox.dataset.globalSearch ||
+      searchBox.dataset.filterDs;
+
+    if (key) {
+      clearTimeout(filterTimeouts[key]);
+      filterTable(key);
+    }
+
+    return;
+  }
+
+  if (event.key === "Escape") {
+    if (hasOpenModal()) closeAllModals();
+    else clearCellSelection();
+    return;
+  }
 
       if ((event.ctrlKey || event.metaKey) && event.key.toLowerCase() === "c") {
         if (isEditableTarget(event.target)) return;
@@ -1540,53 +1702,52 @@ Teacher note:`;
   }
 
   function chooseDefaultColumns(key, headers) {
-    if (key === "cf") {
-      const preferred = [
-        "Baseword",
-        "Baseword_frq_Zipf",
-        "Baseword_Family_Size",
-        "Word",
-        "Word_frq_Zipf_Recomputed",
-        "GPT_Coded_Word_Parts",
-        "Prefix_1",
-        "Prefix_2",
-        "Prefix_3",
-        "Suffix_1",
-        "Suffix_2",
-        "Suffix_3",
-        "Suffix_4",
-        MORPHEME_COL_PLUS_INFLECTIONS
-      ];
+if (key === "cf") {
+  const preferred = [
+    "Baseword",
+    "Greek_Latin_Root_1",
+    "Baseword_frq_Zipf",
+    "Baseword_Family_Size",
+    "Word",
+    "Word_frq_Zipf_Recomputed",
+    "GPT_Coded_Word_Parts",
+    "Prefix_1",
+    "Prefix_2",
+    "Prefix_3",
+    "Suffix_1",
+    "Suffix_2",
+    "Suffix_3",
+    "Suffix_4",
+    MORPHEME_COL_PLUS_INFLECTIONS
+  ];
+  const found = preferred.filter(c => headers.includes(c));
+  return found.length ? found : headers.slice(0, 16);
+}
 
-      const found = preferred.filter(c => headers.includes(c));
-      return found.length ? found : headers.slice(0, 16);
-    }
-
-    if (key === "wf") {
-      const preferred = [
-        "Word",
-        "Word_frq_Zipf",
-        "Baseword",
-        "Baseword_frq_Zipf",
-        "Baseword_Family_Size",
-        "GPT_Root",
-        "GPT_Coded_Word_Parts",
-        "Prefix_1",
-        "Prefix_2",
-        "Prefix_3",
-        "Suffix_1",
-        "Suffix_2",
-        "Suffix_3",
-        "Suffix_4",
-        "Suffix_5",
-        "Suffix_6",
-        MORPHEME_COL_PLUS_INFLECTIONS,
-        "Vocabulary eXpected Grade Level Flor et al._ 2024"
-      ];
-
-      const found = preferred.filter(c => headers.includes(c));
-      return found.length ? found : headers.slice(0, 20);
-    }
+if (key === "wf") {
+  const preferred = [
+    "Word",
+    "Word_frq_Zipf",
+    "Baseword",
+    "Greek_Latin_Root_1",
+    "Baseword_frq_Zipf",
+    "Baseword_Family_Size",
+    "GPT_Coded_Word_Parts",
+    "Prefix_1",
+    "Prefix_2",
+    "Prefix_3",
+    "Suffix_1",
+    "Suffix_2",
+    "Suffix_3",
+    "Suffix_4",
+    "Suffix_5",
+    "Suffix_6",
+    MORPHEME_COL_PLUS_INFLECTIONS,
+    "Vocabulary eXpected Grade Level Flor et al._ 2024"
+  ];
+  const found = preferred.filter(c => headers.includes(c));
+  return found.length ? found : headers.slice(0, 20);
+}
 
     if (key === "cm" || key === "cs") {
       return headers.slice(0, 28);
@@ -1965,10 +2126,20 @@ Teacher note:`;
     filterTableDebounced(key);
   }
 
-  function filterTableDebounced(key) {
-    clearTimeout(filterTimeouts[key]);
-    filterTimeouts[key] = setTimeout(() => filterTable(key), 300);
+const FILTER_DEBOUNCE_MS = 1000;
+
+function filterTableDebounced(key) {
+  clearTimeout(filterTimeouts[key]);
+
+  const rowCountEl = $(`${key}RowCount`);
+  if (rowCountEl) {
+    rowCountEl.textContent = "typing...";
   }
+
+  filterTimeouts[key] = setTimeout(() => {
+    filterTable(key);
+  }, FILTER_DEBOUNCE_MS);
+}
 
   function filterTable(key) {
     const config = DATASETS[key];
@@ -4177,26 +4348,25 @@ async function studioApplyPlanToMainTable(plan, options = {}) {
 
   config.page = 1;
 
-  const teachingCols = [
-    "Word",
-    "Baseword",
-    "Word_frq_Zipf_Recomputed",
-    "Word_frq_Zipf",
-    "Baseword_frq_Zipf",
-    "Baseword_Family_Size",
-    "GPT_Coded_Word_Parts",
-    "GPT_Root",
-    "Greek_Latin_Root_1",
-    "Prefix_1",
-    "Prefix_2",
-    "Prefix_3",
-    "Suffix_1",
-    "Suffix_2",
-    "Suffix_3",
-    MORPHEME_COL_PLUS_INFLECTIONS,
-    "GPT_Familiarity Brysbaert et al._ 2024",
-    "Vocabulary eXpected Grade Level Flor et al._ 2024"
-  ];
+const teachingCols = [
+  "Word",
+  "Baseword",
+  "Greek_Latin_Root_1",
+  "Word_frq_Zipf_Recomputed",
+  "Word_frq_Zipf",
+  "Baseword_frq_Zipf",
+  "Baseword_Family_Size",
+  "GPT_Coded_Word_Parts",
+  "Prefix_1",
+  "Prefix_2",
+  "Prefix_3",
+  "Suffix_1",
+  "Suffix_2",
+  "Suffix_3",
+  MORPHEME_COL_PLUS_INFLECTIONS,
+  "GPT_Familiarity Brysbaert et al._ 2024",
+  "Vocabulary eXpected Grade Level Flor et al._ 2024"
+];
 
   const visible = teachingCols.filter(c => config.all.includes(c));
 
