@@ -1899,7 +1899,7 @@ if (key === "wf") {
         }
 
         const response = await fetch(config.file);
-       if (!response.ok) {
+if (!response.ok) {
   throw new Error(`HTTP ${response.status}: ${config.file}`);
 }
 
@@ -2744,8 +2744,10 @@ function openMorphReviewPromptInAI() {
     alert("No prompt available yet.");
     return;
   }
+
   copyText(lastMorphCheckPrompt).catch(() => {});
   const encoded = encodeURIComponent(lastMorphCheckPrompt);
+
   window.open(`https://chatgpt.com/?q=${encoded}`, "_blank", "noopener");
 }
 
@@ -3831,16 +3833,6 @@ function estimateFrequencyPerMillionFromRow(row, config) {
   return 1;
 }
 
-  const zipfCol = getWordZipfColumn(config);
-  const zipf = Number(row[zipfCol]);
-
-  if (Number.isFinite(zipf) && zipf > 0) {
-    return Math.round(Math.pow(10, zipf -3));
-  }
-
-  return 1;
-}
-
 function getWordForFamilyList(row) {
   return String(
     row.Word ||
@@ -4258,29 +4250,28 @@ Please include:
     });
   }
 
-  function openInLLM() {
-    const provider = $("llmProvider").value;
-    const prompt = $("finalPrompt").value.trim();
+function openInLLM() {
+  const provider = $("llmProvider").value;
+  const prompt = $("finalPrompt").value.trim();
 
-    if (!prompt) {
-      alert("Generate a prompt first.");
-      return;
-    }
-
-    copyText(prompt).catch(() => {});
-
-    const encoded = encodeURIComponent(prompt);
-
-    if (provider === "gemini") {
-      window.open(`https://gemini.google.com/app?prompt=${encoded}`, "_blank", "noopener");
-    } else if (provider === "chatgpt") {
-      window.open(`https://chatgpt.com/?q=${encoded}`, "_blank", "noopener");
-    } else {
-      window.open("https://claude.ai/new", "_blank", "noopener");
-    }
-
-    $("llmStatus").textContent = "Prompt copied. Paste it into the opened AI tool if needed.";
+  if (!prompt) {
+    alert("Generate a prompt first.");
+    return;
   }
+
+  copyText(prompt).catch(() => {});
+  const encoded = encodeURIComponent(prompt);
+
+  if (provider === "gemini") {
+    window.open(`https://gemini.google.com/app?prompt=${encoded}`, "_blank", "noopener");
+  } else if (provider === "chatgpt") {
+    window.open(`https://chatgpt.com/?q=${encoded}`, "_blank", "noopener");
+  } else {
+    window.open("https://claude.ai/new", "_blank", "noopener");
+  }
+
+  $("llmStatus").textContent = "Prompt copied. Paste it into the opened AI tool if needed.";
+}
 
   function handleCellMouseDown(event) {
     if (event.button !== 0) return;
