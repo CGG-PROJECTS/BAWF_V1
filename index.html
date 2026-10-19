@@ -1514,7 +1514,9 @@ and 7 is about 10,000 per million.
 
   const MORPH_CHECK_ENDPOINT = "https://wwt-classifier.clarenceggreen.workers.dev";
   const GOOGLE_ERROR_REPORT_ENDPOINT = "https://script.google.com/macros/s/AKfycbydBfAee3LRNRjT8O-K2rutdLR67KS-2Lp_0TjBuER38EAhRRd7LyITADcbzDALCYgw/exec";
-
+const REPORTS_ENABLED = false;
+const REPORTS_DISABLED_MESSAGE =
+  "Reporting is temporarily disabled while ethics/privacy requirements are reviewed.";
   const PREFIX_COLS = ["Prefix_1", "Prefix_2", "Prefix_3"];
   const SUFFIX_COLS = ["Suffix_1", "Suffix_2", "Suffix_3", "Suffix_4", "Suffix_5", "Suffix_6"];
 
@@ -1747,7 +1749,13 @@ const DISPLAY_LABELS = {
         if (action === "wordnik") lookupWordnik(word);
         if (action === "explain") showExplainFromIndex(key, rowIndex);
         if (action === "review-parse") checkMorphologyFromIndex(key, rowIndex);
-        if (action === "report") showReportFromIndex(key, rowIndex);
+        if (action === "report") {
+  if (!REPORTS_ENABLED) {
+    alert(REPORTS_DISABLED_MESSAGE);
+    return;
+  }
+  showReportFromIndex(key, rowIndex);
+}
 
         return;
       }
@@ -2231,8 +2239,16 @@ if (!response.ok) {
             <button type="button" class="lookup-btn wordnik" data-row-action="wordnik" data-word="${escapeHTML(lookupWord)}" ${lookupWord ? "" : "disabled"}>🧠 Wordnik</button>
             <button type="button" class="explain-btn" data-row-action="explain" data-ds="${key}" data-row-index="${rowIndex}">✨ Explain</button>
             <button type="button" class="check-btn" data-row-action="review-parse" data-ds="${key}" data-row-index="${rowIndex}">🧪 Review Parse</button>
-            <button type="button" class="report-btn" data-row-action="report" data-ds="${key}" data-row-index="${rowIndex}">⚠️ Report</button>
-          </div>
+            <button
+  type="button"
+  class="report-btn"
+  data-row-action="report"
+  data-ds="${key}"
+  data-row-index="${rowIndex}"
+  ${REPORTS_ENABLED ? "" : `disabled title="${escapeHTML(REPORTS_DISABLED_MESSAGE)}"`}
+>
+  ⚠️ Report
+</button>  </div>
         </td>
       `;
 
@@ -3379,9 +3395,16 @@ ${reviewText || "No response returned."}
     resultEl.textContent = "";
     notesEl.value = "";
     reportStatusEl.textContent = "";
-    submitBtn.disabled = false;
-    submitBtn.textContent = "⚠️ Report Disagreement/Error";
-
+    if (REPORTS_ENABLED) {
+  submitBtn.disabled = false;
+  submitBtn.textContent = "⚠️ Report Disagreement/Error";
+  reportStatusEl.textContent = "";
+} else {
+  submitBtn.disabled = true;
+  submitBtn.textContent = "Reporting temporarily disabled";
+  reportStatusEl.textContent = REPORTS_DISABLED_MESSAGE;
+  reportStatusEl.style.color = "#6b7280";
+}
     const packet = buildTeacherMorphReviewPacket(row, key);
     const userPrompt = buildTeacherMorphReviewPrompt(packet);
     const localTeacherReview = getLocalTeacherReviewIfObvious(packet);
@@ -3534,6 +3557,10 @@ if (localTeacherReview) {
   }
 
   async function submitMorphDisagreement() {
+      if (!REPORTS_ENABLED) {
+    alert(REPORTS_DISABLED_MESSAGE);
+    return;
+  }
     const notesEl = $("morphDisagreementNotes");
     const btn = $("submitMorphReportBtn");
     const status = $("morphReportStatus");
@@ -3648,6 +3675,10 @@ if (morphTermsAgree && !morphTermsAgree.checked) {
   }
 
   async function submitErrorReport() {
+    if (!REPORTS_ENABLED) {
+  alert(REPORTS_DISABLED_MESSAGE);
+  return;
+}
     const notes = $("reportNotes").value.trim();
     const btn = $("submitReportBtn");
     const status = $("reportStatus");
