@@ -1397,6 +1397,15 @@ and 7 is about 10,000 per million.
           Report disagreement/error notes
         </label>
         <textarea id="morphDisagreementNotes" placeholder="If the AI review or database parse seems wrong, explain the issue here..." style="width:100%; min-height:95px; border:1px solid #cbd5e1; border-radius:8px; padding:10px; font-family:inherit;"></textarea>
+      <div style="background:#f8fafc; border:1px solid #e5e7eb; border-radius:8px; padding:10px; margin:12px 0; font-size:0.92rem; color:#374151;">
+  <label>
+    <input type="checkbox" id="morphTermsAgree">
+    I agree to the
+    <button type="button" onclick="showTermsModal()" style="border:none; background:none; color:#1d4ed8; text-decoration:underline; cursor:pointer; padding:0;">
+      Contribution Terms & Privacy Notice
+    </button>.
+  </label>
+</div>
       </div>
 
       <p id="morphReportStatus" style="text-align:right; font-weight:600; margin-top:8px; font-size:0.9rem;"></p>
@@ -1429,6 +1438,15 @@ and 7 is about 10,000 per million.
       <div style="margin-bottom:10px;">
         <label for="reportNotes" style="font-weight:600; display:block; margin-bottom:6px;">Your Correction / Notes:</label>
         <textarea id="reportNotes" placeholder="e.g., The root should be spect, not the whole word..." style="width:100%; min-height:100px; border:1px solid #cbd5e1; border-radius:8px; padding:10px; font-family:inherit;"></textarea>
+<div style="background:#f8fafc; border:1px solid #e5e7eb; border-radius:8px; padding:10px; margin:12px 0; font-size:0.92rem; color:#374151;">
+  <label>
+    <input type="checkbox" id="reportTermsAgree">
+    I agree to the
+    <button type="button" onclick="showTermsModal()" style="border:none; background:none; color:#1d4ed8; text-decoration:underline; cursor:pointer; padding:0;">
+      Contribution Terms & Privacy Notice
+    </button>.
+  </label>
+</div>
       </div>
 
       <div class="modal-actions">
@@ -1440,7 +1458,43 @@ and 7 is about 10,000 per million.
     </div>
   </div>
 </div>
+<div id="termsModalBackdrop" class="modal" role="dialog" aria-modal="true">
+  <div class="modal-content" style="max-width:720px;">
+    <div class="modal-header">
+      <h3>Contribution Terms & Privacy Notice</h3>
+      <button type="button" class="close" onclick="closeTermsModal()">×</button>
+    </div>
 
+    <div class="modal-body">
+      <p>
+        By submitting a correction or comment, you agree that the BAWF Project may store,
+        review, edit, combine, publish, and reuse your contribution to improve the database
+        and related open educational resources.
+      </p>
+
+      <p>
+        Please do not include personal, student, confidential, sensitive, or private information.
+        Your submission may include the reported word, database row information, your notes,
+        AI review text, and a timestamp.
+      </p>
+
+      <p>
+        Contributions may be reused under an open license such as Creative Commons Attribution
+        4.0 or CC0 where appropriate. Submissions are not guaranteed to be used. BAWF is an
+        AI-informed resource and may contain errors.
+      </p>
+
+      <p style="font-size:0.9rem; color:#4b5563;">
+        Reports may be processed using third-party tools such as Google Apps Script,
+        Google Sheets, Cloudflare Workers, or related hosting services.
+      </p>
+    </div>
+
+    <div class="modal-actions">
+      <button type="button" class="db-btn" onclick="closeTermsModal()">Close</button>
+    </div>
+  </div>
+</div>
   <script>
   function $(idOrStrings, ...values) {
   if (Array.isArray(idOrStrings) && idOrStrings.raw) {
@@ -1744,7 +1798,13 @@ document.addEventListener("keydown", event => {
   function displayColumnName(col) {
     return DISPLAY_LABELS[col] || col;
   }
+function showTermsModal() {
+  showModal("termsModalBackdrop");
+}
 
+function closeTermsModal() {
+  hideModal("termsModalBackdrop");
+}
   function buildDatasetShell(key) {
     const wrap = $(`${key}Wrap`);
     if (!wrap) return;
@@ -3490,7 +3550,12 @@ if (localTeacherReview) {
       status.style.color = "#dc2626";
       return;
     }
-
+const morphTermsAgree = $("morphTermsAgree");
+if (morphTermsAgree && !morphTermsAgree.checked) {
+  status.textContent = "Please agree to the Contribution Terms & Privacy Notice before submitting.";
+  status.style.color = "#dc2626";
+  return;
+}
     const payload = {
       timestamp: new Date().toISOString(),
       report_type: "morphology_ai_review_disagreement_or_parse_error",
@@ -3592,6 +3657,12 @@ if (localTeacherReview) {
       status.style.color = "#dc2626";
       return;
     }
+    const reportTermsAgree = $("reportTermsAgree");
+if (reportTermsAgree && !reportTermsAgree.checked) {
+  status.textContent = "Please agree to the Contribution Terms & Privacy Notice before submitting.";
+  status.style.color = "#dc2626";
+  return;
+}
 
     const payload = {
       timestamp: new Date().toISOString(),
