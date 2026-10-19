@@ -762,7 +762,7 @@
     <li>Use the curated tab to focus on familiar (widely known) word families for teaching.</li>
     <li>Use the full database tabs to explore the broader lexicon, drawn from Wiktionary and large English corpora.</li>
     <li>Use sorting, filtering, AI prompts, dictionary links, and etymology links.</li>
-    <li>Use the 'Action' buttons to check morphology, get more word information, report errors, alternative parses etc.</li>
+    <li>Use the 'Action' buttons to check morphology, get more word information, alternative parses etc.</li>
     <li>Download the raw compressed CSV files for offline use and advanced analysis.</li>
     <li>This is an open project for the community, Creative Commons—you can use it, change it, and do what you want with it!</li>
     <li>See a dry academic article on the project here :) Green C, Hiebert EH and Coxhead A (2026) Patterns of morphology in children’s print: estimates of polymorphemic vocabulary using an innovative, AI-informed database of British and American word families. <em>Front. Psychol.</em> 17:1985734. DOI: <a href="https://doi.org/10.3389/fpsyg.2026.1985734" target="_blank" rel="noopener noreferrer">10.3389/fpsyg.2026.1985734</a></li>
@@ -1516,7 +1516,7 @@ and 7 is about 10,000 per million.
   const GOOGLE_ERROR_REPORT_ENDPOINT = "https://script.google.com/macros/s/AKfycbydBfAee3LRNRjT8O-K2rutdLR67KS-2Lp_0TjBuER38EAhRRd7LyITADcbzDALCYgw/exec";
 const REPORTS_ENABLED = false;
 const REPORTS_DISABLED_MESSAGE =
-  "Reporting is temporarily disabled while ethics/privacy requirements are reviewed.";
+  "Reporting is under development - stay tuned.";
   const PREFIX_COLS = ["Prefix_1", "Prefix_2", "Prefix_3"];
   const SUFFIX_COLS = ["Suffix_1", "Suffix_2", "Suffix_3", "Suffix_4", "Suffix_5", "Suffix_6"];
 
@@ -3401,7 +3401,7 @@ ${reviewText || "No response returned."}
   reportStatusEl.textContent = "";
 } else {
   submitBtn.disabled = true;
-  submitBtn.textContent = "Reporting temporarily disabled";
+  submitBtn.textContent = "Reporting temporarily disabled - under development";
   reportStatusEl.textContent = REPORTS_DISABLED_MESSAGE;
   reportStatusEl.style.color = "#6b7280";
 }
