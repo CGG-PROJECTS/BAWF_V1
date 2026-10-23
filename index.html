@@ -137,7 +137,28 @@
   font-size: 1.05rem;
   line-height: 1.5;
 }
-
+.studio-chip-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin: 10px 0 0;
+}
+.studio-chip {
+  background: #e0e7ff;
+  color: #1e3a8a;
+  border: 1px solid #c7d2fe;
+  border-radius: 999px;
+  padding: 6px 10px;
+  font-size: 0.88rem;
+  font-weight: 600;
+}
+.studio-confidence {
+  font-size: 0.95rem;
+  margin-top: 6px;
+}
+.studio-confidence.low { color: #b45309; }
+.studio-confidence.mid { color: #1d4ed8; }
+.studio-confidence.high { color: #15803d; }
 .studio-plan-card h3 {
   margin-top: 0;
   color: #1d4ed8;
@@ -2816,7 +2837,68 @@ Please:
       showCopyToast("Morphology review copied");
     });
   }
+function studioNormalizeAffix(v) {
+  return studioNorm(v).replace(/^-+/, "").replace(/-+$/, "");
+}
 
+function studioApplyTypoCorrections(query) {
+  let q = studioNorm(query);
+
+  const fixes = [
+    [/\bsufix\b/g, "suffix"],
+    [/\bsufixx\b/g, "suffix"],
+    [/\bprefixx\b/g, "prefix"],
+    [/\bprefx\b/g, "prefix"],
+    [/\bmorphems?\b/g, "morphemes"],
+    [/\bfamilarity\b/g, "familiarity"],
+    [/\bfrequncy\b/g, "frequency"],
+    [/\betymolgy\b/g, "etymology"],
+    [/\bgryek\b/g, "greek"],
+    [/\blatin root\b/g, "root"],
+    [/\bgradelevel\b/g, "grade level"],
+    [/\bgrde\b/g, "grade"]
+  ];
+
+  for (const [pattern, replacement] of fixes) {
+    q = q.replace(pattern, replacement);
+  }
+
+  // normalize common punctuation patterns
+  q = q.replace(/[–—]/g, "-").replace(/\s+/g, " ").trim();
+  return q;
+}
+
+function studioConfidenceClass(c) {
+  if (c >= 0.75) return "high";
+  if (c >= 0.45) return "mid";
+  return "low";
+}
+
+function studioRenderPlanChips(plan) {
+  const chips = [];
+  if (plan.dataset) chips.push(`dataset: ${DATASETS[plan.dataset]?.name || plan.dataset}`);
+  if (plan.global) chips.push(`topic: ${plan.global}`);
+  for (const f of plan.filters || []) {
+    if (f.type === "affixAny") {
+      const kind = (f.columns || []).some(c => c.startsWith("Prefix")) ? "prefix" : "suffix";
+      chips.push(`${kind}: ${f.value}`);
+    } else if (f.type === "anyColumn") {
+      chips.push(`root: ${f.value}`);
+    } else if (f.type === "contains") {
+      chips.push(`${f.column}: contains "${f.value}"`);
+    } else if (f.type === "range") {
+      chips.push(`${f.column}: ${f.min}-${f.max}`);
+    } else if (f.type === "min") {
+      chips.push(`${f.column}: >= ${f.value}`);
+    } else if (f.type === "max") {
+      chips.push(`${f.column}: <= ${f.value}`);
+    } else if (f.type === "numberEquals") {
+      chips.push(`${f.column}: = ${f.value}`);
+    }
+  }
+  if (!chips.length) return `<div class="studio-chip">broad search (no filters)</div>`;
+  return chips.map(c => `<span class="studio-chip">${escapeHTML(c)}</span>`).join("");
+}
 function openMorphReviewPromptInAI() {
   if (!lastMorphCheckPrompt) {
     alert("No prompt available yet.");
@@ -4820,11 +4902,135 @@ function studioInterpretQuery(query) {
     plan.filters.push({
       type: "min",
       column: "GPT_Familiarity Brysbaert et al._ 2024",
-      value: 3.5
-    });
+      vafunction studioInterpretQuery(query) {
+  const raw = studioClean(query);
+  const q = studioApplyTypoCorrections(raw);
+
+  const plan = {
+    dataset: q.includes("compound") ? "cm" : "cf",
+    filters: [],
+    global: "",
+    sort: null,
+    explanation: "",
+    confidence: 0.2,
+    recognized: []
+  };
+
+  // dataset intent
+  if (q.includes("full database") || q.includes("rare") || q.includes("all words")) {
+    plan.dataset = "wf";
+    plan.confidence += 0.1;
+    plan.recognized.push("dataset: full");
+  }
+  if (q.includes("compound")) {
+    plan.dataset = "cm";
+    plan.confidence += 0.2;
+    plan.recognized.push("dataset: compound");
   }
 
-  if (q.includes("high frequency") || q.includes("frequent")) {
+  // prefix
+  const prefix =
+    q.match(/prefix\s+[-]?([a-z]+)/) ||
+    q.match(/\b([a-z]+)-\s*prefix/);
+  if (prefix) {
+    plan.filters.push({
+      type: "affixAny",
+      columns: ["Prefix_1", "Prefix_2", "Prefix_3"],
+      value: studioNormalizeAffix(prefix[1]),
+      matchMode: "exact"
+    });
+    plan.confidence += 0.25;
+    plan.recognized.push(`prefix:${prefix[1]}`);
+  }
+
+  // suffix
+  const suffix =
+    q.match(/suffix\s+[-]?([a-z]+)/) ||
+    q.match(/ending\s+[-]?([a-z]+)/) ||
+    q.match(/\b-([a-z]{2,})\b/);
+  if (suffix && !q.includes("prefix")) {
+    plan.filters.push({
+      type: "affixAny",
+      columns: ["Suffix_1", "Suffix_2", "Suffix_3", "Suffix_4", "Suffix_5", "Suffix_6"],
+      value: studioNormalizeAffix(suffix[1]),
+      matchMode: "exact"
+    });
+    plan.confidence += 0.25;
+    plan.recognized.push(`suffix:${suffix[1]}`);
+  }
+
+  // root
+  const root = q.match(/root\s+([a-z]+)/);
+  if (root) {
+    plan.filters.push({
+      type: "anyColumn",
+      columns: ["GPT_Root", "Greek_Latin_Root_1", "Greek_Latin_Root"],
+      value: root[1]
+    });
+    plan.confidence += 0.22;
+    plan.recognized.push(`root:${root[1]}`);
+  }
+
+  // baseword
+  const base = q.match(/baseword\s+([a-z]+)/) || q.match(/base\s+([a-z]+)/);
+  if (base) {
+    plan.filters.push({
+      type: "contains",
+      column: "Baseword",
+      value: base[1]
+    });
+    plan.confidence += 0.2;
+    plan.recognized.push(`base:${base[1]}`);
+  }
+
+  // morpheme count
+  const morphemes = q.match(/(\d+)\s+morpheme/);
+  if (morphemes) {
+    plan.filters.push({
+      type: "numberEquals",
+      column: MORPHEME_COL_PLUS_INFLECTIONS,
+      value: Number(morphemes[1])
+    });
+    plan.confidence += 0.2;
+    plan.recognized.push(`morphemes:${morphemes[1]}`);
+  }
+
+  // grade
+  const gradeRange = q.match(/grade\s*(\d+)\s*(?:to|-|–)\s*(\d+)/);
+  const singleGrade = q.match(/grade\s*(\d+)/);
+  if (gradeRange) {
+    plan.filters.push({
+      type: "range",
+      column: "Vocabulary eXpected Grade Level Flor et al._ 2024",
+      min: Number(gradeRange[1]),
+      max: Number(gradeRange[2])
+    });
+    plan.confidence += 0.2;
+    plan.recognized.push(`grade:${gradeRange[1]}-${gradeRange[2]}`);
+  } else if (singleGrade) {
+    const g = Number(singleGrade[1]);
+    plan.filters.push({
+      type: "range",
+      column: "Vocabulary eXpected Grade Level Flor et al._ 2024",
+      min: Math.max(0, g - 1),
+      max: g + 1
+    });
+    plan.confidence += 0.15;
+    plan.recognized.push(`grade~${g}`);
+  }
+
+  // familiarity/frequency
+  if (q.includes("familiar") || q.includes("common")) {
+    plan.filters.push({
+      type: "min",
+      column: "GPT_Familiarity Brysbaert et al._ 2024",
+      value: 3.5
+    });
+    plan.confidence += 0.12;
+    plan.recognized.push("familiar");
+  }
+
+  if (q.includes("high frequency") || q.includes("frequent") || q.includes("frequency")) {
     plan.filters.push({
       type: "min",
       column: "Word_frq_Zipf_Recomputed",
@@ -4834,29 +5040,20 @@ function studioInterpretQuery(query) {
       column: "Word_frq_Zipf_Recomputed",
       direction: "desc"
     };
+    plan.confidence += 0.12;
+    plan.recognized.push("frequency");
   }
 
-  const topics = [
-    "science",
-    "weather",
-    "animal",
-    "animals",
-    "school",
-    "ecosystem",
-    "ecosystems",
-    "space",
-    "math",
-    "history",
-    "reading"
-  ];
-
+  // topic words
+  const topics = ["science","weather","animal","animals","school","ecosystem","ecosystems","space","math","history","reading"];
   const topic = topics.find(t => q.includes(t));
   if (topic) {
-    plan.global = topic
-      .replace("animals", "animal")
-      .replace("ecosystems", "ecosystem");
+    plan.global = topic.replace("animals", "animal").replace("ecosystems", "ecosystem");
+    plan.confidence += 0.1;
+    plan.recognized.push(`topic:${plan.global}`);
   }
 
+  plan.confidence = Math.max(0, Math.min(1, plan.confidence));
   plan.explanation = `Dataset: ${DATASETS[plan.dataset].name}. Filters: ${plan.filters.length || "none"}.`;
 
   return plan;
@@ -4864,13 +5061,16 @@ function studioInterpretQuery(query) {
 
 async function studioAskBAWF() {
   const query = studioClean($("studioAskInput").value);
-
   if (!query) {
     alert("Please type a search request first.");
     return;
   }
 
   const plan = studioInterpretQuery(query);
+  const conf = plan.confidence || 0;
+  const confClass = studioConfidenceClass(conf); // "low" | "mid" | "high"
+  const confPct = Math.round(conf * 100);
+  const needsClarification = conf < 0.45;
 
   $("studioPlanBox").style.display = "block";
   $("studioPlanBox").innerHTML = `
@@ -4881,27 +5081,33 @@ async function studioAskBAWF() {
   `;
 
   const resultCount = await studioApplyPlanToMainTable(plan, { openResults: false });
-
   const friendlyFilters = studioDescribePlan(plan);
 
   $("studioPlanBox").innerHTML = `
     <div class="studio-plan-card">
       <h3>✨ I understood your request</h3>
 
+      <div class="studio-confidence ${confClass}">
+        Parser confidence: <strong>${confPct}%</strong>
+        ${needsClarification
+          ? ` — I may have misunderstood. Try specifying prefix/suffix/root/grade more explicitly.`
+          : ``}
+      </div>
+
       <p>
         You asked:
         <strong>${escapeHTML(query)}</strong>
       </p>
-
       <p>
         I searched in:
         <strong>${escapeHTML(DATASETS[plan.dataset].name)}</strong>
       </p>
 
-      <p>
-        I looked for:
-      </p>
+      <div class="studio-chip-row">
+        ${studioRenderPlanChips(plan)}
+      </div>
 
+      <p style="margin-top:12px;">I looked for:</p>
       <ul>
         ${friendlyFilters.map(item => `<li>${item}</li>`).join("")}
       </ul>
@@ -4916,15 +5122,12 @@ async function studioAskBAWF() {
         <button type="button" class="db-btn" onclick="studioOpenDatasetTab(activeKey)">
           Open Results Table
         </button>
-
         <button type="button" class="db-btn secondary" onclick="studioPutTopResultsInWordSet()">
           Put Top Results in Word Set
         </button>
-
         <button type="button" class="db-btn secondary" onclick="studioCopyCurrentResultWords()">
           Copy Top Words
         </button>
-
         <button type="button" class="db-btn secondary" onclick="studioShowTechnicalPlan()">
           Show Technical Filters
         </button>
@@ -5217,41 +5420,34 @@ function studioRowMatchesPlan(row, plan, headers) {
 
 function studioFilterPasses(row, filter, headers) {
   if (filter.type === "affixAny" || filter.type === "anyColumn") {
+    const target = studioNormalizeAffix(filter.value);
+    const mode = filter.matchMode || "contains";
+
     return filter.columns.some(col => {
       if (!headers.includes(col)) return false;
-      return studioNorm(row[col]).includes(studioNorm(filter.value));
+      const cellRaw = studioClean(row[col]);
+      const cellNorm = studioNormalizeAffix(cellRaw);
+
+      if (!cellNorm) return false;
+      if (mode === "exact") return cellNorm === target;
+      return cellNorm.includes(target);
     });
   }
 
   let col = filter.column;
-
   if (!headers.includes(col)) {
     if (col.includes("Zipf")) col = studioFindColumn(headers, "Zipf");
     else if (col.includes("Grade")) col = studioFindColumn(headers, "grade");
     else if (col.includes("Familiarity")) col = studioFindColumn(headers, "familiarity");
     else if (col.includes("Morphemes")) col = studioFindColumn(headers, "morpheme");
   }
-
   if (!col) return true;
 
   const raw = studioClean(row[col]);
-
-  if (filter.type === "contains") {
-    return studioNorm(raw).includes(studioNorm(filter.value));
-  }
-
-  if (filter.type === "numberEquals") {
-    return Number(raw) === Number(filter.value);
-  }
-
-  if (filter.type === "min") {
-    return Number(raw) >= Number(filter.value);
-  }
-
-  if (filter.type === "max") {
-    return Number(raw) <= Number(filter.value);
-  }
-
+  if (filter.type === "contains") return studioNorm(raw).includes(studioNorm(filter.value));
+  if (filter.type === "numberEquals") return Number(raw) === Number(filter.value);
+  if (filter.type === "min") return Number(raw) >= Number(filter.value);
+  if (filter.type === "max") return Number(raw) <= Number(filter.value);
   if (filter.type === "range") {
     const n = Number(raw);
     if (!Number.isFinite(n)) return false;
@@ -5259,7 +5455,6 @@ function studioFilterPasses(row, filter, headers) {
     if (filter.max !== null && filter.max !== undefined && n > filter.max) return false;
     return true;
   }
-
   return true;
 }
 
