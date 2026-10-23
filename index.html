@@ -1501,7 +1501,22 @@ const REPORTS_DISABLED_MESSAGE =
   "Reporting is under development - stay tuned.";
   const PREFIX_COLS = ["Prefix_1", "Prefix_2", "Prefix_3"];
   const SUFFIX_COLS = ["Suffix_1", "Suffix_2", "Suffix_3", "Suffix_4", "Suffix_5", "Suffix_6"];
+const ALT_BASES_FILE = "BAWF_alt_basewords_Wiktionary_etymology.csv";
+const ALT_BASES_WORD_COL = "Word";
+const ALT_BASES_COLUMNS = [
+  "AltBase_Nation_2017",
+  "AltBase_Brysbaert_et_al_2016",
+  "AltBase_Batsuren_et_al_2021",
+  "Greek_Latin_Wiktionary_etymology_Root_1",
+  "Greek_Latin_Wiktionary_Meaning_1",
+  "Greek_Latin_Wiktionary_etymology_Root_2",
+  "Greek_Latin_Wiktionary_Meaning_2",
+  "Greek_Latin_Origin_1",
+  "Greek_Latin_Origin_2"
+];
 
+let altBasesMap = null;
+let altBasesPromise = null;
 const MORPH_CHECK_PROMPT = `You are a friendly expert in English morphology and structured word inquiry.
 
 You are helping a teacher understand a database parse.
@@ -2059,19 +2074,21 @@ if (!response.ok) {
           });
         });
 
-        config.loaded = true;
-        config.loading = false;
-        config.uniqueValues = {};
-        config.page = 1;
+ config.loaded = true;
+config.loading = false;
+config.uniqueValues = {};
+config.page = 1;
 
-        buildDropdowns(key);
+// NEW
+await enrichDatasetWithAltBases(key);
 
-        if (hasActiveFilterState(key)) {
-          filterTable(key);
-        } else {
-          config.filtered = [...config.data];
-          renderTable(key);
-        }
+buildDropdowns(key);
+if (hasActiveFilterState(key)) {
+  filterTable(key);
+} else {
+  config.filtered = [...config.data];
+  renderTable(key);
+}
 
         const table = $(`${key}Table`);
         const pagination = $(`${key}Pagination`);
@@ -4584,7 +4601,75 @@ function openInLLM() {
       .replace(/\n/g, "\\n")
       .replace(/\r/g, "");
   }
+function normWordKey(v) {
+  return String(v ?? "").toLowerCase().trim();
+}
 
+async function loadAltBasesMap() {
+  if (altBasesMap) return altBasesMap;
+  if (altBasesPromise) return altBasesPromise;
+
+  altBasesPromise = (async () => {
+    const resp = await fetch(ALT_BASES_FILE);
+    if (!resp.ok) {
+      throw new Error(`Could not load ${ALT_BASES_FILE} (HTTP ${resp.status})`);
+    }
+    const text = await resp.text();
+
+    const parsed = Papa.parse(text, {
+      header: true,
+      skipEmptyLines: "greedy",
+      dynamicTyping: false
+    });
+
+    const map = new Map();
+    for (const row of parsed.data || []) {
+      const w = normWordKey(row[ALT_BASES_WORD_COL]);
+      if (!w) continue;
+
+      const payload = {};
+      for (const col of ALT_BASES_COLUMNS) {
+        payload[col] = String(row[col] ?? "").trim();
+      }
+      map.set(w, payload);
+    }
+
+    altBasesMap = map;
+    return altBasesMap;
+  })();
+
+  return altBasesPromise;
+}
+
+async function enrichDatasetWithAltBases(key) {
+  // only for word-family datasets
+  if (!["cf", "wf"].includes(key)) return;
+
+  const config = DATASETS[key];
+  if (!config || !Array.isArray(config.data) || !config.data.length) return;
+
+  const map = await loadAltBasesMap();
+
+  // add these columns to dataset headers so they appear in "Add Columns"
+  for (const col of ALT_BASES_COLUMNS) {
+    if (!config.all.includes(col)) config.all.push(col);
+  }
+
+  for (const row of config.data) {
+    const w = normWordKey(row.Word || row.FLemma || "");
+    const hit = map.get(w);
+
+    if (hit) {
+      for (const col of ALT_BASES_COLUMNS) {
+        row[col] = hit[col] ?? "";
+      }
+    } else {
+      for (const col of ALT_BASES_COLUMNS) {
+        if (row[col] === undefined) row[col] = "";
+      }
+    }
+  }
+}
 let studioLastRows = [];
 
 function studioNorm(value) {
