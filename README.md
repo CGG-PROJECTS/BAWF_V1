@@ -11,8 +11,9 @@ Use sorting, filtering, AI prompts, dictionary links, and etymology links.
 Use the 'Action' buttons to check morphology, get more word information, alternative parses etc.
 Download the raw compressed CSV files for offline use and advanced analysis.
 This is an open project for the community, Creative Commons—you can use it, change it, and do what you want with it!
-See a dry academic article on the project here :) Green C, Hiebert EH and Coxhead A (2026) Patterns of morphology in children’s print: estimates of polymorphemic vocabulary using an innovative, AI-informed database of British and American word families. Front. Psychol. 17:1985734. DOI: 10.3389/fpsyg.2026.1985734
-Be inspired by joyful word learning and reading — dive in and explore!
+**See a dry academic article on the project here :)** Green C, Hiebert EH and Coxhead A (2026) Patterns of morphology in children’s print: estimates of polymorphemic vocabulary using an innovative, AI-informed database of British and American word families. Front. Psychol. 17:1985734. DOI: 10.3389/fpsyg.2026.1985734
+
+**Be inspired by joyful word learning and reading — dive in and explore!**
 
 **This work is licensed under a Creative Commons Attribution 4.0 International License**
 
@@ -55,5 +56,12 @@ GPT_Familiarity Brysbaert et al._ 2024: GPT-estimated familiarity rating when av
 
 
 
-
-Batsuren, K., Bella, G., & Giunchiglia, F. (2021). MorphyNet: A large multilingual database of derivational and inflectional morphology. In N. Gala & A. Nicolai (Eds.), Proceedings of the 18th SIGMORPHON Workshop on Computational Research in Phonetics, Phonology, and Morphology (pp. 39–48). Association for Computational Linguistics.Brysbaert, M., Martínez, G., & Reviriego, P. (2025). Moving beyond word frequency based on tally counting: AI-generated familiarity estimates of words and phrases are an interesting additional index of language knowledge. Behavior Research Methods, 57, Article 28. https://doi.org/10.3758/s13428-024-02561-7Brysbaert, M., Stevens, M., Mandera, P., & Keuleers, E. (2016). How many words do we know? Practical estimates of vocabulary size dependent on word definition, the degree of language input and the participant’s age. Frontiers in Psychology, 7, Article 1116. https://doi.org/10.3389/fpsyg.2016.01116Davies, M. (2019). The Corpus of Contemporary American English (COCA): One billion words, 1990–2019.Flor, M., Holtzman, S., Deane, P., & Bejar, I. (2024). Mapping of American English vocabulary by grade levels. ITL – International Journal of Applied Linguistics, 175(1), 25–45. https://doi.org/10.1075/itl.22025.floGreen, C., Hiebert, E. H., & Coxhead, A. (2026). Patterns of morphology in children’s print: Estimates of polymorphemic vocabulary using an innovative, AI-informed database of British and American word families. Frontiers in Psychology, 17, Article 1985734.Love, R., Dembry, C., Hardie, A., Brezina, V., & McEnery, T. (2017). The Spoken BNC2014: Designing and building a spoken corpus of everyday conversations. International Journal of Corpus Linguistics, 22(3), 319–344. https://doi.org/10.1075/ijcl.22.3.02lovNation, I. S. P. (2017). The BNC/COCA Level 6 word family lists (Version 1.0.0) [Data set]. Victoria University of Wellington. http://www.victoria.ac.nz/lals/staff/paul-nation.aspx
+**Selected References**
+Green, C., Hiebert, E. H., & Coxhead, A. (2026). Patterns of morphology in children’s print: Estimates of polymorphemic vocabulary using an innovative, AI-informed database of British and American word families. Frontiers in Psychology, 17, Article 1985734
+Batsuren, K., Bella, G., & Giunchiglia, F. (2021). MorphyNet: A large multilingual database of derivational and inflectional morphology. In N. Gala & A. Nicolai (Eds.), Proceedings of the 18th SIGMORPHON Workshop on Computational Research in Phonetics, Phonology, and Morphology (pp. 39–48). Association for Computational Linguistics.
+Brysbaert, M., Martínez, G., & Reviriego, P. (2025). Moving beyond word frequency based on tally counting: AI-generated familiarity estimates of words and phrases are an interesting additional index of language knowledge. Behavior Research Methods, 57, Article 28. https://doi.org/10.3758/s13428-024-02561-7
+Brysbaert, M., Stevens, M., Mandera, P., & Keuleers, E. (2016). How many words do we know? Practical estimates of vocabulary size dependent on word definition, the degree of language input and the participant’s age. Frontiers in Psychology, 7, Article 1116. https://doi.org/10.3389/fpsyg.2016.01116
+Davies, M. (2019). The Corpus of Contemporary American English (COCA): One billion words, 1990–2019.
+Flor, M., Holtzman, S., Deane, P., & Bejar, I. (2024). Mapping of American English vocabulary by grade levels. ITL – International Journal of Applied Linguistics, 175(1), 25–45. https://doi.org/10.1075/itl.22025.flo
+Love, R., Dembry, C., Hardie, A., Brezina, V., & McEnery, T. (2017). The Spoken BNC2014: Designing and building a spoken corpus of everyday conversations. International Journal of Corpus Linguistics, 22(3), 319–344. 
+Nation, I. S. P. (2017). The BNC/COCA Level 6 word family lists (Version 1.0.0) [Data set]. Victoria University of Wellington. http://www.victoria.ac.nz/lals/staff/paul-nation.aspx
